@@ -93,25 +93,29 @@ export class FFMpegAudioExportService implements AudioExportService {
             let bitrate: string = `0`;
             switch (format) {
                 case `LP2`:
-                    bitrate = `132`;
+                    bitrate = `128`;
                     break;
                 case `LP105`:
                     bitrate = `102`;
                     break;
                 case `LP4`:
-                    bitrate = `66`;
+                    bitrate = `64`;
                     break;
             }
-            //result = await this.atracdencProcess!.encode(data.buffer, bitrate);
-            const payload = new FormData();
-            payload.append('file', new Blob([data.buffer]), `${this.outFileNameNoExt}.wav`)
-            let response = await fetch(`http://localhost:5000/encode?type=${format}`, {
-                method: 'POST',
-                body: payload
-            })
-            const file = new File([await response.arrayBuffer()], 'test.at3')
-            let encoding: null | { format: 'LP2' | 'LP4'; headerLength: number } = await getATRACWAVEncoding(file);
-            result = (await file.arrayBuffer()).slice(encoding!.headerLength)
+            if (true) {
+                const payload = new FormData();
+                payload.append('file', new Blob([data.buffer]), `${this.outFileNameNoExt}.wav`)
+                let response = await fetch(`http://localhost:5000/encode?type=${format}`, {
+                    method: 'POST',
+                    body: payload
+                })
+                const file = new File([await response.arrayBuffer()], 'test.at3')
+                let encoding: null | { format: 'LP2' | 'LP4'; headerLength: number } = await getATRACWAVEncoding(file);
+                result = (await file.arrayBuffer()).slice(encoding!.headerLength)
+            } else {
+                result = await this.atracdencProcess!.encode(data.buffer, bitrate);
+            }
+
         }
         this.ffmpegProcess.worker.terminate();
         //this.atracdencProcess!.terminate();
