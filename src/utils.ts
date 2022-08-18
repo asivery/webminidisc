@@ -359,7 +359,7 @@ export function isSequential(numbers: number[]) {
 export function asyncMutex(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     // This is meant to be used only with classes having a "mutex" instance property
     const oldValue = descriptor.value;
-    descriptor.value = async function(...args: any) {
+    descriptor.value = async function (...args: any) {
         const mutex = (this as any).mutex as Mutex;
         const release = await mutex.acquire();
         try {
