@@ -118,7 +118,7 @@ export class FFMpegAudioExportService implements AudioExportService {
 
         }
         this.ffmpegProcess.worker.terminate();
-        //this.atracdencProcess!.terminate();
+        this.atracdencProcess!.terminate();
         return result;
     }
 }
