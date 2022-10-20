@@ -20,7 +20,7 @@ Works without any addtional set up - tested with 91 stable (91.0.4472.102). If y
 
 ## macOS 
 It just works... no need to download or install any software. 
-Users can visit the live version at: https://we.minidisc.wiki. (⚠️A Chrome or Chromium-based browser is required.)
+Users can visit the live version at: https://web.minidisc.wiki. (⚠️A Chrome or Chromium-based browser is required.)
 
 For developers on Apple Silicon, see below.
 
