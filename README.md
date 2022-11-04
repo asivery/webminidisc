@@ -53,6 +53,7 @@ Development discussion and coordination happens through the [MiniDisc.wiki Disco
 ### How to build
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app), so you can run:
+- `npm i` to install the required node modules
 - `npm start` to start the development server
 - `npm build` to build for production
 
@@ -63,6 +64,9 @@ WASM modules are provided in the `public/` directory. However, if you wish to bu
 #### Important changes:
 
 For Web MiniDisc Pro development on Apple Silicon as of v1.3.0 going forward, to successfully built it, npm/node will need a few legacy dependencies to be installed on your machine until certain core parts of WebMD Pro have been addressed further or replaced for alternatives.
+
+The following section asumes you are developing using a more recent node version, but at minimum node v18.11.0.
+If you are still using and older version of node, this may not apply to you.
 
 ##### Install Xcode Build Tools CLI & Homebrew
 In macOS Terminal: `xcode-select install`, wait for it to finish then proceed with homebrew: `-c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)`
