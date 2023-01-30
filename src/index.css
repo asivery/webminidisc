@@ -9,6 +9,10 @@ body, html {
     height: 100%;
 }
 
+#root > main > .MuiPaper-root {
+    height: calc(100vh - 50px);
+}
+
 div {
     outline: none;
 }
