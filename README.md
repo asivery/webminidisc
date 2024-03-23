@@ -18,6 +18,8 @@ For macOS developers, see [this](#development-on-macos)
 ### Linux
 Follow the instructions here [https://github.com/glaubitz/linux-minidisc/tree/master/netmd/etc](https://github.com/glaubitz/linux-minidisc/tree/master/netmd/etc) to grant your user access to the device. If you skip this step you'll likely get an *Access denied* message when trying to connect.
 
+*Ubuntu users* - Avoid using browsers installed via Snap as Snap's permission structure is different from traditionally installed applications and will lead to access denied errors. 
+
 ### Windows
 The Windows USB stack requires a driver to be installed to communicate with any USB device. The bad news is that there are no official Windows 10 drivers for NetMD devices. The good news is that we don't need it!
 We can just use a generic driver like *WinUSB* to access the device.
