@@ -25,6 +25,10 @@ export const slice = createSlice({
         },
         setPosition: (state, action: PayloadAction<{ x: number; y: number }>) => {
             state.position = action.payload;
+        },
+        openContextMenu: (state, action: PayloadAction<{ x: number; y: number }>) => {
+            state.visible = true;
+            state.position = action.payload;
         }
     },
 });

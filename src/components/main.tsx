@@ -16,6 +16,7 @@ import { actions as renameDialogActions, RenameType } from '../redux/rename-dial
 import { actions as convertDialogActions } from '../redux/convert-dialog-feature';
 import { actions as dumpDialogActions } from '../redux/dump-dialog-feature';
 import { actions as appStateActions } from '../redux/app-feature';
+import { actions as contextMenuActions } from '../redux/context-menu-feature';
 
 import { DeviceStatus } from 'netmd-js';
 import { control } from '../redux/actions';
@@ -287,10 +288,13 @@ export const Main = (props: {}) => {
         [selected, setSelected, lastClicked, setLastClicked]
     );
 
-    const handleOpenContextMenu = useCallback((event: React.MouseEvent) => {
-        event.preventDefault();
-        setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    }, []);
+    const handleOpenContextMenu = useCallback(
+        (event: React.MouseEvent) => {
+            event.preventDefault();
+            dispatch(contextMenuActions.openContextMenu({ x: event.clientX, y: event.clientY }));
+        },
+        [dispatch]
+    );
 
     const handleSelectGroupClick = useCallback(
         (event: React.MouseEvent, item: number) => {
@@ -763,7 +767,7 @@ export const Main = (props: {}) => {
             <ChangelogDialog />
             <SettingsDialog />
             <PanicDialog />
-            <ContextMenu position={contextMenuPosition} />
+            <ContextMenu />
         </React.Fragment>
     );
 };
