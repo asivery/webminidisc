@@ -12,6 +12,7 @@ import { Capability } from '../services/interfaces/netmd';
 interface ContextMenuProps {
     onTogglePlayPause: (event: React.MouseEvent, trackIdx: number) => void;
     onRename: (event: React.MouseEvent, trackIdx: number) => void;
+    onDelete: (event: React.MouseEvent, trackIdx: number) => void;
 }
 
 interface ContextButtonProps extends ButtonProps {
@@ -78,7 +79,7 @@ const ContextButton = ({ title, ...otherProps }: ContextButtonProps) => {
     );
 };
 
-export const ContextMenu = ({ onTogglePlayPause, onRename }: ContextMenuProps) => {
+export const ContextMenu = ({ onTogglePlayPause, onRename, onDelete }: ContextMenuProps) => {
     const dispatch = useDispatch();
 
     const { classes } = useStyles();
@@ -106,6 +107,14 @@ export const ContextMenu = ({ onTogglePlayPause, onRename }: ContextMenuProps) =
             dispatch(actions.closeContextMenu(null));
         },
         [contextTrack?.index, dispatch, onRename]
+    );
+    const handleDeleteTrack = useCallback(
+        (e: React.MouseEvent) => {
+            e?.preventDefault();
+            contextTrack?.index !== undefined && onDelete(e, contextTrack.index);
+            dispatch(actions.closeContextMenu(null));
+        },
+        [contextTrack?.index, dispatch, onDelete]
     );
 
     const handleClose = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -137,7 +146,7 @@ export const ContextMenu = ({ onTogglePlayPause, onRename }: ContextMenuProps) =
                 >
                     <ContextButton title="Play Track" onClick={handlePlayTrack} />
                     <ContextButton title="Rename Track" disabled={!isCapable(Capability.metadataEdit)} onClick={handleRenameTrack} />
-                    <ContextButton title="Delete Track" disabled={!isCapable(Capability.metadataEdit)} />
+                    <ContextButton title="Delete Track" disabled={!isCapable(Capability.metadataEdit)} onClick={handleDeleteTrack} />
                 </Box>
             </Box>
         </Box>

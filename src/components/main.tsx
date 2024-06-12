@@ -379,6 +379,13 @@ export const Main = (props: {}) => {
         [dispatch, selected]
     );
 
+    const handleDeleteTrack = useCallback(
+        (event: React.MouseEvent, index: number) => {
+            dispatch(deleteTracks([index]));
+        },
+        [dispatch]
+    );
+
     const handleGroupTracks = useCallback(
         (event: React.MouseEvent) => {
             dispatch(groupTracks(selected));
@@ -766,7 +773,7 @@ export const Main = (props: {}) => {
             <ChangelogDialog />
             <SettingsDialog />
             <PanicDialog />
-            <ContextMenu onTogglePlayPause={handleTogglePlayPauseTrack} onRename={handleRenameTrack} />
+            <ContextMenu onTogglePlayPause={handleTogglePlayPauseTrack} onRename={handleRenameTrack} onDelete={handleDeleteTrack} />
         </React.Fragment>
     );
 };
