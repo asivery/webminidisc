@@ -766,7 +766,7 @@ export const Main = (props: {}) => {
             <ChangelogDialog />
             <SettingsDialog />
             <PanicDialog />
-            <ContextMenu onTogglePlayPause={handleTogglePlayPauseTrack} />
+            <ContextMenu onTogglePlayPause={handleTogglePlayPauseTrack} onRename={handleRenameTrack} />
         </React.Fragment>
     );
 };
