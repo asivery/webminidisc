@@ -5,8 +5,14 @@ import { actions } from '../redux/context-menu-feature';
 
 import { useShallowEqualSelector } from '../frontend-utils';
 import { makeStyles } from 'tss-react/mui';
+import { Box, Button, ButtonProps } from '@mui/material';
+import { Capability } from '../services/interfaces/netmd';
 
 interface ContextMenuProps {}
+
+interface ContextButtonProps extends ButtonProps {
+    title: string;
+}
 
 const useStyles = makeStyles()((theme) => ({
     background: {
@@ -30,16 +36,43 @@ const useStyles = makeStyles()((theme) => ({
         boxSizing: 'border-box',
         position: 'fixed',
         width: '300px',
-        height: '100px',
         backgroundColor: '#303030',
-        borderRadius: '5px',
+        borderRadius: theme.shape.borderRadius,
         color: 'white',
-        padding: '10px',
+        padding: '5px',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'flex-start',
         border: '1px solid #444',
     },
+    button: {
+        color: 'white',
+        backgroundColor: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '5px',
+        textAlign: 'left',
+        height: '30px',
+        fontSize: '14px',
+        width: '100%',
+        justifyContent: 'flex-start',
+        '&:hover': {
+            backgroundColor: '#444',
+        },
+    },
 }));
+
+const ContextButton = ({ title, ...otherProps }: ContextButtonProps) => {
+    const {
+        classes: { button },
+    } = useStyles();
+
+    return (
+        <Button className={button} {...otherProps}>
+            {title}
+        </Button>
+    );
+};
 
 export const ContextMenu = () => {
     const dispatch = useDispatch();
@@ -48,37 +81,42 @@ export const ContextMenu = () => {
 
     const position = useShallowEqualSelector((state) => state.contextMenu.position);
     const isVisible = useShallowEqualSelector((state) => state.contextMenu.visible);
+    const deviceCapabilities = useShallowEqualSelector((state) => state.main.deviceCapabilities);
 
-    const handleClose = () => {
+    const isCapable = useCallback((capability: Capability) => deviceCapabilities.includes(capability), [deviceCapabilities]);
+
+    const handleClose = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        e?.preventDefault();
         dispatch(actions.closeContextMenu(null));
     };
 
-    const handleReopenMenu = useCallback(
-        (event: React.MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            dispatch(actions.openContextMenu({ x: event.clientX, y: event.clientY }));
-        },
-        [dispatch]
-    );
+    // // Tobio: I will come back to this later if it makes sense
+    // const handleReopenMenu = useCallback(
+    //     (event: React.MouseEvent) => {
+    //         event.preventDefault();
+    //         event.stopPropagation();
+    //         dispatch(actions.openContextMenu({ x: event.clientX, y: event.clientY }));
+    //     },
+    //     [dispatch]
+    // );
 
     if (!isVisible || !position) return null;
 
     return (
-        <div className={classes.background} onClick={handleClose} onContextMenu={handleClose}>
-            <div className={classes.reopenArea} onContextMenu={handleReopenMenu}>
-                <div
+        <Box className={classes.background} onClick={handleClose} onContextMenu={handleClose}>
+            <Box className={classes.reopenArea} onContextMenu={handleClose}>
+                <Box
                     className={classes.menuContainer}
                     style={{
                         top: position.y,
                         left: position.x,
                     }}
                 >
-                    <div>Rename Track</div>
-                    <div>Play Track</div>
-                    <div>Delete Track</div>
-                </div>
-            </div>
-        </div>
+                    <ContextButton title="Play Track" />
+                    <ContextButton title="Rename Track" disabled={!isCapable(Capability.metadataEdit)} />
+                    <ContextButton title="Delete Track" disabled={!isCapable(Capability.metadataEdit)} />
+                </Box>
+            </Box>
+        </Box>
     );
 };
