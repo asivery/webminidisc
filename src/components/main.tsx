@@ -287,9 +287,10 @@ export const Main = (props: {}) => {
     );
 
     const handleOpenContextMenu = useCallback(
-        (event: React.MouseEvent) => {
+        (event: React.MouseEvent, track: Track) => {
+            if (!track) return;
             event.preventDefault();
-            dispatch(contextMenuActions.openContextMenu({ x: event.clientX, y: event.clientY }));
+            dispatch(contextMenuActions.openContextMenu({ position: { x: event.clientX, y: event.clientY }, track: track }));
         },
         [dispatch]
     );
@@ -715,7 +716,7 @@ export const Main = (props: {}) => {
                                                                             onSelect={handleSelectTrackClick}
                                                                             onRename={handleRenameTrack}
                                                                             onTogglePlayPause={handleTogglePlayPauseTrack}
-                                                                            onOpenContextMenu={handleOpenContextMenu}
+                                                                            onOpenContextMenu={(e) => handleOpenContextMenu(e, t)}
                                                                             isCapable={isCapable}
                                                                         />
                                                                     )}

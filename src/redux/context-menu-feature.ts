@@ -1,15 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { enableBatching } from 'redux-batched-actions';
+import { Track } from '../services/interfaces/netmd';
 
 export interface ContextMenuState {
     visible: boolean;
-    trackID: string;
+    track:Track | null;
     position: { x: number; y: number } | null;
 }
 
 const initialState: ContextMenuState = {
     visible: false,
-    trackID: '',
+    track:null,
     position: null,
 };
 
@@ -20,19 +21,21 @@ export const slice = createSlice({
         setVisible: (state, action: PayloadAction<boolean>) => {
             state.visible = action.payload;
         },
-        setTrack: (state, action: PayloadAction<string>) => {
-            state.trackID = action.payload;
+        setTrack: (state, action: PayloadAction<Track>) => {
+            state.track = action.payload;
         },
         setPosition: (state, action: PayloadAction<{ x: number; y: number }>) => {
             state.position = action.payload;
         },
-        openContextMenu: (state, action: PayloadAction<{ x: number; y: number }>) => {
+        openContextMenu: (state, action: PayloadAction<{position: { x: number; y: number }, track:Track}>) => {
             state.visible = true;
-            state.position = action.payload;
+            state.position = action.payload.position;
+            state.track = action.payload.track;
         },
         closeContextMenu: (state, action: PayloadAction<null>) => {
             state.visible = false;
             state.position = null;
+            state.track = null;
         }
 
     },
