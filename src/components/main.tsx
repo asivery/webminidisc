@@ -180,8 +180,6 @@ export const Main = (props: {}) => {
     const [lastClicked, setLastClicked] = useState(-1);
     const [moveMenuAnchorEl, setMoveMenuAnchorEl] = React.useState<null | HTMLElement>(null);
 
-    const [contextMenuPosition, setContextMenuPosition] = React.useState<{ x: number; y: number } | null>(null);
-
     const isCapable = useCallback((capability: Capability) => deviceCapabilities.includes(capability), [deviceCapabilities]);
 
     const handleShowMoveMenu = useCallback(
