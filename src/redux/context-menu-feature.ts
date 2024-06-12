@@ -29,7 +29,12 @@ export const slice = createSlice({
         openContextMenu: (state, action: PayloadAction<{ x: number; y: number }>) => {
             state.visible = true;
             state.position = action.payload;
+        },
+        closeContextMenu: (state, action: PayloadAction<null>) => {
+            state.visible = false;
+            state.position = null;
         }
+
     },
 });
 
