@@ -4,10 +4,12 @@ interface ContextMenuProps {
     position: {
         x: number;
         y: number;
-    };
+    } | null;
 }
 
 export const ContextMenu = ({ position }: ContextMenuProps) => {
+    if (!position) return null;
+
     return (
         <div
             style={{
