@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 
+import { control } from '../redux/actions';
 import { actions } from '../redux/context-menu-feature';
 
 import { useShallowEqualSelector } from '../frontend-utils';
@@ -8,7 +9,9 @@ import { makeStyles } from 'tss-react/mui';
 import { Box, Button, ButtonProps } from '@mui/material';
 import { Capability } from '../services/interfaces/netmd';
 
-interface ContextMenuProps {}
+interface ContextMenuProps {
+    onTogglePlayPause: (event: React.MouseEvent, trackIdx: number) => void;
+}
 
 interface ContextButtonProps extends ButtonProps {
     title: string;
@@ -74,16 +77,27 @@ const ContextButton = ({ title, ...otherProps }: ContextButtonProps) => {
     );
 };
 
-export const ContextMenu = () => {
+export const ContextMenu = ({ onTogglePlayPause }: ContextMenuProps) => {
     const dispatch = useDispatch();
 
     const { classes } = useStyles();
 
     const position = useShallowEqualSelector((state) => state.contextMenu.position);
     const isVisible = useShallowEqualSelector((state) => state.contextMenu.visible);
+    const contextTrack = useShallowEqualSelector((state) => state.contextMenu.track);
+
     const deviceCapabilities = useShallowEqualSelector((state) => state.main.deviceCapabilities);
 
     const isCapable = useCallback((capability: Capability) => deviceCapabilities.includes(capability), [deviceCapabilities]);
+
+    const handlePlayTrack = useCallback(
+        (e: React.MouseEvent) => {
+            e?.preventDefault();
+            contextTrack?.index !== undefined && onTogglePlayPause(e, contextTrack.index);
+            dispatch(actions.closeContextMenu(null));
+        },
+        [contextTrack?.index, dispatch, onTogglePlayPause]
+    );
 
     const handleClose = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         e?.preventDefault();
@@ -112,7 +126,7 @@ export const ContextMenu = () => {
                         left: position.x,
                     }}
                 >
-                    <ContextButton title="Play Track" />
+                    <ContextButton title="Play Track" onClick={handlePlayTrack} />
                     <ContextButton title="Rename Track" disabled={!isCapable(Capability.metadataEdit)} />
                     <ContextButton title="Delete Track" disabled={!isCapable(Capability.metadataEdit)} />
                 </Box>
