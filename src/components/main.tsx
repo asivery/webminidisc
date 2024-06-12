@@ -20,20 +20,8 @@ import { actions as appStateActions } from '../redux/app-feature';
 import { DeviceStatus } from 'netmd-js';
 import { control } from '../redux/actions';
 
-import {
-    formatTimeFromSeconds,
-    getGroupedTracks,
-    getSortedTracks,
-    isSequential,
-    acceptedTypes,
-} from '../utils';
-import {
-    belowDesktop,
-    forAnyDesktop,
-    useShallowEqualSelector,
-    themeSpacing,
-    batchActions
-} from '../frontend-utils';
+import { formatTimeFromSeconds, getGroupedTracks, getSortedTracks, isSequential, acceptedTypes } from '../utils';
+import { belowDesktop, forAnyDesktop, useShallowEqualSelector, themeSpacing, batchActions } from '../frontend-utils';
 
 import { makeStyles } from 'tss-react/mui';
 import { alpha, lighten } from '@mui/material/styles';
@@ -82,10 +70,11 @@ import { SongRecognitionProgressDialog } from './song-recognition-progress-dialo
 import { SettingsDialog } from './settings-dialog';
 import { FactoryModeBadSectorDialog } from './factory/factory-bad-sector-dialog';
 import { DiscProtectedDialog } from './disc-protected-dialog';
+import { ContextMenu } from './context-menu';
 
 // TODO jss-to-tss-react codemod: Unable to handle style definition reliably. Unsupported arrow function syntax.
 //Unexpected value type of ConditionalExpression.
-const useStyles = makeStyles()(theme => ({
+const useStyles = makeStyles()((theme) => ({
     add: {
         position: 'absolute',
         bottom: theme.spacing(3),
@@ -121,13 +110,13 @@ const useStyles = makeStyles()(theme => ({
     toolbarHighlight:
         theme.palette.mode === 'light'
             ? {
-                color: theme.palette.secondary.main,
-                backgroundColor: lighten(theme.palette.secondary.light, 0.85),
-            }
+                  color: theme.palette.secondary.main,
+                  backgroundColor: lighten(theme.palette.secondary.light, 0.85),
+              }
             : {
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.secondary.dark,
-            },
+                  color: theme.palette.text.primary,
+                  backgroundColor: theme.palette.secondary.dark,
+              },
     headBox: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -176,19 +165,21 @@ function getTrackStatus(track: Track, deviceStatus: DeviceStatus | null): 'playi
 
 export const Main = (props: {}) => {
     const dispatch = useDispatch();
-    const disc = useShallowEqualSelector(state => state.main.disc);
-    const flushable = useShallowEqualSelector(state => state.main.flushable);
-    const deviceName = useShallowEqualSelector(state => state.main.deviceName);
-    const deviceStatus = useShallowEqualSelector(state => state.main.deviceStatus);
-    const deviceCapabilities = useShallowEqualSelector(state => state.main.deviceCapabilities);
-    const factoryModeRippingInMainUi = useShallowEqualSelector(state => state.appState.factoryModeRippingInMainUi);
-    const { vintageMode } = useShallowEqualSelector(state => state.appState);
+    const disc = useShallowEqualSelector((state) => state.main.disc);
+    const flushable = useShallowEqualSelector((state) => state.main.flushable);
+    const deviceName = useShallowEqualSelector((state) => state.main.deviceName);
+    const deviceStatus = useShallowEqualSelector((state) => state.main.deviceStatus);
+    const deviceCapabilities = useShallowEqualSelector((state) => state.main.deviceCapabilities);
+    const factoryModeRippingInMainUi = useShallowEqualSelector((state) => state.appState.factoryModeRippingInMainUi);
+    const { vintageMode } = useShallowEqualSelector((state) => state.appState);
 
     const [selected, setSelected] = React.useState<number[]>([]);
     const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
     const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
     const [lastClicked, setLastClicked] = useState(-1);
     const [moveMenuAnchorEl, setMoveMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    const [contextMenuPosition, setContextMenuPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const isCapable = useCallback((capability: Capability) => deviceCapabilities.includes(capability), [deviceCapabilities]);
 
@@ -236,14 +227,14 @@ export const Main = (props: {}) => {
     }, [disc]);
 
     const [wasLastDiscNull, setWasLastDiscNull] = useState<boolean>(false);
-    const discProtectedDialogDisabled = useShallowEqualSelector(state => state.appState.discProtectedDialogDisabled);
+    const discProtectedDialogDisabled = useShallowEqualSelector((state) => state.appState.discProtectedDialogDisabled);
     useEffect(() => {
-        if(disc === null && !wasLastDiscNull){
+        if (disc === null && !wasLastDiscNull) {
             setWasLastDiscNull(true);
             dispatch(appStateActions.showDiscProtectedDialog(false));
-        }else if(disc !== null && wasLastDiscNull && disc.writeProtected && disc.writable){
+        } else if (disc !== null && wasLastDiscNull && disc.writeProtected && disc.writable) {
             setWasLastDiscNull(false);
-            if(!discProtectedDialogDisabled){
+            if (!discProtectedDialogDisabled) {
                 dispatch(appStateActions.showDiscProtectedDialog(true));
             }
         }
@@ -252,7 +243,7 @@ export const Main = (props: {}) => {
     const onDrop = useCallback(
         (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
             const bannedTypes = ['audio/mpegurl', 'audio/x-mpegurl'];
-            const accepted = acceptedFiles.filter(n => !bannedTypes.includes(n.type));
+            const accepted = acceptedFiles.filter((n) => !bannedTypes.includes(n.type));
             if (accepted.length > 0) {
                 setUploadedFiles(accepted);
                 dispatch(convertDialogActions.setVisible(true));
@@ -287,7 +278,7 @@ export const Main = (props: {}) => {
                 if (!copy.includes(item)) copy.push(item);
                 setSelected(copy);
             } else if (selected.includes(item)) {
-                setSelected(selected.filter(i => i !== item));
+                setSelected(selected.filter((i) => i !== item));
             } else {
                 setSelected([...selected, item]);
             }
@@ -296,11 +287,16 @@ export const Main = (props: {}) => {
         [selected, setSelected, lastClicked, setLastClicked]
     );
 
+    const handleOpenContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        setContextMenuPosition({ x: event.clientX, y: event.clientY });
+    }, []);
+
     const handleSelectGroupClick = useCallback(
         (event: React.MouseEvent, item: number) => {
             setSelected([]);
             if (selectedGroups.includes(item)) {
-                setSelectedGroups(selectedGroups.filter(i => i !== item));
+                setSelectedGroups(selectedGroups.filter((i) => i !== item));
             } else {
                 setSelectedGroups([...selectedGroups, item]);
             }
@@ -312,7 +308,7 @@ export const Main = (props: {}) => {
         (event: React.ChangeEvent<HTMLInputElement>) => {
             setSelectedGroups([]);
             if (selected.length < tracks.length) {
-                setSelected(tracks.map(t => t.index));
+                setSelected(tracks.map((t) => t.index));
             } else {
                 setSelected([]);
             }
@@ -322,7 +318,7 @@ export const Main = (props: {}) => {
 
     const handleRenameTrack = useCallback(
         (event: React.MouseEvent, index: number) => {
-            const track = tracks.find(t => t.index === index);
+            const track = tracks.find((t) => t.index === index);
             if (!track) {
                 return;
             }
@@ -347,7 +343,7 @@ export const Main = (props: {}) => {
 
     const handleRenameGroup = useCallback(
         (event: React.MouseEvent, index: number) => {
-            const group = groupedTracks.find(g => g.index === index);
+            const group = groupedTracks.find((g) => g.index === index);
             if (!group) {
                 return;
             }
@@ -452,7 +448,7 @@ export const Main = (props: {}) => {
 
     const canGroup = useMemo(() => {
         return (
-            tracks.filter(n => n.group === null && selected.includes(n.index)).length === selected.length &&
+            tracks.filter((n) => n.group === null && selected.includes(n.index)).length === selected.length &&
             isSequential(selected.sort((a, b) => a - b))
         );
     }, [tracks, selected]);
@@ -534,17 +530,11 @@ export const Main = (props: {}) => {
                 {disc !== null ? (
                     <React.Fragment>
                         <span>{`${formatTimeFromSeconds(disc.left)} left of ${formatTimeFromSeconds(disc.total)} `}</span>
-                        <Tooltip
-                            title={
-                                LeftInNondefaultCodecs(disc.left)
-                            }
-                            arrow
-                        >
+                        <Tooltip title={LeftInNondefaultCodecs(disc.left)} arrow>
                             <span className={classes.remainingTimeTooltip}>SP Mode</span>
                         </Tooltip>
                         <div className={classes.spacing} />
                         <LinearProgress
-                        
                             variant="determinate"
                             color={((disc.total - disc.left) * 100) / disc.total >= 90 ? 'secondary' : 'primary'}
                             value={((disc.total - disc.left) * 100) / disc.total}
@@ -564,7 +554,7 @@ export const Main = (props: {}) => {
                         indeterminate={selectedCount > 0 && selectedCount < tracks.length}
                         checked={selectedCount > 0}
                         disabled={selectedGroupsCount > 0}
-                        color='secondary'
+                        color="secondary"
                         onChange={handleSelectAllClick}
                         inputProps={{ 'aria-label': 'select all tracks' }}
                     />
@@ -651,7 +641,7 @@ export const Main = (props: {}) => {
                             <IconButton
                                 aria-label="rename group"
                                 disabled={!isCapable(Capability.metadataEdit) || selectedGroupsCount !== 1}
-                                onClick={e => handleRenameGroup(e, selectedGroups[0])}
+                                onClick={(e) => handleRenameGroup(e, selectedGroups[0])}
                             >
                                 <EditIcon />
                             </IconButton>
@@ -690,7 +680,7 @@ export const Main = (props: {}) => {
                                                             ref={provided.innerRef}
                                                             className={cx({ [classes.hoveringOverGroup]: snapshot.isDraggingOver })}
                                                         >
-                                                            <MockTrackRow isHimdTrack={usesHimdTracks}/>
+                                                            <MockTrackRow isHimdTrack={usesHimdTracks} />
                                                             {group.title !== null && (
                                                                 <GroupRow
                                                                     usesHimdTracks={usesHimdTracks}
@@ -723,6 +713,7 @@ export const Main = (props: {}) => {
                                                                             onSelect={handleSelectTrackClick}
                                                                             onRename={handleRenameTrack}
                                                                             onTogglePlayPause={handleTogglePlayPauseTrack}
+                                                                            onOpenContextMenu={handleOpenContextMenu}
                                                                             isCapable={isCapable}
                                                                         />
                                                                     )}
@@ -772,6 +763,7 @@ export const Main = (props: {}) => {
             <ChangelogDialog />
             <SettingsDialog />
             <PanicDialog />
+            <ContextMenu position={contextMenuPosition} />
         </React.Fragment>
     );
 };
