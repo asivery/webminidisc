@@ -8,6 +8,7 @@ import { useShallowEqualSelector } from '../frontend-utils';
 import { makeStyles } from 'tss-react/mui';
 import { Box, Button, ButtonProps } from '@mui/material';
 import { Capability } from '../services/interfaces/netmd';
+import { Delete, Edit, PlayArrow } from '@mui/icons-material';
 
 interface ContextMenuProps {
     onTogglePlayPause: (event: React.MouseEvent, trackIdx: number) => void;
@@ -16,7 +17,7 @@ interface ContextMenuProps {
 }
 
 interface ContextButtonProps extends ButtonProps {
-    title: string;
+    icon?: React.ReactNode;
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -40,25 +41,28 @@ const useStyles = makeStyles()((theme) => ({
         zIndex: 1000,
         boxSizing: 'border-box',
         position: 'fixed',
-        width: '300px',
+        width: '160px',
         backgroundColor: '#303030',
         borderRadius: theme.shape.borderRadius,
         color: 'white',
-        padding: '5px',
+        padding: '2px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
         border: '1px solid #444',
     },
     button: {
+        gap: '5px',
         color: 'white',
         backgroundColor: 'transparent',
+        display: 'flex',
+        alignItems: 'center',
         border: 'none',
         cursor: 'pointer',
-        padding: '5px',
+        padding: '2px',
         textAlign: 'left',
-        height: '30px',
-        fontSize: '14px',
+        height: '24px',
+        fontSize: '10px',
         width: '100%',
         justifyContent: 'flex-start',
         '&:hover': {
@@ -67,14 +71,15 @@ const useStyles = makeStyles()((theme) => ({
     },
 }));
 
-const ContextButton = ({ title, ...otherProps }: ContextButtonProps) => {
+const ContextButton = ({ icon, children, ...otherProps }: ContextButtonProps) => {
     const {
         classes: { button },
     } = useStyles();
 
     return (
         <Button className={button} {...otherProps}>
-            {title}
+            {icon}
+            {children}
         </Button>
     );
 };
@@ -144,9 +149,23 @@ export const ContextMenu = ({ onTogglePlayPause, onRename, onDelete }: ContextMe
                         left: position.x,
                     }}
                 >
-                    <ContextButton title="Play Track" onClick={handlePlayTrack} />
-                    <ContextButton title="Rename Track" disabled={!isCapable(Capability.metadataEdit)} onClick={handleRenameTrack} />
-                    <ContextButton title="Delete Track" disabled={!isCapable(Capability.metadataEdit)} onClick={handleDeleteTrack} />
+                    <ContextButton icon={<PlayArrow sx={{ height: '16px' }} />} onClick={handlePlayTrack}>
+                        Play / Pause
+                    </ContextButton>
+                    <ContextButton
+                        icon={<Edit sx={{ height: '16px' }} />}
+                        disabled={!isCapable(Capability.metadataEdit)}
+                        onClick={handleRenameTrack}
+                    >
+                        Rename
+                    </ContextButton>
+                    <ContextButton
+                        icon={<Delete sx={{ height: '16px' }} />}
+                        disabled={!isCapable(Capability.metadataEdit)}
+                        onClick={handleDeleteTrack}
+                    >
+                        Delete
+                    </ContextButton>
                 </Box>
             </Box>
         </Box>
