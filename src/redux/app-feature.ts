@@ -28,6 +28,8 @@ export interface AppState {
     factoryModeRippingInMainUi: boolean;
     audioExportService: number;
     audioExportServiceConfig: CustomParameters;
+    libraryService: number;
+    libraryServiceConfig: CustomParameters;
     pageFullHeight: boolean;
     pageFullWidth: boolean;
     archiveDiscCreateZip: boolean;
@@ -60,6 +62,8 @@ export const buildInitialState = (): AppState => {
         // it should not be stored in the preferences, and should default to false.
         audioExportService: loadPreference('audioExportService', 0),
         audioExportServiceConfig: loadPreference('audioExportServiceConfig', {}),
+        libraryService: loadPreference('libraryService', -1),
+        libraryServiceConfig: loadPreference('libraryServiceConfig', {}),
         pageFullHeight: loadPreference('pageFullHeight', false),
         pageFullWidth: loadPreference('pageFullWidth', false),
         archiveDiscCreateZip: loadPreference('archiveDiscCreateZip', false),
@@ -151,6 +155,14 @@ export const slice = createSlice({
         setAudioExportServiceConfig: (state, action: PayloadAction<CustomParameters>) => {
             state.audioExportServiceConfig = action.payload;
             savePreference('audioExportServiceConfig', state.audioExportServiceConfig);
+        },
+        setLibraryService: (state, action: PayloadAction<number>) => {
+            state.libraryService = action.payload;
+            savePreference('libraryService', state.libraryService);
+        },
+        setLibraryServiceConfig: (state, action: PayloadAction<CustomParameters>) => {
+            state.libraryServiceConfig = action.payload;
+            savePreference('libraryServiceConfig', state.libraryServiceConfig);
         },
         setPageFullHeight: (state, action: PayloadAction<boolean>) => {
             state.pageFullHeight = action.payload;

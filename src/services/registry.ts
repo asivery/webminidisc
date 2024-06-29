@@ -2,6 +2,7 @@ import { MinidiscSpec, NetMDFactoryService, NetMDService } from './interfaces/ne
 import { AudioExportService } from './audio/audio-export';
 import { MediaRecorderService } from './browserintegration/mediarecorder';
 import { MediaSessionService } from './browserintegration/media-session';
+import { LibraryService } from './library/library';
 
 interface ServiceRegistry {
     netmdService?: NetMDService;
@@ -10,6 +11,7 @@ interface ServiceRegistry {
     audioExportService?: AudioExportService;
     mediaRecorderService?: MediaRecorderService;
     mediaSessionService?: MediaSessionService;
+    libraryService?: LibraryService;
 }
 
 const ServiceRegistry: ServiceRegistry = {};

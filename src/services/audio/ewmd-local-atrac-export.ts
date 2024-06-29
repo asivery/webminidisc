@@ -5,10 +5,12 @@ import { DefaultFfmpegAudioExportService, ExportParams } from './audio-export';
 
 export class LocalAtracExportService extends DefaultFfmpegAudioExportService {
     public exe: string;
+    public ffmpeg: string;
     public originalFileName: string = '';
 
     constructor(parameters: CustomParameters) {
         super();
+        this.ffmpeg = parameters.ffmpeg as string;
         this.exe = parameters.exe as string;
     }
 
@@ -21,7 +23,7 @@ export class LocalAtracExportService extends DefaultFfmpegAudioExportService {
         const { data } = await this.ffmpegProcess.read(this.inFileName);
         const arrayBuffer = data.buffer as ArrayBuffer;
 
-        const response = await window.native!.invokeLocalEncoder!(this.exe, arrayBuffer, this.inFileName, params);
+        const response = await window.native!.invokeLocalEncoder!(this.ffmpeg, this.exe, arrayBuffer, this.inFileName, params);
         if(!response) throw new Error("Couldn't invoke the local encoder!");
 
         const content = new Uint8Array(response);

@@ -45,10 +45,17 @@ if(window.native?.invokeLocalEncoder) {
     AudioServices.push({
         name: 'Local ATRAC Encoder',
         create: LocalAtracExportService,
-        description: 'A local copy of the high-quality Sony encoder. Warning: Requires FFMPEG to be present in $PATH!',
+        description: 'A local copy of the high-quality Sony encoder.',
         customParameters: [
             {
-                userFriendlyName: 'Windows Executable Path',
+                userFriendlyName: 'FFMPEG Path',
+                type: 'hostFilePath',
+                varName: 'ffmpeg',
+                defaultValue: '',
+                validator: content => !!content,
+            },
+            {
+                userFriendlyName: 'psp_at3tool Path',
                 type: 'hostFilePath',
                 varName: 'exe',
                 defaultValue: '',

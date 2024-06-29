@@ -78,6 +78,7 @@ const useStyles = makeStyles<
         verticalAlign: 'middle',
         width: theme.spacing(4.5),
         marginRight: theme.spacing(0.5),
+        lineHeight: 'normal',
     },
     channelBadge: {
         position: 'static',

@@ -32,16 +32,21 @@ declare global {
             // Required:
             unrestrictedFetchJSON: (url: string, parameters?: any) => any;
 
-            // Optional:
+            // Services:
             interface?: NetMDService;
             himdFullInterface?: NetMDService;
+
+            // Optional:
+            reload?: () => void;
 
             // Settings API:
             getSettings?: () => Promise<SettingInterface[]>;
             openFileHostDialog?: (filters: { name: string, extensions: string[] }[], directory?: boolean) => Promise<string | null>;
 
             // Encoder settings
-            invokeLocalEncoder?: (encoderPath: string, data: ArrayBuffer, sourceFilename: string, parameters: { format: Codec, enableReplayGain?: boolean }) => Promise<ArrayBuffer | null>;
+            invokeLocalEncoder?: (ffmpegPath: string, encoderPath: string, data: ArrayBuffer, sourceFilename: string, parameters: { format: Codec, enableReplayGain?: boolean }) => Promise<ArrayBuffer | null>;
         };
+
+        reload: () => void;
     }
 }

@@ -23,6 +23,7 @@ import { AudioServices } from '../services/audio-export-service-manager';
 import { renderCustomParameter } from './custom-parameters-renderer';
 import { initializeParameters, isAllValid } from '../custom-parameters';
 import { SettingInterface } from '../bridge-types';
+import { LibraryServices } from '../services/library-services';
 
 const Transition = React.forwardRef(function Transition(
     props: SlideProps,
@@ -199,10 +200,15 @@ export const SettingsDialog = (props: {}) => {
     const {
         audioExportService: globalStateAudioExportService,
         audioExportServiceConfig: globalStateAudioExportServiceConfig,
+        libraryService: globalStateLibraryService,
+        libraryServiceConfig: globalStateLibraryServiceConfig,
     } = useShallowEqualSelector(state => state.appState);
     const [currentExportService, setCurrentExportService] = useState(globalStateAudioExportService);
     const [currentExportServiceConfig, setExportServiceConfig] = useState(globalStateAudioExportServiceConfig);
+    const [currentLibraryService, setCurrentLibraryService] = useState(globalStateLibraryService);
+    const [currentLibraryServiceConfig, setLibraryServiceConfig] = useState(globalStateLibraryServiceConfig);
     const currentService = AudioServices[currentExportService ?? 0];
+    const currentLibrary = LibraryServices[currentLibraryService ?? -1];
 
     // Functions required for the app to calculate weather or not it needs to restart to apply the changes,
     // create the initial state, etc...
@@ -211,17 +217,21 @@ export const SettingsDialog = (props: {}) => {
         () => () => ({
             currentExportServiceConfig,
             currentExportService,
+            currentLibraryService,
+            currentLibraryServiceConfig,
         }),
-        [currentExportServiceConfig, currentExportService]
+        [currentExportServiceConfig, currentExportService, currentLibraryService, currentLibraryServiceConfig]
     );
     const saveBeforeReset = useCallback(() => {
         dispatch(
             batchActions([
                 appActions.setAudioExportService(currentExportService),
                 appActions.setAudioExportServiceConfig(currentExportServiceConfig),
+                appActions.setLibraryService(currentLibraryService),
+                appActions.setLibraryServiceConfig(currentLibraryServiceConfig),
             ])
         );
-    }, [dispatch, currentExportService, currentExportServiceConfig]);
+    }, [dispatch, currentExportService, currentExportServiceConfig, currentLibraryService, currentLibraryServiceConfig]);
 
     const [initialState, setInitialState] = useState<ReturnType<typeof getStateRebootRequired> | null>(null);
 
@@ -293,13 +303,29 @@ export const SettingsDialog = (props: {}) => {
             return newData;
         });
     }, []);
+    const handleLibraryServiceChanges = useCallback(
+        (event: any) => {
+        const serviceId = event.target.value as number;
+        setCurrentLibraryService(serviceId);
+        if(serviceId === -1) return;
+        setLibraryServiceConfig(initializeParameters(LibraryServices[serviceId].customParameters));
+    }, []);
+
+    const handleLibraryServiceParameterChange = useCallback((varName: string, value: string | number | boolean) => {
+        setLibraryServiceConfig(oldData => {
+            const newData = { ...oldData };
+            newData[varName] = value;
+            return newData;
+        });
+    }, []);
+
 
     const handleClose = useCallback(() => {
         setInitialState(null);
         if (isRestartRequired()) {
             saveBeforeReset();
             // Trigger a reset.
-            dispatch(appActions.setMainView('WELCOME'));
+            window.reload();
         } else {
             dispatch(appActions.showSettingsDialog(false));
         }
@@ -394,6 +420,28 @@ export const SettingsDialog = (props: {}) => {
                         renderCustomParameter(n, currentExportServiceConfig![n.varName], handleExportServiceParameterChange, classes.noLeftMargin)
                     )}
                 </Box>
+
+                <DialogContentText className={classes.header}>Library</DialogContentText>
+                <SimpleField name="Library to use" classes={classes}>
+                    <Select className={classes.wider} value={currentLibraryService} onChange={handleLibraryServiceChanges}>
+                        <MenuItem value={-1} key="library-none">None</MenuItem>
+                        {LibraryServices.map((n, i) => (
+                            <MenuItem value={i} key={`lib-${i}`}>
+                                {n.name}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </SimpleField>
+                {currentLibrary && (
+                    <>
+                        <Typography className={classes.encoderDescription}>{currentLibrary.description}</Typography>
+                        <Box className={classes.fieldMargin}>
+                            {currentLibrary.customParameters?.map(n =>
+                                renderCustomParameter(n, currentLibraryServiceConfig![n.varName], handleLibraryServiceParameterChange, classes.noLeftMargin)
+                            )}
+                        </Box>
+                    </>
+                )}
                 <NativeFields classes={classes} section='Encoding'/>
             </DialogContent>
             <DialogActions>

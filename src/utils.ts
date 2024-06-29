@@ -5,6 +5,7 @@ import { Disc, Group, Track } from './services/interfaces/netmd';
 import { createWorker } from '@ffmpeg/ffmpeg';
 import { ForcedEncodingFormat } from './redux/convert-dialog-feature';
 import { HiMDKBPSToFrameSize } from 'himd-js';
+import { ExportParams } from './services/audio/audio-export';
 
 export type Promised<R> = R extends Promise<infer Q> ? Q : never;
 
@@ -41,8 +42,18 @@ export function removeExtension(filename: string) {
     return filename;
 }
 
+export interface AdaptiveFile {
+    name: string;
+
+    title: string;
+    album: string;
+    artist: string;
+    duration: number;
+    getForEncoding(encoding: ExportParams): Promise<ArrayBuffer>;
+}
+
 export type TitledFile = {
-    file: File;
+    file: File | AdaptiveFile;
     title: string;
     fullWidthTitle: string;
     forcedEncoding: ForcedEncodingFormat;

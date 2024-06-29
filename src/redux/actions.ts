@@ -1,5 +1,6 @@
 import { batchActions } from '../frontend-utils';
 import { AppDispatch, RootState } from './store';
+import { actions as localLibraryActions } from './local-library-feature';
 import { actions as uploadDialogActions } from './upload-dialog-feature';
 import { actions as renameDialogActions } from './rename-dialog-feature';
 import { actions as errorDialogAction } from './error-dialog-feature';
@@ -25,6 +26,7 @@ import {
     convertToWAV,
     ffmpegTranscode,
     getTrackExtension,
+    AdaptiveFile,
 } from '../utils';
 import NotificationCompleteIconUrl from '../images/record-complete-notification-icon.png';
 import { assertNumber, getHalfWidthTitleLength } from 'netmd-js/dist/utils';
@@ -34,6 +36,7 @@ import { AudioServices } from '../services/audio-export-service-manager';
 import { checkFactoryCapability, initializeFactoryMode } from './factory/factory-actions';
 import { Shazam } from 'shazam-api/dist/api';
 import { ExportParams } from '../services/audio/audio-export';
+import { LibraryServices } from '../services/library-services';
 
 export function control(action: 'play' | 'stop' | 'next' | 'prev' | 'goto' | 'pause' | 'seek', params?: unknown) {
     return async function(dispatch: AppDispatch, getState: () => RootState) {
@@ -252,6 +255,13 @@ export function pair(serviceInstance: NetMDService, spec: MinidiscSpec) {
             getState().appState.audioExportServiceConfig
         );
         await serviceRegistry.audioExportService!.init();
+
+        let libraryServiceIndex = getState().appState.libraryService;
+        if(libraryServiceIndex !== -1) {
+            serviceRegistry.libraryService = new LibraryServices[libraryServiceIndex].create(
+                getState().appState.libraryServiceConfig
+            );
+        }
 
         serviceRegistry.netmdService = serviceInstance;
         serviceRegistry.netmdSpec = spec;
@@ -799,7 +809,7 @@ export function selfTest() {
         }
         alert('All tests have passed. The page will now reload');
         await sleep(1000);
-        window.location.reload();
+        window.reload();
         dispatch(recordDialogAction.setVisible(false));
     };
 }
@@ -1397,56 +1407,70 @@ export function convertAndUpload(
                 if (f.forcedEncoding === null) {
                     // This is not an ATRAC file
                     converted[j] = new Promise(async (resolve, reject) => {
+                        let audioExportFormat: ExportParams['format'];
+                        switch (format.codec) {
+                            case 'LP2':
+                                audioExportFormat = {
+                                    codec: 'AT3',
+                                    bitrate: 132,
+                                };
+                                break;
+                            case 'LP4':
+                                audioExportFormat = {
+                                    codec: 'AT3',
+                                    bitrate: 66,
+                                };
+                                break;
+                            case 'SP':
+                            case 'MONO':
+                                audioExportFormat = {
+                                    codec: 'PCM',
+                                };
+                                break;
+                            default:
+                                audioExportFormat = {
+                                    codec: format.codec,
+                                    bitrate: format.bitrate,
+                                };
+                                break;
+                        }
+
+                        const exportParams: ExportParams = {
+                            format: audioExportFormat,
+                            enableReplayGain: additionalParameters?.enableReplayGain,
+                        }
+
                         let data: ArrayBuffer;
-                        try {
-                            await audioExportService!.prepare(f.file);
-
-                            let audioExportFormat: ExportParams['format'];
-                            switch (format.codec) {
-                                case 'LP2':
-                                    audioExportFormat = {
-                                        codec: 'AT3',
-                                        bitrate: 132,
-                                    };
-                                    break;
-                                case 'LP4':
-                                    audioExportFormat = {
-                                        codec: 'AT3',
-                                        bitrate: 66,
-                                    };
-                                    break;
-                                case 'SP':
-                                case 'MONO':
-                                    audioExportFormat = {
-                                        codec: 'PCM',
-                                    };
-                                    break;
-                                default:
-                                    audioExportFormat = {
-                                        codec: format.codec,
-                                        bitrate: format.bitrate,
-                                    };
-                                    break;
-                            }
-
-                            data = await audioExportService!.export({
-                                format: audioExportFormat,
-                                enableReplayGain: additionalParameters?.enableReplayGain,
-                            });
-                            totalBytesCalc += data.byteLength;
+                        if((f.file as any).getForEncoding){
+                            // It's an adaptive file
+                            const file = f.file as AdaptiveFile;
+                            data = await file.getForEncoding(exportParams);
                             convertNext();
                             resolve({ file: f, data: data });
-                        } catch (err) {
-                            error = err;
-                            errorMessage = `${f.file.name}: Unsupported or unrecognized format`;
-                            reject(err);
+                        } else {
+                            const file = f.file as File;
+                            try {
+                                await audioExportService!.prepare(file);
+
+                                data = await audioExportService!.export(exportParams);
+                                totalBytesCalc += data.byteLength;
+                                convertNext();
+                                resolve({ file: f, data: data });
+                            } catch (err) {
+                                error = err;
+                                errorMessage = `${f.file.name}: Unsupported or unrecognized format`;
+                                reject(err);
+                            }
                         }
                     });
                 } else {
+                    // TODO: FIXME - This should be supported!
+                    if((f.file as any).getForEncoding) throw new Error("Adaptive files cannot be preencoded!");
                     // This is already an ATRAC file - don't reencode.
                     converted[j] = new Promise(async resolve => {
                         // Remove the WAV header.
-                        const data = (await f.file.arrayBuffer()).slice(f.bytesToSkip);
+                        const file = f.file as File;
+                        const data = (await file.arrayBuffer()).slice(f.bytesToSkip);
                         totalBytesCalc += data.byteLength;
                         convertNext();
                         resolve({ file: f, data });
@@ -1560,4 +1584,22 @@ export function convertAndUpload(
         releaseScreenLockIfPresent();
         listContent()(dispatch);
     };
+}
+
+export function openLocalLibrary() {
+    return async function(dispatch: AppDispatch, getState: () => RootState) {
+        if(!serviceRegistry.libraryService) {
+            throw new Error("No library service has been registered!");
+        }
+
+        dispatch(localLibraryActions.setVisible(true));
+        if(!getState().localLibrary.database) {
+            dispatch(localLibraryActions.setStatus("Loading database..."));
+            const database = await serviceRegistry.libraryService!.getDatabase();
+            dispatch(batchActions([
+                localLibraryActions.setStatus(null),
+                localLibraryActions.setDatabase(database),
+            ]));
+        }
+    }
 }

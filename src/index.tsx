@@ -17,9 +17,6 @@ import { MediaRecorderService } from './services/browserintegration/mediarecorde
 import { BrowserMediaSessionService } from './services/browserintegration/media-session';
 import { listContent } from './redux/actions';
 import { sleep } from './utils';
-// serviceRegistry.netmdService = (window as any).native?.interface || new NetMDUSBService({ debug: true });
-// serviceRegistry.netmdService = new NetMDMockService(); // Uncomment to work without a device attached
-// serviceRegistry.audioExportService = new FFMpegAudioExportService();
 serviceRegistry.mediaRecorderService = new MediaRecorderService();
 serviceRegistry.mediaSessionService = new BrowserMediaSessionService(store);
 
@@ -59,6 +56,12 @@ if (localStorage.getItem('version') !== (window as any).wmdVersion) {
         store.dispatch(appActions.setBrowserSupported(false));
         store.dispatch(appActions.setRunningChrome(false));
     }
+
+    Object.defineProperty(window, 'reload', {
+        value: window.native?.reload ?? window.location.reload.bind(window.location),
+        writable: false,
+        configurable: false
+    });
 
     if (!('Notification' in window) || Notification.permission === 'denied') {
         store.dispatch(appActions.setNotificationSupport(false));

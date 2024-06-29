@@ -19,10 +19,23 @@ import { actions as appStateActions } from '../redux/app-feature';
 import { actions as contextMenuActions } from '../redux/context-menu-feature';
 
 import { DeviceStatus } from 'netmd-js';
-import { control } from '../redux/actions';
+import { control, openLocalLibrary } from '../redux/actions';
 
-import { formatTimeFromSeconds, getGroupedTracks, getSortedTracks, isSequential, acceptedTypes } from '../utils';
-import { belowDesktop, forAnyDesktop, useShallowEqualSelector, themeSpacing, batchActions } from '../frontend-utils';
+import {
+    formatTimeFromSeconds,
+    getGroupedTracks,
+    getSortedTracks,
+    isSequential,
+    acceptedTypes,
+    AdaptiveFile,
+} from '../utils';
+import {
+    belowDesktop,
+    forAnyDesktop,
+    useShallowEqualSelector,
+    themeSpacing,
+    batchActions
+} from '../frontend-utils';
 
 import { makeStyles } from 'tss-react/mui';
 import { alpha, lighten } from '@mui/material/styles';
@@ -72,6 +85,9 @@ import { SettingsDialog } from './settings-dialog';
 import { FactoryModeBadSectorDialog } from './factory/factory-bad-sector-dialog';
 import { DiscProtectedDialog } from './disc-protected-dialog';
 import { ContextMenu } from './context-menu';
+import { LocalLibraryDialog } from './local-library';
+import { Menu, MenuItem } from '@mui/material';
+import serviceRegistry from '../services/registry';
 
 // TODO jss-to-tss-react codemod: Unable to handle style definition reliably. Unsupported arrow function syntax.
 //Unexpected value type of ConditionalExpression.
@@ -148,6 +164,13 @@ const useStyles = makeStyles()((theme) => ({
     fixedTable: {
         tableLayout: 'fixed',
     },
+    topbarButton: {
+        marginRight: theme.spacing(0.5),
+    },
+    topbarLargeButton: {
+        marginRight: theme.spacing(0.5),
+        minWidth: 'min-content',
+    },
 }));
 
 function getTrackStatus(track: Track, deviceStatus: DeviceStatus | null): 'playing' | 'paused' | 'none' {
@@ -176,7 +199,7 @@ export const Main = (props: {}) => {
 
     const [selected, setSelected] = React.useState<number[]>([]);
     const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
-    const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
+    const [uploadedFiles, setUploadedFiles] = React.useState<(File | AdaptiveFile)[]>([]);
     const [lastClicked, setLastClicked] = useState(-1);
     const [moveMenuAnchorEl, setMoveMenuAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -467,6 +490,22 @@ export const Main = (props: {}) => {
     const selectedGroupsCount = selectedGroups.length;
     const usesHimdTracks = isCapable(Capability.himdTitles);
 
+    const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    const openUploadMenu = useCallback((ev: any) => {
+        if(serviceRegistry.libraryService) {
+            setUploadMenuAnchorEl(ev.currentTarget);
+        } else {
+            open();
+        }
+    }, [open, setUploadMenuAnchorEl]);
+
+    const handleOpenLocalLibrary = useCallback(() => {
+        setUploadedFiles([]);
+        setUploadMenuAnchorEl(null);
+        dispatch(openLocalLibrary());
+    }, [dispatch])
+
     if (vintageMode) {
         const p = {
             disc,
@@ -581,8 +620,9 @@ export const Main = (props: {}) => {
                 )}
                 {selectedCount > 0 ? (
                     <React.Fragment>
-                        <Tooltip title="Record from MD">
+                        <Tooltip title={`${isCapable(Capability.trackDownload) ? 'Download' : 'Record'} from MD`}>
                             <Button
+                                className={classes.topbarLargeButton}
                                 color="inherit"
                                 aria-label={isCapable(Capability.trackDownload) || factoryModeRippingInMainUi ? 'Download' : 'Record'}
                                 onClick={handleShowDumpDialog}
@@ -596,7 +636,12 @@ export const Main = (props: {}) => {
                 {selectedCount > 0 ? (
                     <Tooltip title="Delete">
                         <span>
-                            <IconButton aria-label="delete" disabled={!isCapable(Capability.metadataEdit)} onClick={handleDeleteSelected}>
+                            <IconButton
+                                className={classes.topbarButton}
+                                aria-label="delete"
+                                disabled={!isCapable(Capability.metadataEdit)}
+                                onClick={handleDeleteSelected}
+                            >
                                 <DeleteIcon />
                             </IconButton>
                         </span>
@@ -607,6 +652,7 @@ export const Main = (props: {}) => {
                     <Tooltip title={canGroup ? 'Group' : ''}>
                         <span>
                             <IconButton
+                                className={classes.topbarButton}
                                 aria-label="group"
                                 disabled={!canGroup || !isCapable(Capability.metadataEdit)}
                                 onClick={handleGroupTracks}
@@ -621,6 +667,7 @@ export const Main = (props: {}) => {
                     <Tooltip title="Rename">
                         <span>
                             <IconButton
+                                className={classes.topbarButton}
                                 aria-label="rename"
                                 disabled={selectedCount !== 1 || !isCapable(Capability.metadataEdit)}
                                 onClick={handleRenameActionClick}
@@ -635,6 +682,7 @@ export const Main = (props: {}) => {
                     <Tooltip title="Ungroup">
                         <span>
                             <IconButton
+                                className={classes.topbarButton}
                                 aria-label="ungroup"
                                 disabled={!isCapable(Capability.metadataEdit)}
                                 onClick={handleDeleteSelectedGroups}
@@ -649,6 +697,7 @@ export const Main = (props: {}) => {
                     <Tooltip title="Rename Group">
                         <span>
                             <IconButton
+                                className={classes.topbarButton}
                                 aria-label="rename group"
                                 disabled={!isCapable(Capability.metadataEdit) || selectedGroupsCount !== 1}
                                 onClick={(e) => handleRenameGroup(e, selectedGroups[0])}
@@ -748,10 +797,18 @@ export const Main = (props: {}) => {
                 </Box>
             ) : null}
             {isCapable(Capability.trackUpload) ? (
-                <Fab color="primary" aria-label="add" className={classes.add} onClick={open}>
+                <Fab color="primary" aria-label="add" className={classes.add} onClick={openUploadMenu}>
                     <AddIcon />
                 </Fab>
             ) : null}
+            <Menu
+                anchorEl={uploadMenuAnchorEl}
+                open={Boolean(uploadMenuAnchorEl)}
+                onClose={() => setUploadMenuAnchorEl(null)}
+            >
+                <MenuItem onClick={() => {setUploadMenuAnchorEl(null); open();}}>Upload from this machine</MenuItem>
+                <MenuItem onClick={handleOpenLocalLibrary}>Upload from library</MenuItem>
+            </Menu>
 
             <DiscProtectedDialog />
             <UploadDialog />
@@ -772,8 +829,13 @@ export const Main = (props: {}) => {
             <AboutDialog />
             <ChangelogDialog />
             <SettingsDialog />
+            <LocalLibraryDialog setUploadedFiles={setUploadedFiles}/>
             <PanicDialog />
-            <ContextMenu onTogglePlayPause={handleTogglePlayPauseTrack} onRename={handleRenameTrack} onDelete={handleDeleteTrack} />
+            <ContextMenu
+                onTogglePlayPause={handleTogglePlayPauseTrack}
+                onRename={handleRenameTrack}
+                onDelete={handleDeleteTrack}
+            />
         </React.Fragment>
     );
 };

@@ -17,6 +17,12 @@ export const W95TopMenu = (props: {
 }) => {
     const items = [];
 
+    items.push(
+        <ListItem key="vintage" onClick={props.handleVintageMode}>
+            <Checkbox checked={true} label={<label>Retro Mode (beta)</label>} defaultChecked={true} />
+        </ListItem>
+    );
+
     if (props.mainView === 'MAIN') {
         items.push(
             <ListItem key="update" onClick={props.handleRefresh}>
@@ -31,11 +37,6 @@ export const W95TopMenu = (props: {
         items.push(
             <ListItem key="wipe" onClick={props.handleWipeDisc} disabled={!props.isCapable(Capability.metadataEdit)}>
                 Wipe Disc
-            </ListItem>
-        );
-        items.push(
-            <ListItem key="vintage" onClick={props.handleVintageMode}>
-                <Checkbox checked={true} label={<label>Retro Mode (beta)</label>} defaultChecked={true} />
             </ListItem>
         );
 

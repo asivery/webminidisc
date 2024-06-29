@@ -40,7 +40,7 @@ export const PanicDialog = (props: {}) => {
     const { visible, dismissed, errorProvided } = useShallowEqualSelector(state => state.panicDialog);
 
     const handleReloadApp = useCallback(() => {
-        window.location.reload();
+        window.reload();
     }, []);
 
     const handleIgnore = useCallback(() => {

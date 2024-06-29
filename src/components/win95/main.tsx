@@ -19,7 +19,7 @@ import { makeStyles } from 'tss-react/mui';
 import { DropzoneRootProps, DropzoneInputProps, FileRejection } from 'react-dropzone';
 import { ThemeContext } from 'styled-components';
 import { Controls } from '../controls';
-import { formatTimeFromSeconds } from '../../utils';
+import { AdaptiveFile, formatTimeFromSeconds } from '../../utils';
 import { useShallowEqualSelector } from "../../frontend-utils";
 
 import DeleteIconUrl from '../../images/win95/delete.png';
@@ -94,8 +94,8 @@ export const W95Main = (props: {
         duration: number;
         encoding: string;
     }[];
-    uploadedFiles: File[];
-    setUploadedFiles: React.Dispatch<React.SetStateAction<File[]>>;
+    uploadedFiles: (File | AdaptiveFile)[];
+    setUploadedFiles: React.Dispatch<React.SetStateAction<(File | AdaptiveFile)[]>>;
     onDrop: (acceptedFiles: File[], rejectedFiles: FileRejection[]) => void;
     getRootProps: (props?: DropzoneRootProps | undefined) => DropzoneRootProps;
     getInputProps: (props?: DropzoneInputProps | undefined) => DropzoneInputProps;

@@ -77,7 +77,7 @@ export class HiMDSpec implements MinidiscSpec {
             }
         }
         if(disc.title) amt += t(disc.title);
-        return { halfWidth: ALL_CHARACTERS - amt, fullWidth: 0 };
+        return { halfWidth: ALL_CHARACTERS - amt, fullWidth: 1 };
     }
 
     getCharactersForTitle(track: Track): { halfWidth: number; fullWidth: number } {
