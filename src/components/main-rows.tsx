@@ -18,8 +18,10 @@ import { formatTimeFromSeconds, secondsToNormal } from '../utils';
 import serviceRegistry from '../services/registry';
 import { alpha, lighten } from '@mui/material';
 
-
-const useStyles = makeStyles<void, 'indexCell' | 'titleCell' | 'playButtonInTrackList' | 'trackIndex' | 'deleteGroupButton' | 'groupFolderIcon'>()((theme, _params, classes) => ({
+const useStyles = makeStyles<
+    void,
+    'indexCell' | 'titleCell' | 'playButtonInTrackList' | 'trackIndex' | 'deleteGroupButton' | 'groupFolderIcon'
+>()((theme, _params, classes) => ({
     currentTrackRow: {
         color: theme.palette.primary.main,
         '& > td': {
@@ -137,30 +139,33 @@ const useStyles = makeStyles<void, 'indexCell' | 'titleCell' | 'playButtonInTrac
         },
     },
     rowClass: {
-        "&.Mui-selected": theme.palette.mode === 'light' ? {
-            backgroundColor: lighten(theme.palette.secondary.main, 0.85),
-            "&:hover": {
-                backgroundColor: lighten(theme.palette.secondary.main, 0.85),
-            }
-        } : {
-            backgroundColor: alpha(theme.palette.secondary.main, 0.16),
-            "&:hover": {
-                backgroundColor: alpha(theme.palette.secondary.main, 0.16),
-            }
+        '&.Mui-selected':
+            theme.palette.mode === 'light'
+                ? {
+                      backgroundColor: lighten(theme.palette.secondary.main, 0.85),
+                      '&:hover': {
+                          backgroundColor: lighten(theme.palette.secondary.main, 0.85),
+                      },
+                  }
+                : {
+                      backgroundColor: alpha(theme.palette.secondary.main, 0.16),
+                      '&:hover': {
+                          backgroundColor: alpha(theme.palette.secondary.main, 0.16),
+                      },
+                  },
+        '&:hover': {
+            backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))',
         },
-        "&:hover": {
-            backgroundImage: "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))",
-        }
     },
     mockRow: {
         '& *': {
             margin: '0px !important',
             lineHeight: '0px',
-            padding: '0px !important'
+            padding: '0px !important',
         },
         borderSpacing: '0px',
         visibility: 'collapse',
-    }
+    },
 }));
 
 interface TrackRowProps {
@@ -173,34 +178,24 @@ interface TrackRowProps {
     onSelect: (event: React.MouseEvent, trackIdx: number) => void;
     onRename: (event: React.MouseEvent, trackIdx: number) => void;
     onTogglePlayPause: (event: React.MouseEvent, trackIdx: number) => void;
+    onOpenContextMenu: (event: React.MouseEvent) => void;
     isCapable: (capability: Capability) => boolean;
 }
 
-export function MockTrackRow({isHimdTrack} : {isHimdTrack: boolean}) {
+export function MockTrackRow({ isHimdTrack }: { isHimdTrack: boolean }) {
     const { classes, cx } = useStyles();
     return (
-        <TableRow
-            hover
-            color="inherit"
-            className={classes.mockRow}
-            style={{ maxHeight: '0px !important', height: '0px !important' }}
-        >
-            <TableCell className={classes.dragHandle} onClick={event => event.stopPropagation()}>
-            </TableCell>
-            <TableCell className={classes.indexCell}>
-            </TableCell>
-            <TableCell className={classes.titleCell} title={''}>
-            </TableCell>
+        <TableRow hover color="inherit" className={classes.mockRow} style={{ maxHeight: '0px !important', height: '0px !important' }}>
+            <TableCell className={classes.dragHandle} onClick={(event) => event.stopPropagation()}></TableCell>
+            <TableCell className={classes.indexCell}></TableCell>
+            <TableCell className={classes.titleCell} title={''}></TableCell>
             {isHimdTrack && (
                 <>
-                    <TableCell className={classes.titleCell} title={''}>
-                    </TableCell>
-                    <TableCell className={classes.titleCell} title={''}>
-                    </TableCell>
+                    <TableCell className={classes.titleCell} title={''}></TableCell>
+                    <TableCell className={classes.titleCell} title={''}></TableCell>
                 </>
             )}
-            <TableCell align="right" className={classes.durationCell}>
-            </TableCell>
+            <TableCell align="right" className={classes.durationCell}></TableCell>
         </TableRow>
     );
 }
@@ -215,24 +210,29 @@ export function TrackRow({
     onSelect,
     onRename,
     onTogglePlayPause,
+    onOpenContextMenu,
     isCapable,
 }: TrackRowProps) {
     const { classes, cx } = useStyles();
 
-    const handleRename = useCallback((event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onRename(event, track.index), [
-        track.index,
-        onRename,
-        isCapable,
-    ]);
+    const handleRename = useCallback(
+        (event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onRename(event, track.index),
+        [track.index, onRename, isCapable]
+    );
     const handleSelect = useCallback((event: React.MouseEvent) => onSelect(event, track.index), [track.index, onSelect]);
+    const handleContext = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        console.log('event', event);
+    }, []);
+
     const handlePlayPause: React.MouseEventHandler = useCallback(
-        event => {
+        (event) => {
             event.stopPropagation();
             onTogglePlayPause(event, track.index);
         },
         [track.index, onTogglePlayPause]
     );
-    const handleDoubleClickOnPlayButton: React.MouseEventHandler = useCallback(event => event.stopPropagation(), []);
+    const handleDoubleClickOnPlayButton: React.MouseEventHandler = useCallback((event) => event.stopPropagation(), []);
     const isPlayingOrPaused = trackStatus === 'playing' || trackStatus === 'paused';
 
     return (
@@ -243,6 +243,7 @@ export function TrackRow({
             selected={isSelected}
             onDoubleClick={handleRename}
             onClick={handleSelect}
+            onContextMenu={onOpenContextMenu}
             color="inherit"
             className={cx({
                 [classes.rowClass]: true,
@@ -251,14 +252,14 @@ export function TrackRow({
                 [classes.currentTrackRow]: isPlayingOrPaused,
             })}
         >
-            <TableCell className={classes.dragHandle} {...draggableProvided.dragHandleProps} onClick={event => event.stopPropagation()}>
+            <TableCell className={classes.dragHandle} {...draggableProvided.dragHandleProps} onClick={(event) => event.stopPropagation()}>
                 <DragIndicator fontSize="small" color="disabled" />
             </TableCell>
             <TableCell className={classes.indexCell}>
                 <span className={classes.trackIndex}>{track.index + 1}</span>
                 <IconButton
                     aria-label="play/pause"
-                    classes={{root: cx(classes.controlButtonInTrackCommon, classes.playButtonInTrackList)}}
+                    classes={{ root: cx(classes.controlButtonInTrackCommon, classes.playButtonInTrackList) }}
                     size="small"
                     onClick={handlePlayPause}
                     onDoubleClick={handleDoubleClickOnPlayButton}
@@ -312,16 +313,14 @@ interface GroupRowProps {
 export function GroupRow({ group, usesHimdTracks, onRename, onDelete, isCapable, onSelect, isSelected }: GroupRowProps) {
     const { classes, cx } = useStyles();
 
-    const handleDelete = useCallback((event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onDelete(event, group.index), [
-        onDelete,
-        group,
-        isCapable,
-    ]);
-    const handleRename = useCallback((event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onRename(event, group.index), [
-        onRename,
-        group,
-        isCapable,
-    ]);
+    const handleDelete = useCallback(
+        (event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onDelete(event, group.index),
+        [onDelete, group, isCapable]
+    );
+    const handleRename = useCallback(
+        (event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onRename(event, group.index),
+        [onRename, group, isCapable]
+    );
     const handleSelect = useCallback((event: React.MouseEvent) => onSelect(event, group.index), [onSelect, group]);
     return (
         <TableRow
@@ -333,7 +332,7 @@ export function GroupRow({ group, usesHimdTracks, onRename, onDelete, isCapable,
         >
             <TableCell className={classes.dragHandleEmpty}></TableCell>
             <TableCell className={classes.indexCell}>
-                <FolderIcon className={cx(classes.controlButtonInTrackCommon, classes.groupFolderIcon)} fontSize="inherit"/>
+                <FolderIcon className={cx(classes.controlButtonInTrackCommon, classes.groupFolderIcon)} fontSize="inherit" />
                 <IconButton
                     aria-label="delete"
                     className={cx(classes.controlButtonInTrackCommon, classes.deleteGroupButton)}
@@ -355,30 +354,28 @@ export function GroupRow({ group, usesHimdTracks, onRename, onDelete, isCapable,
             )}
             <TableCell align="right" className={classes.durationCellSecondary}>
                 <span className={classes.durationCellTime}>
-                    {formatTimeFromSeconds(group.tracks.map(n => n.duration).reduce((a, b) => a + b))}
+                    {formatTimeFromSeconds(group.tracks.map((n) => n.duration).reduce((a, b) => a + b))}
                 </span>
             </TableCell>
         </TableRow>
     );
 }
 
-export function LeftInNondefaultCodecs(timeLeft: number){
+export function LeftInNondefaultCodecs(timeLeft: number) {
     const minidiscSpec = serviceRegistry.netmdSpec;
-    if(!minidiscSpec){
-        return (<></>);
+    if (!minidiscSpec) {
+        return <></>;
     }
     return (
         <React.Fragment>
-            {minidiscSpec.availableFormats.map(e =>
+            {minidiscSpec.availableFormats.map((e) =>
                 e.codec === minidiscSpec.defaultFormat.codec ? null : (
                     <React.Fragment key={`total-${e.codec}`}>
                         <span>{`${secondsToNormal(
                             minidiscSpec.translateDefaultMeasuringModeTo(
                                 {
                                     codec: e.codec,
-                                    bitrate: e.availableBitrates
-                                        ? e.defaultBitrate ?? Math.max(...e.availableBitrates)
-                                        : undefined,
+                                    bitrate: e.availableBitrates ? e.defaultBitrate ?? Math.max(...e.availableBitrates) : undefined,
                                 },
                                 timeLeft
                             )
@@ -388,5 +385,5 @@ export function LeftInNondefaultCodecs(timeLeft: number){
                 )
             )}
         </React.Fragment>
-    )
+    );
 }

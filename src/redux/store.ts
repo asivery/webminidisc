@@ -1,4 +1,5 @@
 import { configureStore, Middleware, combineReducers, Dispatch } from '@reduxjs/toolkit';
+import contextMenu from './context-menu-feature';
 import uploadDialog from './upload-dialog-feature';
 import renameDialog from './rename-dialog-feature';
 import otherDeviceDialog from './other-device-feature';
@@ -34,6 +35,7 @@ const errorCatcher: Middleware = store => next => async action => {
 };
 
 const reducer = combineReducers({
+    contextMenu,
     localLibrary,
     renameDialog,
     otherDeviceDialog,
