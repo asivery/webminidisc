@@ -1,10 +1,13 @@
 import { useSelector, shallowEqual, useDispatch as _useDispatch } from 'react-redux';
 import { batchActions as _batchActions } from 'redux-batched-actions';
 import { Theme } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AppDispatch, RootState } from './redux/store';
 import { AnyAction, UnknownAction } from '@reduxjs/toolkit';
 import { Capability } from './services/interfaces/netmd';
+
+type CapabilityKey = keyof typeof Capability;
+type ComputedCapabilities = {[K in CapabilityKey]: boolean};
 
 export function themeSpacing(theme: Theme, number: number){
     return parseInt(theme.spacing(number).slice(0, -2));
@@ -44,7 +47,15 @@ export function useThemeDetector() {
 export const useDispatch = _useDispatch<AppDispatch>;
 export const batchActions = _batchActions as unknown as (actions: UnknownAction[], type?: string) => UnknownAction;
 
-export function useCapability(c:Capability){
+
+export function useDeviceCapabilities(){
     const deviceCapabilities = useShallowEqualSelector((state) => state.main.deviceCapabilities);
-    return deviceCapabilities.includes(c);
+    
+     return useMemo<ComputedCapabilities>(() => {
+        return Object.fromEntries(
+            Object.entries(Capability)
+            .filter(e => typeof e[1] === 'number')
+            .map(e => [e[0], deviceCapabilities.includes(e[1] as Capability)])
+        ) as any;
+    }, [deviceCapabilities]);   
 }
