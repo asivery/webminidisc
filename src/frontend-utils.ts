@@ -1,7 +1,7 @@
 import { useSelector, shallowEqual, useDispatch as _useDispatch } from 'react-redux';
 import { batchActions as _batchActions } from 'redux-batched-actions';
 import { Theme } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {  useEffect, useMemo, useState } from 'react';
 import type { AppDispatch, RootState } from './redux/store';
 import { AnyAction, UnknownAction } from '@reduxjs/toolkit';
 import { Capability } from './services/interfaces/netmd';
