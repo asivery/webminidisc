@@ -180,7 +180,6 @@ export const Main = (props: {}) => {
     const flushable = useShallowEqualSelector((state) => state.main.flushable);
     const deviceName = useShallowEqualSelector((state) => state.main.deviceName);
     const deviceStatus = useShallowEqualSelector((state) => state.main.deviceStatus);
-    // const deviceCapabilities = useShallowEqualSelector((state) => state.main.deviceCapabilities);
     const factoryModeRippingInMainUi = useShallowEqualSelector((state) => state.appState.factoryModeRippingInMainUi);
     const { vintageMode } = useShallowEqualSelector((state) => state.appState);
 
