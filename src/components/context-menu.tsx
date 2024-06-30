@@ -3,10 +3,9 @@ import { useDispatch } from 'react-redux';
 
 import { actions } from '../redux/context-menu-feature';
 
-import { useCapability, useShallowEqualSelector } from '../frontend-utils';
+import { useDeviceCapabilities, useShallowEqualSelector } from '../frontend-utils';
 import { makeStyles } from 'tss-react/mui';
 import { Box, Button, ButtonProps } from '@mui/material';
-import { Capability } from '../services/interfaces/netmd';
 import { Delete, Edit, PlayArrow } from '@mui/icons-material';
 
 interface ContextMenuProps {
@@ -92,7 +91,7 @@ export const ContextMenu = ({ onTogglePlayPause, onRename, onDelete }: ContextMe
     const isVisible = useShallowEqualSelector((state) => state.contextMenu.visible);
     const contextTrack = useShallowEqualSelector((state) => state.contextMenu.track);
 
-    const isEditCapable = useCapability(Capability.metadataEdit);
+    const { metadataEdit: isEditCapable } = useDeviceCapabilities();
 
     const handlePlayTrack = useCallback(
         (e: React.MouseEvent) => {
