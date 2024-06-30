@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { useCapability, useDeviceCapabilities, useDispatch } from '../frontend-utils';
+import { useDeviceCapabilities, useDispatch } from '../frontend-utils';
 import { FileRejection, useDropzone } from 'react-dropzone';
 import {
     DragDropContext,
@@ -63,7 +63,7 @@ import Button from '@mui/material/Button';
 import { W95Main } from './win95/main';
 import { useMemo } from 'react';
 import { ChangelogDialog } from './changelog-dialog';
-import { Capability, Track } from '../services/interfaces/netmd';
+import { Track } from '../services/interfaces/netmd';
 import { FactoryModeNoticeDialog } from './factory/factory-notice-dialog';
 import { FactoryModeProgressDialog } from './factory/factory-progress-dialog';
 import { SongRecognitionDialog } from './song-recognition-dialog';
@@ -475,7 +475,6 @@ export const Main = (props: {}) => {
 
     const selectedCount = selected.length;
     const selectedGroupsCount = selectedGroups.length;
-    const usesHimdTracks = useCapability(Capability.himdTitles);
 
     const [uploadMenuAnchorEl, setUploadMenuAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -705,7 +704,7 @@ export const Main = (props: {}) => {
                                 <TableCell className={classes.dragHandleEmpty}></TableCell>
                                 <TableCell className={classes.indexCell}>#</TableCell>
                                 <TableCell>Title</TableCell>
-                                {usesHimdTracks && (
+                                {deviceCapabilities.himdTitles && (
                                     <>
                                         <TableCell>Album</TableCell>
                                         <TableCell>Artist</TableCell>
@@ -718,7 +717,7 @@ export const Main = (props: {}) => {
                             <TableBody>
                                 {groupedTracks.map((group, index) => (
                                     <TableRow key={`${index}`}>
-                                        <TableCell colSpan={4 + (usesHimdTracks ? 2 : 0)} style={{ padding: '0' }}>
+                                        <TableCell colSpan={4 + (deviceCapabilities.himdTitles ? 2 : 0)} style={{ padding: '0' }}>
                                             <Table size="small" className={classes.fixedTable}>
                                                 <Droppable droppableId={`${index}`} key={`${index}`}>
                                                     {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
@@ -727,10 +726,10 @@ export const Main = (props: {}) => {
                                                             ref={provided.innerRef}
                                                             className={cx({ [classes.hoveringOverGroup]: snapshot.isDraggingOver })}
                                                         >
-                                                            <MockTrackRow isHimdTrack={usesHimdTracks} />
+                                                            <MockTrackRow isHimdTrack={deviceCapabilities.himdTitles} />
                                                             {group.title !== null && (
                                                                 <GroupRow
-                                                                    usesHimdTracks={usesHimdTracks}
+                                                                    usesHimdTracks={deviceCapabilities.himdTitles}
                                                                     group={group}
                                                                     onRename={handleRenameGroup}
                                                                     onDelete={handleDeleteGroup}
@@ -751,7 +750,7 @@ export const Main = (props: {}) => {
                                                                     {(provided: DraggableProvided) => (
                                                                         <TrackRow
                                                                             track={t}
-                                                                            isHimdTrack={usesHimdTracks}
+                                                                            isHimdTrack={deviceCapabilities.himdTitles}
                                                                             draggableProvided={provided}
                                                                             inGroup={group.title !== null}
                                                                             isSelected={selected.includes(t.index)}
