@@ -12,12 +12,12 @@ import FolderIcon from '@mui/icons-material/Folder';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import { DraggableProvided } from 'react-beautiful-dnd';
-import { Capability, Track, Group } from '../services/interfaces/netmd';
+import { Track, Group } from '../services/interfaces/netmd';
 import { formatTimeFromSeconds, secondsToNormal } from '../utils';
 
 import serviceRegistry from '../services/registry';
 import { alpha, lighten } from '@mui/material';
-import { useCapability } from '../frontend-utils';
+import { useDeviceCapabilities } from '../frontend-utils';
 
 const useStyles = makeStyles<
     void,
@@ -214,12 +214,11 @@ export function TrackRow({
 }: TrackRowProps) {
     const { classes, cx } = useStyles();
 
-    const isEditCapable = useCapability(Capability.metadataEdit);
-    const isPlaybackCapable = useCapability(Capability.playbackControl);
+    const deviceCapabilities = useDeviceCapabilities();
 
     const handleRename = useCallback(
-        (event: React.MouseEvent) => isEditCapable && onRename(event, track.index),
-        [isEditCapable, onRename, track.index]
+        (event: React.MouseEvent) => deviceCapabilities.metadataEdit && onRename(event, track.index),
+        [deviceCapabilities.metadataEdit, onRename, track.index]
     );
     const handleSelect = useCallback((event: React.MouseEvent) => onSelect(event, track.index), [track.index, onSelect]);
 
@@ -245,7 +244,7 @@ export function TrackRow({
             color="inherit"
             className={cx({
                 [classes.rowClass]: true,
-                [classes.trackRow]: isPlaybackCapable,
+                [classes.trackRow]: deviceCapabilities.playbackControl,
                 [classes.inGroupTrackRow]: inGroup,
                 [classes.currentTrackRow]: isPlayingOrPaused,
             })}
@@ -310,22 +309,22 @@ interface GroupRowProps {
 export function GroupRow({ group, usesHimdTracks, onRename, onDelete, onSelect, isSelected }: GroupRowProps) {
     const { classes, cx } = useStyles();
 
-    const isEditCapable = useCapability(Capability.metadataEdit);
+    const deviceCapabilities = useDeviceCapabilities();
 
     const handleDelete = useCallback(
-        (event: React.MouseEvent) => isEditCapable && onDelete(event, group.index),
-        [isEditCapable, onDelete, group.index]
+        (event: React.MouseEvent) => deviceCapabilities.metadataEdit && onDelete(event, group.index),
+        [deviceCapabilities.metadataEdit, onDelete, group.index]
     );
     const handleRename = useCallback(
-        (event: React.MouseEvent) => isEditCapable && onRename(event, group.index),
-        [isEditCapable, onRename, group.index]
+        (event: React.MouseEvent) => deviceCapabilities.metadataEdit && onRename(event, group.index),
+        [deviceCapabilities.metadataEdit, onRename, group.index]
     );
     const handleSelect = useCallback((event: React.MouseEvent) => onSelect(event, group.index), [onSelect, group]);
     return (
         <TableRow
             hover
             selected={isSelected}
-            className={cx({ [classes.groupHeadRow]: isEditCapable, [classes.rowClass]: true })}
+            className={cx({ [classes.groupHeadRow]: deviceCapabilities.metadataEdit, [classes.rowClass]: true })}
             onDoubleClick={handleRename}
             onClick={handleSelect}
         >
