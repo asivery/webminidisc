@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useDispatch, batchActions } from '../frontend-utils';
+import { useDispatch, batchActions, useDeviceCapabilities } from '../frontend-utils';
 
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
@@ -42,7 +42,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import CodeIcon from '@mui/icons-material/Code';
 
 import { W95TopMenu } from './win95/topmenu';
-import { Capability, ExploitCapability } from '../services/interfaces/netmd';
+import { ExploitCapability } from '../services/interfaces/netmd';
 
 import {
     archiveDisc,
@@ -56,7 +56,7 @@ import {
     writeModifiedTOC,
 } from '../redux/factory/factory-actions';
 
-const useStyles = makeStyles()(theme => ({
+const useStyles = makeStyles()((theme) => ({
     listItemIcon: {
         minWidth: theme.spacing(5),
     },
@@ -66,15 +66,15 @@ const useStyles = makeStyles()(theme => ({
     },
 }));
 
-export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: () => void }) {
+export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: () => void }) {
     const { classes } = useStyles();
     const dispatch = useDispatch();
 
-    const { mainView, vintageMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector(state => state.appState);
-    const { deviceCapabilities, disc } = useShallowEqualSelector(state => state.main);
-    const { spUploadSpeedupActive } = useShallowEqualSelector(state => state.factory);
-    const discTitle = useShallowEqualSelector(state => state.main.disc?.title ?? ``);
-    const fullWidthDiscTitle = useShallowEqualSelector(state => state.main.disc?.fullWidthTitle ?? ``);
+    const { mainView, vintageMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector((state) => state.appState);
+    const { disc } = useShallowEqualSelector((state) => state.main);
+    const { spUploadSpeedupActive } = useShallowEqualSelector((state) => state.factory);
+    const discTitle = useShallowEqualSelector((state) => state.main.disc?.title ?? ``);
+    const fullWidthDiscTitle = useShallowEqualSelector((state) => state.main.disc?.fullWidthTitle ?? ``);
 
     const githubLinkRef = React.useRef<null | HTMLAnchorElement>(null);
     const helpLinkRef = React.useRef<null | HTMLAnchorElement>(null);
@@ -85,7 +85,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
     const menuOpen = Boolean(menuAnchorEl);
     const shortcutsOpen = Boolean(shortcutsAnchorEl);
 
-    const isCapable = (capability: Capability) => deviceCapabilities.includes(capability);
+    const deviceCapabilities = useDeviceCapabilities();
 
     const handleMenuOpen = useCallback(
         (event: React.MouseEvent<HTMLElement>) => {
@@ -231,7 +231,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
 
     // BEGIN HOMEBREW / MAINUI BRIDGE
 
-    const { exploitCapabilities, firmwareVersion } = useShallowEqualSelector(state => state.factory);
+    const { exploitCapabilities, firmwareVersion } = useShallowEqualSelector((state) => state.factory);
 
     const isExploitCapable = (expl: ExploitCapability) => exploitCapabilities.includes(expl);
 
@@ -266,7 +266,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
         <MenuItem
             key="short-archive-disc"
             onClick={handleArchiveDisc}
-            disabled={!(isExploitCapable(ExploitCapability.downloadAtrac) || isCapable(Capability.trackDownload)) || noDisc}
+            disabled={!(isExploitCapable(ExploitCapability.downloadAtrac) || deviceCapabilities.trackDownload) || noDisc}
         >
             <ListItemIcon className={classes.listItemIcon}>
                 <ArchiveIcon fontSize="small" />
@@ -312,7 +312,6 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
         </MenuItem>
     );
 
-
     if (firmwareVersion.startsWith('H') && !window.native?.himdFullInterface) {
         // HIMD
         shortcutsItems.push(
@@ -341,7 +340,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
             </MenuItem>
         );
     }
-    if (isCapable(Capability.factoryMode) && mainView === 'MAIN') {
+    if (deviceCapabilities.factoryMode && mainView === 'MAIN') {
         if (factoryModeShortcuts) {
             menuItems.push(
                 <MenuItem key="factoryEntryShortcuts" onClick={handleShortcutsOpen}>
@@ -363,7 +362,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
     }
     if (mainView === 'MAIN' && disc !== null) {
         menuItems.push(
-            <MenuItem key="title" onClick={handleRenameDisc} disabled={!isCapable(Capability.metadataEdit)}>
+            <MenuItem key="title" onClick={handleRenameDisc} disabled={!deviceCapabilities.metadataEdit}>
                 <ListItemIcon className={classes.listItemIcon}>
                     <EditIcon fontSize="small" />
                 </ListItemIcon>
@@ -371,7 +370,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
             </MenuItem>
         );
         menuItems.push(
-            <MenuItem key="wipe" onClick={handleWipeDisc} disabled={!isCapable(Capability.metadataEdit)}>
+            <MenuItem key="wipe" onClick={handleWipeDisc} disabled={!deviceCapabilities.metadataEdit}>
                 <ListItemIcon className={classes.listItemIcon}>
                     <DeleteForeverIcon fontSize="small" />
                 </ListItemIcon>
@@ -383,7 +382,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
             <MenuItem
                 key="song-recognition"
                 onClick={handleOpenSongRecognition}
-                disabled={!isCapable(Capability.playbackControl) || !isCapable(Capability.contentList)}
+                disabled={!deviceCapabilities.playbackControl || !deviceCapabilities.contentList}
             >
                 <ListItemIcon className={classes.listItemIcon}>
                     <MusicNoteIcon fontSize="small" />
@@ -393,7 +392,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
         );
 
         menuItems.push(
-            <MenuItem key="import-csv" onClick={handleImportCSV} disabled={!isCapable(Capability.metadataEdit)}>
+            <MenuItem key="import-csv" onClick={handleImportCSV} disabled={!deviceCapabilities.metadataEdit}>
                 <ListItemIcon className={classes.listItemIcon}>
                     <PublishIcon fontSize="small" />
                 </ListItemIcon>
@@ -411,7 +410,7 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
         );
 
         menuItems.push(<Divider key="action-divider" />);
-        if (isCapable(Capability.factoryMode)) {
+        if (deviceCapabilities.factoryMode) {
             menuItems.push(
                 <MenuItem key="factoryUnify" onClick={handleToggleFactoryModeRippingInMainUi}>
                     <ListItemIcon className={classes.listItemIcon}>
@@ -536,7 +535,6 @@ export const TopMenu = function(props: { tracksSelected?: number[]; onClick?: ()
             handleShowAbout,
             handleShowChangelog,
             handleVintageMode,
-            isCapable,
         };
         return <W95TopMenu {...p} />;
     }

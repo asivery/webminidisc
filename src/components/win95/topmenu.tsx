@@ -1,7 +1,7 @@
 import React from 'react';
 import { List, ListItem, Checkbox, Divider } from 'react95';
 import { Views } from '../../redux/app-feature';
-import { Capability } from '../../services/interfaces/netmd';
+import { useDeviceCapabilities } from '../../frontend-utils';
 
 export const W95TopMenu = (props: {
     mainView: Views;
@@ -13,10 +13,10 @@ export const W95TopMenu = (props: {
     handleShowAbout: () => void;
     handleShowChangelog: () => void;
     handleVintageMode: () => void;
-    isCapable: (c: Capability) => boolean;
 }) => {
-    const items = [];
+    const deviceCapabilities = useDeviceCapabilities();
 
+    const items = [];
     items.push(
         <ListItem key="vintage" onClick={props.handleVintageMode}>
             <Checkbox checked={true} label={<label>Retro Mode (beta)</label>} defaultChecked={true} />
@@ -30,12 +30,12 @@ export const W95TopMenu = (props: {
             </ListItem>
         );
         items.push(
-            <ListItem key="title" onClick={props.handleRenameDisc} disabled={!props.isCapable(Capability.metadataEdit)}>
+            <ListItem key="title" onClick={props.handleRenameDisc} disabled={!deviceCapabilities.metadataEdit}>
                 Rename Disc
             </ListItem>
         );
         items.push(
-            <ListItem key="wipe" onClick={props.handleWipeDisc} disabled={!props.isCapable(Capability.metadataEdit)}>
+            <ListItem key="wipe" onClick={props.handleWipeDisc} disabled={!deviceCapabilities.metadataEdit}>
                 Wipe Disc
             </ListItem>
         );

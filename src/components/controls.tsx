@@ -12,7 +12,7 @@ import Box from '@mui/material/Box';
 
 import { makeStyles } from 'tss-react/mui';
 import { formatTimeFromSeconds, getSortedTracks } from '../utils';
-import { belowDesktop, useShallowEqualSelector } from "../frontend-utils";
+import { belowDesktop, useDeviceCapabilities, useShallowEqualSelector } from '../frontend-utils';
 import { control } from '../redux/actions';
 import { useDispatch } from '../frontend-utils';
 
@@ -21,11 +21,10 @@ import MDIcon1 from '../images/md1.svg?react';
 import MDIcon2 from '../images/md2.svg?react';
 import MDIcon3 from '../images/md3.svg?react';
 import { W95Controls } from './win95/controls';
-import { Capability } from '../services/interfaces/netmd';
 
 const frames = [MDIcon0, MDIcon1, MDIcon2, MDIcon3];
 
-const useStyles = makeStyles()(theme => ({
+const useStyles = makeStyles()((theme) => ({
     container: {
         display: 'flex',
         flex: '1 1 auto',
@@ -108,31 +107,32 @@ const useStyles = makeStyles()(theme => ({
         flexGrow: 0.01,
         height: 8,
         backgroundSize: '8px 4px',
-        
+
         backgroundRepeat: 'repeat-x',
-        backgroundImage: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAICAYAAADwdn+XAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9Tix9UBC0i4pChOlkQFREnrUIRKpRaoVUHk0u/oElDkuLiKLgWHPxYrDq4OOvq4CoIgh8gzg5Oii5S4v+SQosYD4778e7e4+4dINRKTDXbxgBVs4xkLCqmM6ti+ysC6EU/ZtApMVOfSyTi8Bxf9/Dx9S7Cs7zP/Tm6lazJAJ9IPMt0wyLeIJ7atHTO+8QhVpAU4nPiUYMuSPzIddnlN855hwWeGTJSyXniELGYb2G5hVnBUIknicOKqlG+kHZZ4bzFWS1VWOOe/IXBrLayzHWaQ4hhEUtIQISMCooowUKEVo0UE0naj3r4Bx1/glwyuYpg5FhAGSokxw/+B7+7NXMT425SMAoEXmz7Yxho3wXqVdv+Prbt+gngfwautKa/XAOmP0mvNrXwEdCzDVxcNzV5D7jcAQaedMmQHMlPU8jlgPcz+qYM0HcLdK25vTX2cfoApKir+A1wcAiM5Cl73ePdHa29/Xum0d8PjEtysaBQHcsAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfoBRIXCBTPWcirAAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAABhJREFUKM9jZCAM/uOTZGKgEIwaMBgMAAD0cwEPreO1ugAAAABJRU5ErkJggg==')",
+        backgroundImage:
+            "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAICAYAAADwdn+XAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9Tix9UBC0i4pChOlkQFREnrUIRKpRaoVUHk0u/oElDkuLiKLgWHPxYrDq4OOvq4CoIgh8gzg5Oii5S4v+SQosYD4778e7e4+4dINRKTDXbxgBVs4xkLCqmM6ti+ysC6EU/ZtApMVOfSyTi8Bxf9/Dx9S7Cs7zP/Tm6lazJAJ9IPMt0wyLeIJ7atHTO+8QhVpAU4nPiUYMuSPzIddnlN855hwWeGTJSyXniELGYb2G5hVnBUIknicOKqlG+kHZZ4bzFWS1VWOOe/IXBrLayzHWaQ4hhEUtIQISMCooowUKEVo0UE0naj3r4Bx1/glwyuYpg5FhAGSokxw/+B7+7NXMT425SMAoEXmz7Yxho3wXqVdv+Prbt+gngfwautKa/XAOmP0mvNrXwEdCzDVxcNzV5D7jcAQaedMmQHMlPU8jlgPcz+qYM0HcLdK25vTX2cfoApKir+A1wcAiM5Cl73ePdHa29/Xum0d8PjEtysaBQHcsAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfoBRIXCBTPWcirAAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAABhJREFUKM9jZCAM/uOTZGKgEIwaMBgMAAD0cwEPreO1ugAAAABJRU5ErkJggg==')",
         filter: theme.palette.mode === 'dark' ? 'invert(1) contrast(0.5)' : 'contrast(0.1)',
     },
     durationSlowDown: {
         transition: 'flex-grow linear 0.5s',
-    }
+    },
 }));
 
 export const Controls = () => {
     const dispatch = useDispatch();
     // TODO: The shallow equality won't work for these 2 states
-    const deviceStatus = useShallowEqualSelector(state => state.main.deviceStatus);
-    const disc = useShallowEqualSelector(state => state.main.disc);
-    const deviceCapabilities = useShallowEqualSelector(state => state.main.deviceCapabilities);
-    const loading = useShallowEqualSelector(state => state.appState.loading);
+    const deviceStatus = useShallowEqualSelector((state) => state.main.deviceStatus);
+    const disc = useShallowEqualSelector((state) => state.main.disc);
+    const loading = useShallowEqualSelector((state) => state.appState.loading);
 
-    const isCapable = (capability: Capability) => deviceCapabilities.includes(capability);
+    const deviceCapabilities = useDeviceCapabilities();
 
     const { classes, cx } = useStyles();
     const [lcdScreen, _setLCDScreen] = useState<number>(-1);
     const [trackPercentage, _setTrackPercentage] = useState<number>(0);
-    const setLCDScreen = (newScreen: number) => lcdScreen === newScreen ? void 0 : _setLCDScreen(newScreen);
-    const setTrackPercentage = (newTrackPercentage: typeof _setTrackPercentage extends (a: infer R) => any ? R : never) => newTrackPercentage === trackPercentage ? void 0 : _setTrackPercentage(newTrackPercentage);
+    const setLCDScreen = (newScreen: number) => (lcdScreen === newScreen ? void 0 : _setLCDScreen(newScreen));
+    const setTrackPercentage = (newTrackPercentage: typeof _setTrackPercentage extends (a: infer R) => any ? R : never) =>
+        newTrackPercentage === trackPercentage ? void 0 : _setTrackPercentage(newTrackPercentage);
 
     const handlePrev = useCallback(() => {
         dispatch(control('prev'));
@@ -175,29 +175,30 @@ export const Controls = () => {
     } else if (deviceStatus && deviceStatus.track !== null && tracks[deviceStatus.track]) {
         const track = tracks[deviceStatus.track];
         const title = track.fullWidthTitle || track.title;
-        let currentTimeSecs = ((deviceStatus.time?.minute ?? 0) * 60 + (deviceStatus.time?.second ?? 0));
+        let currentTimeSecs = (deviceStatus.time?.minute ?? 0) * 60 + (deviceStatus.time?.second ?? 0);
         message = (deviceStatus.track + 1).toString().padStart(3, '0') + (title ? ' - ' + title : '');
-        const messageIsTime = () => message = `${formatTimeFromSeconds(currentTimeSecs, false)} / ${formatTimeFromSeconds(track.duration, false)}`;
-        switch(lcdScreen) {
+        const messageIsTime = () =>
+            (message = `${formatTimeFromSeconds(currentTimeSecs, false)} / ${formatTimeFromSeconds(track.duration, false)}`);
+        switch (lcdScreen) {
             // -1, 0 - use default
             case 1: // Elapsed Time
                 messageIsTime();
                 break;
             case 2:
-                let timeDiff = track.duration - currentTimeSecs;
+                const timeDiff = track.duration - currentTimeSecs;
                 message = `-${formatTimeFromSeconds(timeDiff, false)}`;
                 break;
         }
-        if(isSeekingProgressLocked) {
-            currentTimeSecs = Math.floor(trackPercentage * track.duration / 100);
+        if (isSeekingProgressLocked) {
+            currentTimeSecs = Math.floor((trackPercentage * track.duration) / 100);
         } else {
             setTrackPercentage(Math.floor((currentTimeSecs / track.duration) * 100));
         }
-        if(isSeeking) {
+        if (isSeeking) {
             messageIsTime();
         }
         // Is locked on a certain message, but can allow other?
-        if(lcdScreen === -1) {
+        if (lcdScreen === -1) {
             // Unlock it
             setLCDScreen(0);
         }
@@ -208,10 +209,10 @@ export const Controls = () => {
     const [lcdIconFrame, setLcdIconFrame] = useState(0);
 
     const handleLCDClick = useCallback(() => {
-        _setLCDScreen(old => {
-            if(old === -1) return old; //Locked
+        _setLCDScreen((old) => {
+            if (old === -1) return old; //Locked
             let next = old + 1;
-            if(next >= 3) next = 0;
+            if (next >= 3) next = 0;
             return next;
         });
     }, [_setLCDScreen]);
@@ -222,37 +223,43 @@ export const Controls = () => {
         setLCDClickPrevent(true);
         setIsSeeking(true);
         setIsSeekingProgressLocked(true);
-    }
+    };
 
     useEffect(() => {
         const func = (e: MouseEvent) => {
-            if(!isSeeking) return;
+            if (!isSeeking) return;
             e.preventDefault();
             e.stopPropagation();
-            const xPerc = Math.min(Math.max((e.pageX - durationHolderRef.current!.getBoundingClientRect().left) * 100 / durationHolderRef.current!.clientWidth, 0), 100)
+            const xPerc = Math.min(
+                Math.max(
+                    ((e.pageX - durationHolderRef.current!.getBoundingClientRect().left) * 100) / durationHolderRef.current!.clientWidth,
+                    0
+                ),
+                100
+            );
             setTrackPercentage(xPerc);
-        }
+        };
         window.addEventListener('mousemove', func);
         return () => window.removeEventListener('mousemove', func);
     }, [isSeeking, durationHolderRef]);
 
     useEffect(() => {
         const func = () => {
-            setIsSeeking(wasSeeking => {
-                if(wasSeeking) {
+            setIsSeeking((wasSeeking) => {
+                if (wasSeeking) {
                     setTimeout(() => setIsSeekingProgressLocked(false), 1000);
-                    if(!deviceStatus?.track) return false;
+                    if (!deviceStatus?.track) return false;
                     const track = tracks[deviceStatus.track];
                     // Hack:
                     setTrackPercentage((trackPercentage: number) => {
-                        const seekTo = Math.floor(trackPercentage * track.duration / 100);
-                        dispatch(control('seek', { trackNumber: deviceStatus.track, time: seekTo}));
+                        const seekTo = Math.floor((trackPercentage * track.duration) / 100);
+                        dispatch(control('seek', { trackNumber: deviceStatus.track, time: seekTo }));
                         return trackPercentage;
                     });
                 }
                 return false;
             });
-        }
+        };
         window.addEventListener('mouseup', func);
         return () => window.removeEventListener('mouseup', func);
     }, [setIsSeeking, deviceStatus, tracks, dispatch]);
@@ -271,9 +278,12 @@ export const Controls = () => {
             setLcdScroll(scrollPerc);
             setLcdScrollDuration(scrollDurationInSec);
             if (scrollDurationInSec > 0) {
-                scrollTimerRef.current = setTimeout(() => {
-                    setLcdScroll(0);
-                }, scrollDurationInSec * 1000 + 500); // stop animation timer
+                scrollTimerRef.current = setTimeout(
+                    () => {
+                        setLcdScroll(0);
+                    },
+                    scrollDurationInSec * 1000 + 500
+                ); // stop animation timer
             }
         };
 
@@ -306,7 +316,7 @@ export const Controls = () => {
 
     const DiscFrame = frames[lcdIconFrame];
 
-    const vintageMode = useShallowEqualSelector(state => state.appState.vintageMode);
+    const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
     if (vintageMode) {
         const p = {
             handlePrev,
@@ -323,14 +333,13 @@ export const Controls = () => {
             lcdScrollDuration,
 
             classes,
-            isCapable,
         };
         return <W95Controls {...p} />;
     }
 
     return (
         <Box className={classes.container}>
-            {isCapable(Capability.playbackControl) ? (
+            {deviceCapabilities.playbackControl ? (
                 <React.Fragment>
                     <IconButton disabled={!disc} aria-label="prev" onClick={handlePrev} className={classes.button}>
                         <SkipPreviousIcon />
@@ -369,8 +378,11 @@ export const Controls = () => {
                     {discPresent && <DiscFrame className={cx(classes.lcdDiscIcon, { [classes.lcdBlink]: paused })} />}
                 </div>
                 <div className={classes.durationHolder} ref={durationHolderRef} onMouseDown={startSeeking}>
-                    <div className={clsx(classes.duration, {[classes.durationSlowDown]: !isSeeking})} style={{flexGrow: trackPercentage}}></div>
-                    <div style={{flexGrow: 100 - trackPercentage}}></div>
+                    <div
+                        className={clsx(classes.duration, { [classes.durationSlowDown]: !isSeeking })}
+                        style={{ flexGrow: trackPercentage }}
+                    ></div>
+                    <div style={{ flexGrow: 100 - trackPercentage }}></div>
                 </div>
             </div>
         </Box>
