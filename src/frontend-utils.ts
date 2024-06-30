@@ -1,9 +1,10 @@
 import { useSelector, shallowEqual, useDispatch as _useDispatch } from 'react-redux';
 import { batchActions as _batchActions } from 'redux-batched-actions';
 import { Theme } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { AppDispatch, RootState } from './redux/store';
 import { AnyAction, UnknownAction } from '@reduxjs/toolkit';
+import { Capability } from './services/interfaces/netmd';
 
 export function themeSpacing(theme: Theme, number: number){
     return parseInt(theme.spacing(number).slice(0, -2));
@@ -42,3 +43,8 @@ export function useThemeDetector() {
 
 export const useDispatch = _useDispatch<AppDispatch>;
 export const batchActions = _batchActions as unknown as (actions: UnknownAction[], type?: string) => UnknownAction;
+
+export function useCapability(c:Capability){
+    const deviceCapabilities = useShallowEqualSelector((state) => state.main.deviceCapabilities);
+    return deviceCapabilities.includes(c);
+}
