@@ -180,7 +180,6 @@ interface TrackRowProps {
     onRename: (event: React.MouseEvent, trackIdx: number) => void;
     onTogglePlayPause: (event: React.MouseEvent, trackIdx: number) => void;
     onOpenContextMenu: (event: React.MouseEvent) => void;
-    isCapable: (capability: Capability) => boolean;
 }
 
 export function MockTrackRow({ isHimdTrack }: { isHimdTrack: boolean }) {
@@ -305,27 +304,28 @@ interface GroupRowProps {
     onRename: (event: React.MouseEvent, groupIdx: number) => void;
     onDelete: (event: React.MouseEvent, groupIdx: number) => void;
     onSelect: (event: React.MouseEvent, groupIdx: number) => void;
-    isCapable: (c: Capability) => boolean;
     isSelected: boolean;
 }
 
-export function GroupRow({ group, usesHimdTracks, onRename, onDelete, isCapable, onSelect, isSelected }: GroupRowProps) {
+export function GroupRow({ group, usesHimdTracks, onRename, onDelete, onSelect, isSelected }: GroupRowProps) {
     const { classes, cx } = useStyles();
 
+    const isEditCapable = useCapability(Capability.metadataEdit);
+
     const handleDelete = useCallback(
-        (event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onDelete(event, group.index),
-        [onDelete, group, isCapable]
+        (event: React.MouseEvent) => isEditCapable && onDelete(event, group.index),
+        [isEditCapable, onDelete, group.index]
     );
     const handleRename = useCallback(
-        (event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onRename(event, group.index),
-        [onRename, group, isCapable]
+        (event: React.MouseEvent) => isEditCapable && onRename(event, group.index),
+        [isEditCapable, onRename, group.index]
     );
     const handleSelect = useCallback((event: React.MouseEvent) => onSelect(event, group.index), [onSelect, group]);
     return (
         <TableRow
             hover
             selected={isSelected}
-            className={cx({ [classes.groupHeadRow]: isCapable(Capability.metadataEdit), [classes.rowClass]: true })}
+            className={cx({ [classes.groupHeadRow]: isEditCapable, [classes.rowClass]: true })}
             onDoubleClick={handleRename}
             onClick={handleSelect}
         >
