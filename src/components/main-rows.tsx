@@ -17,6 +17,7 @@ import { formatTimeFromSeconds, secondsToNormal } from '../utils';
 
 import serviceRegistry from '../services/registry';
 import { alpha, lighten } from '@mui/material';
+import { useCapability } from '../frontend-utils';
 
 const useStyles = makeStyles<
     void,
@@ -211,19 +212,17 @@ export function TrackRow({
     onRename,
     onTogglePlayPause,
     onOpenContextMenu,
-    isCapable,
 }: TrackRowProps) {
     const { classes, cx } = useStyles();
 
+    const isEditCapable = useCapability(Capability.metadataEdit);
+    const isPlaybackCapable = useCapability(Capability.playbackControl);
+
     const handleRename = useCallback(
-        (event: React.MouseEvent) => isCapable(Capability.metadataEdit) && onRename(event, track.index),
-        [track.index, onRename, isCapable]
+        (event: React.MouseEvent) => isEditCapable && onRename(event, track.index),
+        [isEditCapable, onRename, track.index]
     );
     const handleSelect = useCallback((event: React.MouseEvent) => onSelect(event, track.index), [track.index, onSelect]);
-    const handleContext = useCallback((event: React.MouseEvent) => {
-        event.preventDefault();
-        console.log('event', event);
-    }, []);
 
     const handlePlayPause: React.MouseEventHandler = useCallback(
         (event) => {
@@ -247,7 +246,7 @@ export function TrackRow({
             color="inherit"
             className={cx({
                 [classes.rowClass]: true,
-                [classes.trackRow]: isCapable(Capability.playbackControl),
+                [classes.trackRow]: isPlaybackCapable,
                 [classes.inGroupTrackRow]: inGroup,
                 [classes.currentTrackRow]: isPlayingOrPaused,
             })}
