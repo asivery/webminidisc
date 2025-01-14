@@ -99,3 +99,6 @@ ATTRS{idVendor}=="054c", ATTRS{idProduct}=="018a", TAG+="uaccess"
 
 # Sony NetMD CMT-AH10
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021d", TAG+="uaccess"
+
+# Panasonic NetMD SJ-MR250
+ATTRS{idVendor}=="04da", ATTRS{idProduct}=="23b3", TAG+="uaccess"
