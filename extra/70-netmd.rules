@@ -1,6 +1,6 @@
 ## Rules file for NetMD devices and HiMD devices in NetMD mode
 ## source: https://usb-ids.gowdy.us/read/UD/054c
-## last changed: 2025-01-13
+## last changed: 2025-05-05
 ## updated to 'uaccess' by SammysHP
 ## updated to support HiMD devices in mass storage mode by asivery
 
@@ -102,3 +102,6 @@ ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021d", TAG+="uaccess"
 
 # Panasonic NetMD SJ-MR250
 ATTRS{idVendor}=="04da", ATTRS{idProduct}=="23b3", TAG+="uaccess"
+
+# Sony CMT-M333NT
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00e7", TAG+="uaccess"
