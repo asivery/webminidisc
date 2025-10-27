@@ -158,6 +158,9 @@ const useStyles = makeStyles()((theme) => ({
         marginRight: theme.spacing(0.5),
         minWidth: 'min-content',
     },
+    clickableRemainingTime: {
+        cursor: 'pointer',
+    },
 }));
 
 function getTrackStatus(track: Track, deviceStatus: DeviceStatus | null): 'playing' | 'paused' | 'none' {
@@ -188,6 +191,7 @@ export const Main = (props: {}) => {
     const [uploadedFiles, setUploadedFiles] = React.useState<(File | AdaptiveFile)[]>([]);
     const [lastClicked, setLastClicked] = useState(-1);
     const [moveMenuAnchorEl, setMoveMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [showRemainingSpace, setShowRemainingSpace] = useState(true);
 
     const deviceCapabilities = useDeviceCapabilities();
     const minidiscSpec = serviceRegistry.netmdSpec;
@@ -567,16 +571,28 @@ export const Main = (props: {}) => {
             <Typography component="h2" variant="body2">
                 {disc !== null ? (
                     <React.Fragment>
-                        {minidiscSpec?.measurementUnits === 'frames' ? 
-                            <>
-                                <span>{`${formatTimeFromSeconds(disc.left)} left of ${formatTimeFromSeconds(disc.total)} `}</span>
-                                <Tooltip title={LeftInNondefaultCodecs(disc.left)} arrow>
-                                    <span className={classes.remainingTimeTooltip}>{defaultCodecName} Mode</span>
-                                </Tooltip>
-                            </> : <>
-                                <span>{`${bytesToHumanReadable(disc.left)} left of ${bytesToHumanReadable(disc.total)} `}</span>
-                            </>
-                        }
+                        <span className={classes.clickableRemainingTime} onClick={() => setShowRemainingSpace(x => !x)}>
+                            {showRemainingSpace ? (<>
+                                {minidiscSpec?.measurementUnits === 'frames' ? 
+                                    <>
+                                        <span>{`${formatTimeFromSeconds(disc.left)} left of ${formatTimeFromSeconds(disc.total)} `}</span>
+                                        <Tooltip title={LeftInNondefaultCodecs(disc.left)} arrow>
+                                            <span className={classes.remainingTimeTooltip}>{defaultCodecName} Mode</span>
+                                        </Tooltip>
+                                    </> : <>
+                                        <span>{`${bytesToHumanReadable(disc.left)} left of ${bytesToHumanReadable(disc.total)} `}</span>
+                                    </>
+                                }
+                            </>) : (<>
+                                {minidiscSpec?.measurementUnits === 'frames' ? 
+                                    <>
+                                        <span>{`${formatTimeFromSeconds(disc.used)} of ${formatTimeFromSeconds(disc.total)} `} {defaultCodecName} Mode</span>
+                                    </> : <>
+                                        <span>{`${bytesToHumanReadable(disc.used)} of ${bytesToHumanReadable(disc.total)} `}</span>
+                                    </>
+                                }
+                            </>)}
+                        </span>
                         <div className={classes.spacing} />
                         <LinearProgress
                             variant="determinate"
