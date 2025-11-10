@@ -333,12 +333,12 @@ export function exploitDownloadTracks(
                     },
                 }
             );
-            let filename = createDownloadTrackName(track, nerawDownload);
+            let filename = createDownloadTrackName(track, trackData.extension);
             if (convertOutputToWav) {
-                trackData = await convertToWAV(trackData, track);
+                trackData.data = await convertToWAV(trackData, track);
                 filename = filename.slice(0, -3) + 'wav';
             }
-            callback(new Blob([trackData]), filename);
+            callback(new Blob([trackData.data]), filename);
             if (getState().factoryProgressDialog.cancelled) break;
         }
         await serviceRegistry.netmdFactoryService!.finalizeDownload();

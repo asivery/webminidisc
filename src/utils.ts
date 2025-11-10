@@ -510,21 +510,7 @@ export function downloadBlob(buffer: Blob, fileName: string) {
     document.body.removeChild(a);
 }
 
-export function getTrackExtension(track: Track) {
-    // Todo: Fix AT3 netmd-js extraction
-    const fileExtMap: { [key in typeof track.encoding.codec]: string } = {
-        SPS: 'aea',
-        SPM: 'aea',
-        'A3+': 'oma',
-        AT3: 'oma',
-        MP3: 'mp3',
-        PCM: 'wav',
-    };
-    const extension = fileExtMap[track.encoding.codec];
-    return extension;
-}
-
-export function createDownloadTrackName(track: Track, useNERAWExtension?: boolean) {
+export function createDownloadTrackName(track: Track, extension: string) {
     let title;
     const index = (track.index + 1).toString().padStart(2, '0');
     if (track.title) {
@@ -537,7 +523,7 @@ export function createDownloadTrackName(track: Track, useNERAWExtension?: boolea
     } else {
         title = `${index}. No title`;
     }
-    const fileName = `${title}.${useNERAWExtension ? 'neraw' : getTrackExtension(track)}`;
+    const fileName = `${title}.${extension}`;
     return fileName;
 }
 
@@ -577,8 +563,7 @@ export async function ffmpegTranscode(data: Uint8Array, inputFormat: string, out
     return output;
 }
 
-export async function convertToWAV(data: Uint8Array, track: Track): Promise<Uint8Array> {
-    const extension = getTrackExtension(track);
+export async function convertToWAV({ data, extension }: { data: Uint8Array, extension: string }, track: Track): Promise<Uint8Array> {
     return ffmpegTranscode(data, extension, '-f wav');
 }
 

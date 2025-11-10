@@ -524,8 +524,11 @@ class NetMDFactoryMockService implements NetMDFactoryService {
         nerawDownload: boolean,
         callback: (data: { read: number; total: number; action: 'READ' | 'SEEK' | 'CHUNK'; sector?: string }) => void,
         config?: any
-    ): Promise<Uint8Array> {
-        return new Uint8Array(Buffer.from('***MOCK DATA***'));
+    ): Promise<{ data: Uint8Array, extension: string }> {
+        return Promise.resolve({
+            extension: 'bin',
+            data: new Uint8Array(Buffer.from('***MOCK DATA***'))
+        });
     }
 
     async setSPSpeedupActive(newState: boolean) {}

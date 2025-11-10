@@ -25,7 +25,6 @@ import {
     getTracks,
     convertToWAV,
     ffmpegTranscode,
-    getTrackExtension,
     AdaptiveFile,
 } from '../utils';
 import NotificationCompleteIconUrl from '../images/record-complete-notification-icon.png';
@@ -486,7 +485,7 @@ export function downloadTracks(
                 })
             );
             try {
-                let { data } = (await netmdService!.download(track.index, ({ read, total }) => {
+                let received = (await netmdService!.download(track.index, ({ read, total }) => {
                     dispatch(
                         recordDialogAction.setProgress({
                             trackTotal: tracks.length,
@@ -496,12 +495,12 @@ export function downloadTracks(
                         })
                     );
                 }))!;
-                let fileName = createDownloadTrackName(track);
+                let fileName = createDownloadTrackName(track, received.extension);
                 if (convertOutputToWav) {
-                    data = await convertToWAV(data, track);
+                    received.data = await convertToWAV(received, track);
                     fileName = fileName.slice(0, -3) + 'wav';
                 }
-                callback(new Blob([data], { type: 'application/octet-stream' }), fileName);
+                callback(new Blob([received.data], { type: 'application/octet-stream' }), fileName);
             } catch (err) {
                 console.error(err);
                 dispatch(
@@ -1184,7 +1183,7 @@ export function recognizeTracks(_trackEntries: TitleEntry[], mode: 'exploits' | 
                         ])
                     );
 
-                    rawSamples = await ffmpegTranscode(atracData, getTrackExtension(track), '-ar 16000 -ac 1 -f s16le');
+                    rawSamples = await ffmpegTranscode(atracData.data, atracData.extension, '-ar 16000 -ac 1 -f s16le');
                 } else {
                     const deviceId = inputModeConfiguration!.deviceId!;
                     dispatch(songRecognitionProgressDialogActions.setCurrentStepTotal(100));
