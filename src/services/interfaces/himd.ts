@@ -163,7 +163,7 @@ export class HiMDRestrictedService extends NetMDService {
         };
     }
     getWorker(): any[]{
-        return [new Worker(new URL(WorkerURL, ""), { type: 'classic' }), makeAsyncWorker, makeAsyncCryptoBlockProvider];
+        return [new Worker(new URL(WorkerURL, window.location.href), { type: 'classic' }), makeAsyncWorker, makeAsyncCryptoBlockProvider];
     }
 
     async getDeviceStatus(): Promise<DeviceStatus> {
