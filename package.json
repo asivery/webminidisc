@@ -1,7 +1,7 @@
 {
   "name": "webminidisc-pro",
   "private": true,
-  "version": "1.5.2",
+  "version": "1.5.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/asivery/webminidisc.git"
