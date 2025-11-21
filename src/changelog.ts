@@ -2,6 +2,14 @@ import { ChangelogVersion } from "./bridge-types";
 
 export const CHANGELOG: ChangelogVersion[] = [
     {
+        name: "Version 1.5.3",
+        contents: [
+            "Added the ability to see used time / bytes on the current disc",
+            "Fixed HiMD workers",
+            "Fixed incorrect extension being applied to ripped files",
+        ],
+    },
+    {
         name: "Version 1.5.2",
         contents: [
             "Added the ability to format MDs to HiMD on supported devices",
