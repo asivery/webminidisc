@@ -33,7 +33,7 @@
     "async-mutex": "^0.5.0",
     "buffer": "^6.0.3",
     "clsx": "^2.1.0",
-    "himd-js": "^0.2.7",
+    "himd-js": "^0.2.8",
     "husky": "^9.0.11",
     "jconv": "github:asivery/jconv-webminidisc",
     "jszip": "^3.10.1",
