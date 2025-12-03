@@ -1,6 +1,6 @@
 import { AppDispatch, RootState } from './redux/store';
 import { Mutex } from 'async-mutex';
-import * as mm from 'music-metadata-browser';
+import * as mm from 'music-metadata';
 import { Disc, Group, Track } from './services/interfaces/netmd';
 import { createWorker } from '@ffmpeg/ffmpeg';
 import { ForcedEncodingFormat } from './redux/convert-dialog-feature';
