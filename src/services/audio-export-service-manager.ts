@@ -1,4 +1,5 @@
 import { CustomParameterInfo, CustomParameters } from '../custom-parameters';
+import { Atrac3OSExportService } from './audio/atrac3os-export';
 import { AtracdencAudioExportService } from './audio/atracdenc-export';
 import { AudioExportService } from './audio/audio-export';
 import { LocalAtracExportService } from './audio/ewmd-local-atrac-export';
@@ -16,6 +17,11 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
         name: 'Atracdenc',
         create: AtracdencAudioExportService,
         description: 'The standard open-source ATRAC encoder. Its ATRAC3 support is incomplete',
+    },
+    {
+        name: 'Atrac3OS',
+        create: Atrac3OSExportService,
+        description: 'The high-quality Sony encoder running in a Web VM',
     },
     {
         name: 'Remote ATRAC Encoder',

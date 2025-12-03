@@ -38,7 +38,7 @@
     "jconv": "github:asivery/jconv-webminidisc",
     "jszip": "^3.10.1",
     "lint-staged": "^15.2.2",
-    "music-metadata-browser": "^2.5.9",
+    "music-metadata": "^11.10.3",
     "netmd-exploits": "^0.5.11",
     "netmd-js": "^4.3.0",
     "netmd-tocmanip": "^0.2.1",
@@ -55,6 +55,7 @@
     "shazam-api": "^0.3.0",
     "styled-components": "^6.1.8",
     "tss-react": "^4.9.3",
+    "v86": "^0.5.292",
     "vite-plugin-commonjs": "^0.10.1",
     "vite-plugin-svgr": "^4.3.0"
   },
