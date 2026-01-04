@@ -122,7 +122,7 @@ export const UploadDialog = (props: {}) => {
                     color="primary"
                     value={currentTrackConversionProgress ?? convertedValue}
                 />
-                <Box className={classes.progressPerc}>{convertedValue}%</Box>
+                <Box className={classes.progressPerc}>{currentTrackConversionProgress ?? convertedValue}%</Box>
 
                 <DialogContentText id="alert-dialog-slide-description" className={classes.uploadLabel}>
                     Uploading {trackCurrent} of {trackTotal}: {titleCurrent}
