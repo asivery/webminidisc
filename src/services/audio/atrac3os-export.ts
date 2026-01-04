@@ -16,7 +16,7 @@ class Atrac3OSProcess {
         });
     }
 
-    async encode(data: ArrayBuffer, bitrate: number, callback?: (obj: { state: number, total: number}) => void) {
+    async encode(data: ArrayBuffer, bitrate: number, lastInBatch: boolean, callback?: (obj: { state: number, total: number}) => void) {
         const total = data.byteLength;
         const eventData = await new Promise<MessageEvent>((resolve) => {
             this.messageCallback = (msg) => {
@@ -27,7 +27,7 @@ class Atrac3OSProcess {
                     this.messageCallback = undefined;
                 }
             };
-            this.worker.postMessage({ action: 'encode', bitrate, data }, [data]);
+            this.worker.postMessage({ action: 'encode', bitrate, data, lastInBatch }, [data]);
         });
         return eventData.data.result as ArrayBuffer;
     }
@@ -44,10 +44,17 @@ class Atrac3OSProcess {
 export class Atrac3OSExportService extends DefaultFfmpegAudioExportService {
     public atrac3OSProcess?: Atrac3OSProcess;
     public ready?: Promise<void>;
+    private gapless: boolean;
+    constructor(parameters: CustomParameters) {
+        super();
+        this.gapless = parameters.gapless as boolean;
+    }
 
     async prepare(file: File): Promise<void> {
-        this.atrac3OSProcess = new Atrac3OSProcess(new Worker(new URL('./atrac3os-worker', import.meta.url), { type: 'classic' }));
-        this.ready = this.atrac3OSProcess.init();
+        if(!this.atrac3OSProcess) {
+            this.atrac3OSProcess = new Atrac3OSProcess(new Worker(new URL('./atrac3os-worker', import.meta.url), { type: 'classic' }));
+            this.ready = this.atrac3OSProcess.init();
+        }
         await super.prepare(file);
     }
 
@@ -59,13 +66,19 @@ export class Atrac3OSExportService extends DefaultFfmpegAudioExportService {
 
         await this.ready; // Make sure Worker is ready
 
+        const finished = !this.gapless || parameters.lastInBatch;
+
         const resultData = await this.atrac3OSProcess!.encode(
             data.buffer as ArrayBuffer,
             parameters.format.bitrate!,
+            finished,
             callback,
         );
 
-        this.atrac3OSProcess?.terminate();
+        if(finished) {
+            this.atrac3OSProcess?.terminate();
+            this.atrac3OSProcess = undefined;
+        }
         return resultData as ArrayBuffer;
     }
 

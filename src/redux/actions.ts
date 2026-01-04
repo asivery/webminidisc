@@ -1460,6 +1460,7 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
                         const exportParams: ExportParams = {
                             format: audioExportFormat,
                             enableReplayGain: additionalParameters?.enableReplayGain,
+                            lastInBatch: j === files.length -1,
                         };
 
                         let data: ArrayBuffer;

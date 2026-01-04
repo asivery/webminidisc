@@ -49,6 +49,14 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
         name: 'Built in High-Quality Encoder',
         create: Atrac3OSExportService,
         description: 'The Sony encoder in a purpose-built Web VM',
+        customParameters: [
+            {
+                varName: 'gapless',
+                type: 'boolean',
+                userFriendlyName: "Allow gapless recording",
+                defaultValue: false,
+            },
+        ],
     },
 ];
 

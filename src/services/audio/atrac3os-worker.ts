@@ -7,7 +7,7 @@ type MemImage = { start: number, fill?: { value: number, length: number }, data?
 function parseImage(data: Uint8Array) {
     const dv = new DataView(data.buffer);
     const image: MemImage = [];
-    let cursor = 0;
+    let cursor = 24;
     while(cursor < dv.byteLength) {
         const blockType = dv.getUint8(cursor++);
         const start = dv.getUint32(cursor, true);
@@ -37,6 +37,7 @@ class CDAatracproject {
     initialRAM: MemImage | null = null;
     data: Uint8Array | null = null;
     dataOut: Uint8Array[] = [];
+    inputCursor: number = 0;
     progress?: (v: number) => void;
     constructor(private emulator: any) {}
     async init() {
@@ -64,13 +65,13 @@ class CDAatracproject {
                 length = this.reg32[1];
             // console.log("XFER called!", destination, source, length);
             if(source >= 0x50000000) {
-                const sourceOffset = source - 0x50000000;
+                const sourceOffset = _atrac.inputCursor;
                 this.mem8.set(_atrac.data!.subarray(sourceOffset, sourceOffset + length), destination);
+                _atrac.inputCursor += length;
                 return;
             }
             if(destination >= 0x60000000) {
-                const destinationOffset = destination - 0x60000000;
-                _atrac.dataOut.push(new Uint8Array(this.mem8.subarray(source, source + length), destinationOffset));
+                _atrac.dataOut.push(new Uint8Array(this.mem8.subarray(source, source + length)));
                 return;
             }
             throw new Error("Illegal context transfer!");
@@ -121,12 +122,16 @@ class CDAatracproject {
     }
 
 
-    async process(inputData: Uint8Array, bitrate: number, callback: (progress: number) => void) {
+    async process(inputData: Uint8Array, bitrate: number, lastInBatch: boolean, callback: (progress: number) => void) {
         this.data = inputData;
         this.dataOut = [];
+        this.inputCursor = 0;
         this.progress = callback;
-        this.emulator.v86.cpu.mem32s[0x850000 / 4] = inputData.length;
-        this.emulator.v86.cpu.mem32s[0x850000 / 4 + 1] = bitrate;
+        /// TODO: Make this work on BigInts:
+        this.emulator.v86.cpu.mem32s[0x850000 / 4] = (inputData.length & 0xFFFFFFFF) >>> 0;
+        this.emulator.v86.cpu.mem32s[0x850000 / 4 + 1] = 0;
+        this.emulator.v86.cpu.mem32s[0x850000 / 4 + 2] = bitrate;
+        this.emulator.v86.cpu.mem32s[0x850000 / 4 + 3] = lastInBatch ? 1 : 0;
         await this._process();
         const totalOutLength = this.dataOut.reduce((a, b) => b.length + a, 0);
         const final = new Uint8Array(totalOutLength);
@@ -184,6 +189,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
             const result = (await atrac3vm.linker!.process(
                 new Uint8Array(others.data as ArrayBuffer),
                 others.bitrate as number,
+                others.lastInBatch,
                 progress => self.postMessage({ progress })
             )).buffer;
             self.postMessage({ result });
