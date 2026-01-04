@@ -1,11 +1,10 @@
 # Atrac3 OS
 
-This directory contains everything you need to build a Linux image to run on the Web the original Sony's Atrac3 converter (aka `psp_at3tool.exe`).
+This directory contains everything you need to build a the system image for the high-quality built in ATRAC encoder.
 
 This means that you won't have to rely on open source encoders like [atracdenc](https://github.com/dcherednik/atracdenc) or an external service like [atrac-api](https://github.com/MiniDisc-wiki/atrac-api) to convert your music for your NetMD device.
 
-It works by embedding `psp_at3tool.exe` (not included) into a custom [buildroot](http://buildroot.org/) Linux image.
-The image runs inside a [v86](https://copy.sh/v86) virtual machine that's used to execute `psp_at3tool.exe` thanks to [atrac3-encoder-linux](https://github.com/asivery/atrac3-encoder-linux).
+It works by building a custom kernel thanks to the [Calderalinker project](https://github.com/asivery/calderalinker) with the "libatrac.so" Sony encoder embedded into it, with additional wrappers which manage the transfer of data between Javascript and i386 machine code. That system image is later executed by a patched copy of [v86](https://github.com/copy/v86) within the browser.
 
 
 Don't expect this to be fast :) ... But you'll definitely get the original Atrac3 quality!
@@ -15,10 +14,17 @@ Don't expect this to be fast :) ... But you'll definitely get the original Atrac
 Note: you'll need a working Docker installation
 
 ### Steps
-1. Use [atrac3-encoder-linux](https://github.com/asivery/atrac3-encoder-linux) to create `psp_at3tool.exe.elf`
-1. Copy `psp_at3tool.exe.elf` into `buildroot-v86/board/rootfs_overlay/`
-2. Launch `./build.sh`
+1. Make sure you have submodules cloned (`git submodule update --init`)
+2. Setup a python3 venv, and install the packages defined in `calderalinker/requirements.txt`
+3. Copy `libatrac.so.1` into the `atracproject` folder
+4. Build the wrapper - run `make` in `atracproject` (Make sure you have a 32-bit x86 toolchain installed!)
+5. Link the system image - run `python3 atracproject.py`
 
 ### Result
 
-In `./dist` you'll find `atrac3os.iso`
+In `./output` you'll find the `kernel.bin` and `system.cmi` files
+
+
+## Credits:
+
+- The system image uses the [tiny](https://github.com/andsmedeiros/tiny) memory allocator.
