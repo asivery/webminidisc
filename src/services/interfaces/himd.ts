@@ -338,7 +338,7 @@ export class HiMDRestrictedService extends NetMDService {
     async download(
         index: number,
         progressCallback: (progress: { read: number; total: number }) => void
-    ): Promise<{ extension: string; data: Uint8Array } | null> {
+    ): Promise<{ extension: string; data: Uint8Array<ArrayBuffer> } | null> {
         const trackNumber = this.himd!.trackIndexToTrackSlot(index);
         const [w, creator, _] = this.getWorker();
         const webWorker = await creator(w);

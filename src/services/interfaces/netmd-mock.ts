@@ -515,7 +515,7 @@ class NetMDFactoryMockService implements NetMDFactoryService {
         };
     }
 
-    async readRAM(callback?: (progress: { readBytes: number; totalBytes: number }) => void): Promise<Uint8Array> {
+    async readRAM(callback?: (progress: { readBytes: number; totalBytes: number }) => void): Promise<Uint8Array<ArrayBuffer>> {
         return new Uint8Array(Buffer.from('***MOCK DATA***'));
     }
 
@@ -524,7 +524,7 @@ class NetMDFactoryMockService implements NetMDFactoryService {
         nerawDownload: boolean,
         callback: (data: { read: number; total: number; action: 'READ' | 'SEEK' | 'CHUNK'; sector?: string }) => void,
         config?: any
-    ): Promise<{ data: Uint8Array, extension: string }> {
+    ): Promise<{ data: Uint8Array<ArrayBuffer>, extension: string }> {
         return Promise.resolve({
             extension: 'bin',
             data: new Uint8Array(Buffer.from('***MOCK DATA***'))

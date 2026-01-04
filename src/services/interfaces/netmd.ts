@@ -244,7 +244,7 @@ export abstract class NetMDService {
     abstract download(
         index: number,
         progressCallback: (progress: { read: number; total: number }) => void
-    ): Promise<{ extension: string; data: Uint8Array } | null>;
+    ): Promise<{ extension: string; data: Uint8Array<ArrayBuffer> } | null>;
     abstract play(): Promise<void>;
     abstract pause(): Promise<void>;
     abstract stop(): Promise<void>;
@@ -271,14 +271,14 @@ export interface NetMDFactoryService {
     writeUTOCSector(index: number, data: Uint8Array): Promise<void>;
     getDeviceFirmware(): Promise<string>;
     getExploitCapabilities(): Promise<ExploitCapability[]>;
-    readRAM(callback?: (progress: { readBytes: number; totalBytes: number }) => void): Promise<Uint8Array>;
+    readRAM(callback?: (progress: { readBytes: number; totalBytes: number }) => void): Promise<Uint8Array<ArrayBuffer>>;
 
     // depend on netmd-exploits:
     flushUTOCCacheToDisc(): Promise<void>;
     runTetris(): Promise<void>;
     readFirmware(
         callback: (progress: { type: 'RAM' | 'ROM' | 'DRAM'; readBytes: number; totalBytes: number }) => void
-    ): Promise<{ rom: Uint8Array; ram: Uint8Array; dram?: Uint8Array }>;
+    ): Promise<{ rom: Uint8Array<ArrayBuffer>; ram: Uint8Array<ArrayBuffer>; dram?: Uint8Array<ArrayBuffer> }>;
 
     prepareDownload(useSlowerExploit: boolean): Promise<void>;
     exploitDownloadTrack(
@@ -286,7 +286,7 @@ export interface NetMDFactoryService {
         nerawDownload: boolean,
         callback: (data: { read: number; total: number; action: 'READ' | 'SEEK' | 'CHUNK'; sector?: string }) => void,
         config?: AtracRecoveryConfig
-    ): Promise<{ data: Uint8Array, extension: string }>;
+    ): Promise<{ data: Uint8Array<ArrayBuffer>, extension: string }>;
     finalizeDownload(): Promise<void>;
 
     setSPSpeedupActive(newState: boolean): Promise<void>;
@@ -889,7 +889,7 @@ class NetMDFactoryUSBService implements NetMDFactoryService {
     }
 
     @asyncMutex
-    async readRAM(callback: (progress?: { readBytes: number; totalBytes: number }) => void): Promise<Uint8Array> {
+    async readRAM(callback: (progress?: { readBytes: number; totalBytes: number }) => void): Promise<Uint8Array<ArrayBuffer>> {
         const firmwareVersion = await getDescriptiveDeviceCode(this.factoryInterface);
         const ramSize = firmwareVersion.startsWith('R') ? 0x4800 : 0x9000;
         const readSlices: Uint8Array[] = [];

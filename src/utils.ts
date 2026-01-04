@@ -563,7 +563,7 @@ export async function ffmpegTranscode(data: Uint8Array, inputFormat: string, out
     return output;
 }
 
-export async function convertToWAV({ data, extension }: { data: Uint8Array, extension: string }, track: Track): Promise<Uint8Array> {
+export async function convertToWAV({ data, extension }: { data: Uint8Array, extension: string }, track: Track): Promise<Uint8Array<ArrayBuffer>> {
     return ffmpegTranscode(data, extension, '-f wav');
 }
 
