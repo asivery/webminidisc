@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { stat } from 'fs';
 import { enableBatching } from 'redux-batched-actions';
 
 export interface LoadingDialogState {
@@ -15,6 +16,9 @@ export interface LoadingDialogState {
 
     titleCurrent: string;
     titleConverting: string;
+
+    trackEncodeProgress: number;
+    trackEncodeProgressOutOf: number;
 }
 
 const initialState: LoadingDialogState = {
@@ -32,6 +36,9 @@ const initialState: LoadingDialogState = {
     trackCurrent: 0,
     titleCurrent: '',
     titleConverting: '',
+
+    trackEncodeProgress: 0,
+    trackEncodeProgressOutOf: 0,
 };
 
 export const slice = createSlice({
@@ -59,6 +66,13 @@ export const slice = createSlice({
             state.titleCurrent = action.payload.titleCurrent;
             state.titleConverting = action.payload.titleConverting;
         },
+        setTrackEncodingProgress: (
+            state,
+            action: PayloadAction<{ state: number; total: number; }>
+        ) => {
+            state.trackEncodeProgress = action.payload.state;
+            state.trackEncodeProgressOutOf = action.payload.total;
+        }
     },
 });
 

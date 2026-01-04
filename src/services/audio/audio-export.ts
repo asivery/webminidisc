@@ -14,7 +14,7 @@ export type ExportParams = {
 
 export interface AudioExportService {
     init(): Promise<void>;
-    export(params: ExportParams): Promise<ArrayBuffer>;
+    export(params: ExportParams, callback: (obj: { state: number, total: number }) => void): Promise<ArrayBuffer>;
     info(): Promise<{ format: string | null; input: string | null }>;
     prepare(file: File): Promise<void>;
 
@@ -111,17 +111,17 @@ export abstract class DefaultFfmpegAudioExportService implements AudioExportServ
         return `${additionalCommands} ${commonFormatting} ${moreParams ?? ''} -f ${outputFormat}`;
     }
 
-    async export(parameters: ExportParams) {
+    async export(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void) {
         const { format } = parameters;
         let result: ArrayBuffer;
         if (format.codec === `PCM`) {
             result = await this.encodePCM(parameters);
         } else if (format.codec === 'AT3') {
-            result = await this.encodeATRAC3(parameters);
+            result = await this.encodeATRAC3(parameters, callback);
         } else if (format.codec === 'MP3') {
             result = await this.encodeMP3(parameters);
         } else if (format.codec === 'A3+') {
-            result = await this.encodeATRAC3Plus(parameters);
+            result = await this.encodeATRAC3Plus(parameters, callback);
         } else throw new Error('Invalid format');
         this.ffmpegProcess?.worker.terminate();
         return result;
@@ -147,7 +147,7 @@ export abstract class DefaultFfmpegAudioExportService implements AudioExportServ
         return data.buffer;
     }
 
-    abstract encodeATRAC3(parameters: ExportParams): Promise<ArrayBuffer>;
-    abstract encodeATRAC3Plus(parameters: ExportParams): Promise<ArrayBuffer>;
+    abstract encodeATRAC3(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void): Promise<ArrayBuffer>;
+    abstract encodeATRAC3Plus(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void): Promise<ArrayBuffer>;
     abstract getSupport(codec: CodecFamily): 'perfect' | 'mediocre' | 'unsupported';
 }

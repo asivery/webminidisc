@@ -45,6 +45,11 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
         description:
             'A separate high-quality ATRAC encoder hosted on another server (as defined by https://github.com/thinkbrown/atrac-api)',
     },
+    {
+        name: 'Built in High-Quality Encoder',
+        create: Atrac3OSExportService,
+        description: 'The Sony encoder in a purpose-built Web VM',
+    },
 ];
 
 if (window.native?.invokeLocalEncoder) {

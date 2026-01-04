@@ -1,6 +1,6 @@
+import { CustomParameters } from '../../custom-parameters';
 import { CodecFamily } from '../interfaces/netmd';
 import { DefaultFfmpegAudioExportService, ExportParams } from './audio-export';
-import { getATRACWAVEncoding } from '../../utils';
 
 class Atrac3OSProcess {
     private messageCallback?: (ev: MessageEvent) => void;
@@ -16,9 +16,17 @@ class Atrac3OSProcess {
         });
     }
 
-    async encode(data: ArrayBuffer, bitrate: string) {
+    async encode(data: ArrayBuffer, bitrate: number, callback?: (obj: { state: number, total: number}) => void) {
+        const total = data.byteLength;
         const eventData = await new Promise<MessageEvent>((resolve) => {
-            this.messageCallback = resolve;
+            this.messageCallback = (msg) => {
+                if(!msg.data.result) {
+                    callback?.({ state: msg.data.progress, total });
+                } else {
+                    resolve(msg);
+                    this.messageCallback = undefined;
+                }
+            };
             this.worker.postMessage({ action: 'encode', bitrate, data }, [data]);
         });
         return eventData.data.result as ArrayBuffer;
@@ -30,7 +38,6 @@ class Atrac3OSProcess {
 
     handleMessage(ev: MessageEvent) {
         this.messageCallback!(ev);
-        this.messageCallback = undefined;
     }
 }
 
@@ -44,7 +51,7 @@ export class Atrac3OSExportService extends DefaultFfmpegAudioExportService {
         await super.prepare(file);
     }
 
-    async encodeATRAC3(parameters: ExportParams): Promise<ArrayBuffer> {
+    async encodeATRAC3(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void): Promise<ArrayBuffer> {
         const ffmpegCommand = await this.createFfmpegParams(parameters, 'wav');
         const outFileName = `${this.outFileNameNoExt}.wav`;
         await this.ffmpegProcess.transcode(this.inFileName, outFileName, ffmpegCommand);
@@ -52,18 +59,18 @@ export class Atrac3OSExportService extends DefaultFfmpegAudioExportService {
 
         await this.ready; // Make sure Worker is ready
 
-        const resultData = await this.atrac3OSProcess!.encode(data.buffer, parameters.format.bitrate!.toString());
-
-        const file = new File([new Uint8Array(resultData)], `outAt3File.at3`);
-        const headerLength = (await getATRACWAVEncoding(file))!.headerLength;
-        const at3Data = resultData.slice(headerLength);
+        const resultData = await this.atrac3OSProcess!.encode(
+            data.buffer as ArrayBuffer,
+            parameters.format.bitrate!,
+            callback,
+        );
 
         this.atrac3OSProcess?.terminate();
-        return at3Data as ArrayBuffer;
+        return resultData as ArrayBuffer;
     }
 
-    async encodeATRAC3Plus(parameters: ExportParams): Promise<ArrayBuffer> {
-        return await this.encodeATRAC3(parameters);
+    async encodeATRAC3Plus(parameters: ExportParams, callback: (obj: { state: number, total: number}) => void): Promise<ArrayBuffer> {
+        return await this.encodeATRAC3(parameters, callback);
     }
 
     getSupport(_codec: CodecFamily): 'perfect' {
