@@ -19,11 +19,6 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
         description: 'The standard open-source ATRAC encoder. Its ATRAC3 support is incomplete',
     },
     {
-        name: 'Atrac3OS',
-        create: Atrac3OSExportService,
-        description: 'The high-quality Sony encoder running in a Web VM',
-    },
-    {
         name: 'Remote ATRAC Encoder',
         create: RemoteAtracExportService,
         customParameters: [
