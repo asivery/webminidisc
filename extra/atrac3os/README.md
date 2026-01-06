@@ -28,3 +28,4 @@ In `./output` you'll find the `kernel.bin` and `system.cmi` files
 ## Credits:
 
 - The system image uses the [tiny](https://github.com/andsmedeiros/tiny) memory allocator.
+- The `configs.c` file was written by the incredible [@cillyvms](https://github.com/cillyvms) who took her time to reverse engineer parts of the Windows version of the encoder

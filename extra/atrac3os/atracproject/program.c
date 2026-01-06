@@ -32,10 +32,9 @@ static inline void hypervisor_transfer(void *a, int a_offset, void *b, int b_off
 
 
 const atrac_encoding_configuration *definition_from_bitrate(int bitrate) {
-    switch(bitrate) {
-        case 66: return &supported_encoding_configurations[2];
-        case 105: return &supported_encoding_configurations[3];
-        case 132: return &supported_encoding_configurations[4];
+    for(int i = 0; i<(sizeof(supported_encoding_configurations) / sizeof(supported_encoding_configurations[0])); i++) {
+        const atrac_encoding_configuration *d = &supported_encoding_configurations[i];
+        if(d->bitrate_kbps == bitrate && d->channel_count == 2) return d;
     }
     return NULL;
 }
