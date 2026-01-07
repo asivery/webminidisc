@@ -1334,19 +1334,29 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
             ])
         );
 
-        let lastProgress = new Date().getTime();
+        let lastUploadProgress = new Date().getTime(),
+            lastConvertProgress = lastUploadProgress;
         const originalTitle = document.title;
         let totalBytesAllTracks = 0,
             totalBytesCalc = 0,
             bytesSentFromPrevTracks = 0,
             bytesSentFromThisTrack = 0;
 
-        const updateProgressCallback = ({ written, encrypted, total }: { written: number; encrypted: number; total: number }) => {
+        const updateUploadProgressCallback = ({ written, encrypted, total }: { written: number; encrypted: number; total: number }) => {
             const now = new Date().getTime();
-            if (now - lastProgress > 200) {
+            if (now - lastUploadProgress > 200) {
                 queueMicrotask(() => dispatch(uploadDialogActions.setWriteProgress({ written, encrypted, total })));
-                lastProgress = now;
+                lastUploadProgress = now;
                 bytesSentFromThisTrack = written;
+                updateTitle();
+            }
+        };
+
+        const updateEncodeProgressCallback = (object: { state: number, total: number }) => {
+            const now = new Date().getTime();
+            if (now - lastConvertProgress > 200) {
+                queueMicrotask(() => dispatch(uploadDialogActions.setTrackEncodingProgress(object)));
+                lastConvertProgress = now;
                 updateTitle();
             }
         };
@@ -1399,7 +1409,10 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
             titleConverting: '',
         };
         const updateTrack = () => {
-            dispatch(uploadDialogActions.setTrackProgress(trackUpdate));
+            dispatch(batchActions([
+                uploadDialogActions.setTrackProgress(trackUpdate),
+                uploadDialogActions.setTrackEncodingProgress({ state: 0, total: 0 }),
+            ]));
             updateTitle();
         };
         updateTrack();
@@ -1447,6 +1460,7 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
                         const exportParams: ExportParams = {
                             format: audioExportFormat,
                             enableReplayGain: additionalParameters?.enableReplayGain,
+                            lastInBatch: j === files.length -1,
                         };
 
                         let data: ArrayBuffer;
@@ -1461,7 +1475,7 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
                             try {
                                 await audioExportService!.prepare(file);
 
-                                data = await audioExportService!.export(exportParams);
+                                data = await audioExportService!.export(exportParams, updateEncodeProgressCallback);
                                 totalBytesCalc += data.byteLength;
                                 convertNext();
                                 resolve({ file: f, data: data });
@@ -1540,7 +1554,7 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
             bytesSentFromPrevTracks += bytesSentFromThisTrack;
             bytesSentFromThisTrack = 0;
             updateTrack();
-            updateProgressCallback({ written: 0, encrypted: 0, total: 100 });
+            updateUploadProgressCallback({ written: 0, encrypted: 0, total: 100 });
             if (file.forcedEncoding?.codec === 'SPS' || file.forcedEncoding?.codec === 'SPM') {
                 // Uploading an AEA file.
                 await netmdFactoryService!.uploadSP(
@@ -1548,7 +1562,7 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
                     fullWidthTitle,
                     file.forcedEncoding.codec === 'SPM',
                     data,
-                    updateProgressCallback
+                    updateUploadProgressCallback
                 );
             } else {
                 try {
@@ -1559,7 +1573,7 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
                         fullWidthTitle,
                         data,
                         formatOverride,
-                        updateProgressCallback
+                        updateUploadProgressCallback
                     );
                 } catch (err) {
                     error = err;

@@ -38,8 +38,8 @@
     "jconv": "github:asivery/jconv-webminidisc",
     "jszip": "^3.10.1",
     "lint-staged": "^15.2.2",
-    "music-metadata-browser": "^2.5.9",
-    "netmd-exploits": "^0.5.11",
+    "music-metadata": "^11.10.3",
+    "netmd-exploits": "^0.5.12",
     "netmd-js": "^4.3.0",
     "netmd-tocmanip": "^0.2.1",
     "prettier": "^3.2.5",
@@ -55,6 +55,7 @@
     "shazam-api": "^0.3.0",
     "styled-components": "^6.1.8",
     "tss-react": "^4.9.3",
+    "v86": "^0.5.292",
     "vite-plugin-commonjs": "^0.10.1",
     "vite-plugin-svgr": "^4.3.0"
   },
@@ -72,7 +73,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "source-map-explorer": "^2.5.3",
-    "typescript": "^5.4.4",
+    "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "vite-plugin-node-polyfills": "^0.23.0",
     "vite-plugin-pwa": "^0.21.1"

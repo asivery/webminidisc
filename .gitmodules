@@ -1,0 +1,3 @@
+[submodule "extra/atrac3os/calderalinker"]
+	path = extra/atrac3os/calderalinker
+	url = https://github.com/asivery/calderalinker

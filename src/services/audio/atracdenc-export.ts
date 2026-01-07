@@ -35,7 +35,7 @@ export class AtracdencAudioExportService extends DefaultFfmpegAudioExportService
             default:
                 throw new Error('Invalid format');
         }
-        const result = await this.atracdencProcess!.encode(data.buffer, bitrate);
+        const result = await this.atracdencProcess!.encode(data.buffer as ArrayBuffer, bitrate);
         this.atracdencProcess?.terminate();
         return result;
     }

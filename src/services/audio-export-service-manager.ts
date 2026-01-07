@@ -1,4 +1,5 @@
 import { CustomParameterInfo, CustomParameters } from '../custom-parameters';
+import { Atrac3OSExportService } from './audio/atrac3os-export';
 import { AtracdencAudioExportService } from './audio/atracdenc-export';
 import { AudioExportService } from './audio/audio-export';
 import { LocalAtracExportService } from './audio/ewmd-local-atrac-export';
@@ -38,6 +39,19 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
         ],
         description:
             'A separate high-quality ATRAC encoder hosted on another server (as defined by https://github.com/thinkbrown/atrac-api)',
+    },
+    {
+        name: 'Built in High-Quality Encoder',
+        create: Atrac3OSExportService,
+        description: 'The Sony encoder in a purpose-built Web VM',
+        customParameters: [
+            {
+                varName: 'gapless',
+                type: 'boolean',
+                userFriendlyName: "Allow gapless recording",
+                defaultValue: false,
+            },
+        ],
     },
 ];
 
