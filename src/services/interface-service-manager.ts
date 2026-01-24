@@ -4,6 +4,8 @@ import { HiMDFullService, HiMDRestrictedService, HiMDSpec } from './interfaces/h
 import { Codec, DefaultMinidiscSpec, MinidiscSpec, NetMDService, NetMDUSBService, RecordingCodec } from './interfaces/netmd';
 import { NetMDMockService } from './interfaces/netmd-mock';
 import { NetMDRemoteService } from './interfaces/remote-netmd';
+import { DeviceIds } from 'networkwm-js';
+import { NetworkWMService } from './interfaces/networkwm-nodrm';
 
 interface ServicePrototype {
     create: (parameters?: CustomParameters) => NetMDService | null;
@@ -54,6 +56,27 @@ export const Services: ServicePrototype[] = [
         },
         spec: new HiMDSpec(),
         requiresChrome: true,
+    },
+    {
+        name: 'DRM-Free NetworkWM',
+        getConnectName: (params) => {
+            const intPid = parseInt(params!.pid as string);
+            return `Connect to ${DeviceIds.find(e => e.productId == intPid)!.name}`;
+        },
+        create: (params) => {
+            const intPid = parseInt(params!.pid as string);
+            return new NetworkWMService(DeviceIds.find(e => e.productId == intPid)!);
+        },
+        requiresChrome: true,
+        spec: new HiMDSpec(),
+        customParameters: [
+            {
+                varName: 'pid',
+                type: DeviceIds.filter(e => e.disableDRM).map(e => ({ name: e.name, value: e.productId.toString() })),
+                userFriendlyName: "Device",
+                defaultValue: DeviceIds.filter(e => e.disableDRM)[0].productId.toString(),
+            },
+        ],
     },
     {
         name: 'Remote NetMD',
