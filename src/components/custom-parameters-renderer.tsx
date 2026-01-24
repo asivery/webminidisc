@@ -3,7 +3,7 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
 import { CustomParameterInfo, CustomParameterType } from '../custom-parameters';
-import { Button, Tooltip } from '@mui/material';
+import { Button, MenuItem, Select, Tooltip } from '@mui/material';
 
 export function renderCustomParameter(
     parameter: CustomParameterInfo,
@@ -14,11 +14,29 @@ export function renderCustomParameter(
     const handleParameterChange = (event: any, type: CustomParameterType, name: string) => {
         parameterChangeCallback(
             name,
-            type === 'string' ? event.target.value : type === 'number' ? parseInt(event.target.value) : event.target.checked
+            (type === 'string' || Array.isArray(type)) ? event.target.value : type === 'number' ? parseInt(event.target.value) : event.target.checked
         );
     };
 
     const fullWidth = { minWidth: '100%' };
+
+    if(Array.isArray(parameter.type)) {
+        // Enumerator:
+        return (
+            <FormControlLabel
+                className={customClass}
+                control={
+                    <Select value={value} onChange={e => handleParameterChange(e, parameter.type, parameter.varName)} className={customClass}>
+                        {parameter.type.map(e => <MenuItem value={e.value} key={e.value}>{e.name}</MenuItem>)}
+                    </Select>
+                }
+                label={parameter.userFriendlyName}
+                labelPlacement="start"
+                style={{ ...fullWidth, justifyContent: 'space-between', marginLeft: 0 }}
+                key={parameter.varName}
+            />
+        );
+    }
 
     switch (parameter.type) {
         case 'boolean':

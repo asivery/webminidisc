@@ -1,5 +1,5 @@
 export type CustomParameters = { [key: string]: string | number | boolean };
-export type CustomParameterType = 'string' | 'number' | 'boolean' | 'hostFilePath' | 'hostDirPath';
+export type CustomParameterType = 'string' | 'number' | 'boolean' | 'hostFilePath' | 'hostDirPath' | { name: string, value: string }[];
 export type CustomParameterInfo = {
     userFriendlyName: string;
     varName: string;
@@ -21,6 +21,7 @@ export function isAllValid(archetype?: CustomParameterInfo[], parameters?: Custo
 }
 
 function getDefaultForType(type: CustomParameterType) {
+    if(Array.isArray(type)) return '';
     switch (type) {
         case 'boolean':
             return false;

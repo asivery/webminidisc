@@ -156,6 +156,12 @@ export const Services: ServicePrototype[] = [
                 varName: 'capabilityFactoryMode',
                 defaultValue: true,
             },
+            {
+                userFriendlyName: "Test combobox",
+                type: [{ name: 'A', value: 'a' }, { name: "Bbb", value: 'b' }],
+                varName: 'combobox',
+                defaultValue: 'a',
+            }
         ],
     },
     {
@@ -258,8 +264,10 @@ export function filterOutCorrupted(savedCustomServices: ServiceConstructionInfo[
         const parameterKeys = Object.keys(info.parameters!);
         if (!requiredParameters) continue; // The service cannot be a custom service - no props to set.
         if (requiredParameters.length !== parameterKeys.length) continue; // Invalid config.
+        const typeValid = (n: CustomParameterInfo, value: CustomParameters extends {[e: string]: infer R} ? R : never) =>
+                Array.isArray(n.type) ? n.type.some(e => e.value === value) : typeof value === n.type;
         if (
-            requiredParameters.filter((n) => parameterKeys.includes(n.varName) && typeof info.parameters![n.varName] === n.type).length !==
+            requiredParameters.filter((n) => parameterKeys.includes(n.varName) && typeValid(n, info.parameters![n.varName])).length !==
             requiredParameters.length
         )
             continue; // The service's parameters differ from the prototype's declaration.
