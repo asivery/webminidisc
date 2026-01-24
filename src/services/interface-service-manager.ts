@@ -58,7 +58,7 @@ export const Services: ServicePrototype[] = [
         requiresChrome: true,
     },
     {
-        name: 'DRM-Free NetworkWM',
+        name: 'DRM-Free Network Walkman',
         getConnectName: (params) => {
             const intPid = parseInt(params!.pid as string);
             return `Connect to ${DeviceIds.find(e => e.productId == intPid)!.name}`;
