@@ -1,4 +1,5 @@
 import { CustomParameterInfo, CustomParameters } from '../custom-parameters';
+import { ATRACOS_INCLUDED } from '../version-info';
 import { Atrac3OSExportService } from './audio/atrac3os-export';
 import { AtracdencAudioExportService } from './audio/atracdenc-export';
 import { AudioExportService } from './audio/audio-export';
@@ -40,7 +41,10 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
         description:
             'A separate high-quality ATRAC encoder hosted on another server (as defined by https://github.com/thinkbrown/atrac-api)',
     },
-    {
+];
+
+if (ATRACOS_INCLUDED) {
+    AudioServices.push({
         name: 'Built in High-Quality Encoder',
         create: Atrac3OSExportService,
         description: 'The Sony encoder in a purpose-built Web VM',
@@ -52,8 +56,8 @@ export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
                 defaultValue: false,
             },
         ],
-    },
-];
+    });
+}
 
 if (window.native?.invokeLocalEncoder) {
     AudioServices.push({

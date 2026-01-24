@@ -20,7 +20,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "analyze": "source-map-explorer 'dist/assets/*.js'",
-    "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\n\\\" > src/version-info.ts\"",
+    "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\nexport const ATRACOS_INCLUDED = $([ -f 'public/atrac3vm/system.cmi' ] && echo 1 || echo 0)\\n\\\" > src/version-info.ts\"",
     "pretty": "prettier src/**/*.{ts,tsx} --write"
   },
   "dependencies": {
