@@ -4,6 +4,8 @@ import { resolvePathFromGlobalIndex, TrackMetadata, DeviceDefinition, decryptMP3
 import { FSAHiMDFilesystem, HiMDKBPSToFrameSize, generateCodecInfo } from "himd-js";
 import { AbstractedTrack, DatabaseAbstraction } from "networkwm-js";
 
+const CHUNK_SIZE = 524288;
+
 export class NetworkWMService extends NetMDService {
     private name: string = "";
     private database: DatabaseAbstraction | null = null;
@@ -138,7 +140,8 @@ export class NetworkWMService extends NetMDService {
                     title: title ?? 'Unknown Title',
                 },
                 new Uint8Array(data),
-                (done, outOf) => progressCallback({ written: done, encrypted: outOf, total: outOf })
+                (done, outOf) => progressCallback({ written: done, encrypted: outOf, total: outOf }),
+                CHUNK_SIZE,
             );
         }
 
@@ -155,7 +158,8 @@ export class NetworkWMService extends NetMDService {
             }, codecInfo,
             new Uint8Array(data),
             undefined,
-            (done, outOf) => progressCallback({ written: done, encrypted: outOf, total: outOf })
+            (done, outOf) => progressCallback({ written: done, encrypted: outOf, total: outOf }),
+            CHUNK_SIZE,
         );
         this.cache = null;
     }

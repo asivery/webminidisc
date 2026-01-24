@@ -42,7 +42,7 @@
     "netmd-exploits": "^0.5.12",
     "netmd-js": "^4.4.1",
     "netmd-tocmanip": "^0.2.1",
-    "networkwm-js": "^0.2.3",
+    "networkwm-js": "^0.2.4",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
