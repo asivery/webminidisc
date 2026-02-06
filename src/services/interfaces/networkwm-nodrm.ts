@@ -1,6 +1,6 @@
 import { DeviceStatus, TrackFlag } from "netmd-js";
 import { Capability, Codec, Disc, Group, NetMDService, TitleParameter, Track } from "./netmd";
-import { resolvePathFromGlobalIndex, TrackMetadata, DeviceDefinition, decryptMP3 } from 'networkwm-js';
+import { resolvePathFromGlobalIndex, TrackMetadata, DeviceDefinition, decryptMP3, initializeIfNeeded } from 'networkwm-js';
 import { FSAHiMDFilesystem, HiMDKBPSToFrameSize, generateCodecInfo } from "himd-js";
 import { AbstractedTrack, DatabaseAbstraction } from "networkwm-js";
 
@@ -42,6 +42,7 @@ export class NetworkWMService extends NetMDService {
     }
     async pair(): Promise<boolean> {
         const fs = await FSAHiMDFilesystem.init(false);
+        await initializeIfNeeded(fs, this.device.databaseParameters?.initLayers);
         this.database = await DatabaseAbstraction.create(fs, this.device);
         this.name = this.device.name;
         return true;
