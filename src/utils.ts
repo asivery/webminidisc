@@ -15,7 +15,7 @@ export const acceptedTypes = {
     "video/mp4": [],
     "video/webm": [],
     'video/x-matroska': [],
-    "application/octet-stream": [".oma", ".at3", ".aea"],
+    "application/octet-stream": [".oma", ".at3", ".aea", ".aif", ".aiff"],
 }
 
 export function sleep(ms: number) {
