@@ -35,6 +35,10 @@ export function debounce<T extends Function>(func: T, timeout = 300): T {
     return (debouncedFn as any) as T;
 }
 
+export function stripTrackNumbers(title: string) {
+    return title.replace(/^\s*(?:(?:\(\d{1,3}\)|\d{1,3})(?:[.\-_:\s]+|$)){1,5}/, '').trimStart();
+}
+
 export function removeExtension(filename: string) {
     const extStartIndex = filename.lastIndexOf('.');
     if (extStartIndex > 0) {

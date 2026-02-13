@@ -11,6 +11,7 @@ export interface ConvertDialogFeature {
     visible: boolean;
     format: { [mdSpecName: string]: [number, number] };
     titleFormat: TitleFormatType;
+    stripTrackNumbers: boolean;
     titles: {
         title: string;
         fullWidthTitle: string;
@@ -26,6 +27,7 @@ const initialState: ConvertDialogFeature = {
     visible: false,
     format: loadPreference('uploadFormat', {}),
     titleFormat: loadPreference('trackTitleFormat', 'filename') as TitleFormatType,
+    stripTrackNumbers: loadPreference('stripTrackNumbers', false),
     titles: [],
 };
 
@@ -43,6 +45,10 @@ const slice = createSlice({
         setTitleFormat: (state, action: PayloadAction<TitleFormatType>) => {
             state.titleFormat = action.payload;
             savePreference('trackTitleFormat', state.titleFormat);
+        },
+        setStripTrackNumbers: (state, action: PayloadAction<boolean>) => {
+            state.stripTrackNumbers = action.payload;
+            savePreference('stripTrackNumbers', state.stripTrackNumbers);
         },
         setTitles: (
             state,

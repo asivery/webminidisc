@@ -3,6 +3,7 @@ import { useDispatch } from '../frontend-utils';
 import {
     getMetadataFromFile,
     removeExtension,
+    stripTrackNumbers,
     secondsToHumanReadable,
     getATRACWAVEncoding,
     getATRACOMAEncoding,
@@ -243,7 +244,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     const dispatch = useDispatch();
     const { classes, cx } = useStyles();
 
-    const { visible, format, titleFormat, titles } = useShallowEqualSelector((state) => state.convertDialog);
+    const { visible, format, titleFormat, titles, stripTrackNumbers: stripTrackNumbersEnabled } = useShallowEqualSelector((state) => state.convertDialog);
     const { fullWidthSupport } = useShallowEqualSelector((state) => state.appState);
     const { disc, deviceCapabilities } = useShallowEqualSelector((state) => state.main);
     const minidiscSpec = serviceRegistry.netmdSpec!;
@@ -397,30 +398,34 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
             dispatch(
                 convertDialogActions.setTitles(
                     files.map((file) => {
+                        const trackTitle = stripTrackNumbersEnabled ? stripTrackNumbers(file.title) : file.title;
                         let rawTitle = '';
                         switch (format) {
                             case 'title': {
-                                rawTitle = file.title;
+                                rawTitle = trackTitle;
                                 break;
                             }
                             case 'artist-title': {
-                                rawTitle = `${file.artist} - ${file.title}`;
+                                rawTitle = `${file.artist} - ${trackTitle}`;
                                 break;
                             }
                             case 'title-artist': {
-                                rawTitle = `${file.title} - ${file.artist}`;
+                                rawTitle = `${trackTitle} - ${file.artist}`;
                                 break;
                             }
                             case 'album-title': {
-                                rawTitle = `${file.album} - ${file.title}`;
+                                rawTitle = `${file.album} - ${trackTitle}`;
                                 break;
                             }
                             case 'artist-album-title': {
-                                rawTitle = `${file.artist} - ${file.album} - ${file.title}`;
+                                rawTitle = `${file.artist} - ${file.album} - ${trackTitle}`;
                                 break;
                             }
                             case 'filename': {
                                 rawTitle = removeExtension(file.file.name);
+                                if (stripTrackNumbersEnabled) {
+                                    rawTitle = stripTrackNumbers(rawTitle);
+                                }
                                 break;
                             }
                         }
@@ -440,7 +445,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 )
             );
         },
-        [fullWidthSupport, dispatch, minidiscSpec, deviceSupportsFullWidth]
+        [fullWidthSupport, dispatch, minidiscSpec, deviceSupportsFullWidth, stripTrackNumbersEnabled]
     );
 
     const renameTrackManually = useCallback(
@@ -543,6 +548,10 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     const handleToggleReplayGain = useCallback(() => {
         setEnableReplayGain((enableReplayGain) => !enableReplayGain);
     }, [setEnableReplayGain]);
+
+    const handleToggleStripTrackNumbers = useCallback(() => {
+        dispatch(convertDialogActions.setStripTrackNumbers(!stripTrackNumbersEnabled));
+    }, [dispatch, stripTrackNumbersEnabled]);
 
     const handleToggleFullWidthSupport = useCallback(() => {
         dispatch(appActions.setFullWidthSupport(!fullWidthSupport));
@@ -1148,6 +1157,12 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                             label={`Use ReplayGain`}
                             className={classes.advancedOption}
                             control={<Checkbox checked={enableReplayGain} onChange={handleToggleReplayGain} />}
+                        />
+
+                        <FormControlLabel
+                            label={`Strip leading track numbers`}
+                            className={classes.advancedOption}
+                            control={<Checkbox checked={stripTrackNumbersEnabled} onChange={handleToggleStripTrackNumbers} />}
                         />
                     </AccordionDetails>
                 </Accordion>
