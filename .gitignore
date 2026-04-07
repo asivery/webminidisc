@@ -31,3 +31,5 @@ src/version-info.ts
 /public/atrac3vm/system.cmi
 /public/atrac3vm/kernel.bin
 **/libatrac.so.1
+**/*.o
+**/*.so
