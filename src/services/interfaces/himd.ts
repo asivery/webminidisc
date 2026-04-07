@@ -520,8 +520,13 @@ export class HiMDFullService extends HiMDRestrictedService {
     }
 
     async deleteTracks(indexes: number[]): Promise<void> {
-        const allTrackSlots = indexes.map(e => this.himd!.trackIndexToTrackSlot(e));
+        const allTrackSlots = indexes.map((e) => this.himd!.trackIndexToTrackSlot(e));
+        let content = await this.listContent();
+        for (const index of indexes) {
+            content = recomputeGroupsAfterTrackMove(content, index, -1);
+        }
         await deleteTracks(this.himd!, indexes);
+        this.rewriteGroups(content.groups);
         // Re-sign the disc
         const session = new HiMDSecureSession(this.himd!, this.fsDriver!.driver);
         await session.performAuthentication();
