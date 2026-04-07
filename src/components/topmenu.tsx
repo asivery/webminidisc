@@ -416,7 +416,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                 <ListItemText>Wipe Disc</ListItemText>
             </MenuItem>
         );
-        if(deviceCapabilities.himdFormat) {
+        if (deviceCapabilities.himdFormat) {
             menuItems.push(
                 <MenuItem key="himdFormat" onClick={handleFormatToHiMD} disabled={!deviceCapabilities.metadataEdit}>
                     <ListItemIcon className={classes.listItemIcon}>

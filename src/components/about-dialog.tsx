@@ -127,7 +127,7 @@ export const AboutDialog = (props: {}) => {
                         </Link>
                     </li>
                 </ul>
-                <Link target="_blank" href="https://ko-fi.com/asivery" style={{display: 'block', textAlign: 'center' }}>
+                <Link target="_blank" href="https://ko-fi.com/asivery" style={{ display: 'block', textAlign: 'center' }}>
                     <img src="kofi.png" style={{ width: '50%' }} />
                 </Link>
                 <DialogContentText style={{ textAlign: 'center', fontSize: 13 }}>

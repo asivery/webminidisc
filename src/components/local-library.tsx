@@ -31,7 +31,6 @@ const Transition = React.forwardRef(function Transition(props: SlideProps, ref: 
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-
 const useStyles = makeStyles()((theme, _params, classes) => ({
     uploadRow: {
         '&:hover': {
@@ -68,7 +67,7 @@ const useStyles = makeStyles()((theme, _params, classes) => ({
     },
     trackIndexCol: {
         width: 60,
-    }
+    },
 }));
 
 export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (files: AdaptiveFile[]) => void }) => {
@@ -76,7 +75,7 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
     const convertToFileArray = (data: LocalDatabase, path: string[] = []): File[] => {
         const originalPath = [...path];
         path = [...path];
-        while(path.length){
+        while (path.length) {
             data = data[path.splice(0, 1)[0]] as any;
         }
         return Object.entries(data).map(([key, value]) => {
@@ -84,13 +83,15 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
             return {
                 name: key,
                 type: isFolder ? FileType.Directory : FileType.File,
-                props: isFolder ? {} : {
-                    ...value,
-                    id: [...originalPath, key].join('/'),
-                },
-            }
+                props: isFolder
+                    ? {}
+                    : {
+                          ...value,
+                          id: [...originalPath, key].join('/'),
+                      },
+            };
         });
-    }
+    };
 
     const { classes } = useStyles();
     const dispatch = useDispatch();
@@ -108,9 +109,9 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
         setCurrentFileTree(convertToFileArray(database || {}, currentPath));
     }, [database, currentPath, setCurrentFileTree]);
 
-    const [selectedFiles, setSelectedFiles] = useState<{ path: string; album: string; artist: string; title: string; duration: number, trackIndex?: number }[]>(
-        []
-    );
+    const [selectedFiles, setSelectedFiles] = useState<
+        { path: string; album: string; artist: string; title: string; duration: number; trackIndex?: number }[]
+    >([]);
 
     const resetToRoot = useMemo(
         () => () => {
@@ -119,64 +120,72 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
         [database, setCurrentPath]
     );
 
-
-    const addFiles = useCallback((files: File[]) => {
-        setSelectedFiles((old) => {
-            let current = [...old];
-            for(let file of files) {
-                const path = file.props!['id'];
-                const album = file.props!['album'];
-                const artist = file.props!['artist'];
-                const title = file.props!['title'];
-                const duration = file.props!['duration'];
-                const trackIndex = file.props!['trackIndex'];
-                const indexFound = current.findIndex((e) => e.path === path);
-                if (indexFound !== -1) {
-                    // Delete (unmark)
-                    current.splice(indexFound, 1);
-                } else {
-                    // Add (mark)
-                    current = [...current, { album, artist, path, title, duration, trackIndex }];
+    const addFiles = useCallback(
+        (files: File[]) => {
+            setSelectedFiles((old) => {
+                let current = [...old];
+                for (let file of files) {
+                    const path = file.props!['id'];
+                    const album = file.props!['album'];
+                    const artist = file.props!['artist'];
+                    const title = file.props!['title'];
+                    const duration = file.props!['duration'];
+                    const trackIndex = file.props!['trackIndex'];
+                    const indexFound = current.findIndex((e) => e.path === path);
+                    if (indexFound !== -1) {
+                        // Delete (unmark)
+                        current.splice(indexFound, 1);
+                    } else {
+                        // Add (mark)
+                        current = [...current, { album, artist, path, title, duration, trackIndex }];
+                    }
                 }
+                return current;
+            });
+        },
+        [setSelectedFiles]
+    );
+
+    const handleFileAction = useCallback(
+        (file: File) => {
+            if (file.type === FileType.Directory) {
+                setCurrentPath((e) => [...e, file.name]);
+            } else {
+                addFiles([file]);
             }
-            return current;
-        });
-    }, [setSelectedFiles]);
+        },
+        [addFiles, setCurrentPath]
+    );
 
-    const handleFileAction = useCallback((file: File) => {
-        if (file.type === FileType.Directory) {
-            setCurrentPath(e => [...e, file.name]);
-        } else {
-            addFiles([ file ]);
-        }
-    }, [addFiles, setCurrentPath]);
-
-    const handleAddAllSelected = useCallback((files: File[]) => {
-        const process = (path: string[], files: File[]): File[] => {
-            const finalFiles = [];
-            for(let file of files){
-                if(file.type === FileType.Directory) {
-                    const newPath = [...path, file.name];
-                    const subFiles = convertToFileArray(database ?? {}, newPath);
-                    subFiles.sort((a, b) => {
-                        const dirSortResult = dirSorter(a, b, '', false);
-                        if(dirSortResult) return dirSortResult;
-                        if(a.props?.['trackIndex'] !== undefined && a.props?.['trackIndex'] !== undefined) {
-                            return a.props!['trackIndex'] - b.props!['trackIndex'];
-                        }
-                        return a.name.localeCompare(b.name);
-                    });
-                    finalFiles.push(...process(newPath, subFiles));
-                } else {
-                    finalFiles.push(file);
+    const handleAddAllSelected = useCallback(
+        (files: File[]) => {
+            const process = (path: string[], files: File[]): File[] => {
+                const finalFiles = [];
+                for (let file of files) {
+                    if (file.type === FileType.Directory) {
+                        const newPath = [...path, file.name];
+                        const subFiles = convertToFileArray(database ?? {}, newPath);
+                        subFiles.sort((a, b) => {
+                            const dirSortResult = dirSorter(a, b, '', false);
+                            if (dirSortResult) return dirSortResult;
+                            if (a.props?.['trackIndex'] !== undefined && a.props?.['trackIndex'] !== undefined) {
+                                return a.props!['trackIndex'] - b.props!['trackIndex'];
+                            }
+                            return a.name.localeCompare(b.name);
+                        });
+                        finalFiles.push(...process(newPath, subFiles));
+                    } else {
+                        finalFiles.push(file);
+                    }
                 }
-            }
-            return finalFiles;
-        };
+                return finalFiles;
+            };
 
-        addFiles(process(currentPath, files));
-        return true;
-    }, [addFiles, database, currentPath]);
+            addFiles(process(currentPath, files));
+            return true;
+        },
+        [addFiles, database, currentPath]
+    );
 
     const handleForwardFiles = useCallback(() => {
         const adaptiveFiles: AdaptiveFile[] = selectedFiles.map((file) => {
@@ -219,7 +228,7 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
                             <FileBrowser
                                 fileTree={currentFileTree}
                                 onFileDoubleClick={handleFileAction}
-                                columnNotFoundPlaceholder=''
+                                columnNotFoundPlaceholder=""
                                 manualName={true}
                                 allowMultifileSelection={true}
                                 defaultSorting={{ by: 'name', asc: false }}
@@ -241,7 +250,7 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
                                         name: '',
                                         icon: <ArrowUpward />,
                                         actionPossible: () => currentPath.length > 0,
-                                        handler: () => setCurrentPath(e => e.slice(0, -1)),
+                                        handler: () => setCurrentPath((e) => e.slice(0, -1)),
                                     },
                                     {
                                         name: 'Root',
@@ -252,9 +261,9 @@ export const LocalLibraryDialog = ({ setUploadedFiles }: { setUploadedFiles: (fi
                                     {
                                         name: 'Add / Remove Selected',
                                         icon: <Add />,
-                                        actionPossible: e => e.length > 0,
-                                        handler: e => handleAddAllSelected(e),
-                                    }
+                                        actionPossible: (e) => e.length > 0,
+                                        handler: (e) => handleAddAllSelected(e),
+                                    },
                                 ]}
                             />
                         )}

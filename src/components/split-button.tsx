@@ -59,7 +59,7 @@ export default function SplitButton(props: SplitButtonProps) {
         <div className={boxClassName}>
             <ButtonGroup variant="contained" ref={anchorRef} aria-label="split button" disabled={loading}>
                 <Button {...buttonProps} onClick={options[selectedIndex].handler} style={{ minWidth: width ? width * 0.8 : undefined }}>
-                    {loading ? <CircularProgress style={{ width: 24, height: 24 }}/> : options[selectedIndex].name}
+                    {loading ? <CircularProgress style={{ width: 24, height: 24 }} /> : options[selectedIndex].name}
                 </Button>
                 <Button
                     size="small"

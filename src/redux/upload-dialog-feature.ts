@@ -66,13 +66,10 @@ export const slice = createSlice({
             state.titleCurrent = action.payload.titleCurrent;
             state.titleConverting = action.payload.titleConverting;
         },
-        setTrackEncodingProgress: (
-            state,
-            action: PayloadAction<{ state: number; total: number; }>
-        ) => {
+        setTrackEncodingProgress: (state, action: PayloadAction<{ state: number; total: number }>) => {
             state.trackEncodeProgress = action.payload.state;
             state.trackEncodeProgressOutOf = action.payload.total;
-        }
+        },
     },
 });
 

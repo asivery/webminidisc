@@ -14,20 +14,32 @@ export function renderCustomParameter(
     const handleParameterChange = (event: any, type: CustomParameterType, name: string) => {
         parameterChangeCallback(
             name,
-            (type === 'string' || Array.isArray(type)) ? event.target.value : type === 'number' ? parseInt(event.target.value) : event.target.checked
+            type === 'string' || Array.isArray(type)
+                ? event.target.value
+                : type === 'number'
+                  ? parseInt(event.target.value)
+                  : event.target.checked
         );
     };
 
     const fullWidth = { minWidth: '100%' };
 
-    if(Array.isArray(parameter.type)) {
+    if (Array.isArray(parameter.type)) {
         // Enumerator:
         return (
             <FormControlLabel
                 className={customClass}
                 control={
-                    <Select value={value} onChange={e => handleParameterChange(e, parameter.type, parameter.varName)} className={customClass}>
-                        {parameter.type.map(e => <MenuItem value={e.value} key={e.value}>{e.name}</MenuItem>)}
+                    <Select
+                        value={value}
+                        onChange={(e) => handleParameterChange(e, parameter.type, parameter.varName)}
+                        className={customClass}
+                    >
+                        {parameter.type.map((e) => (
+                            <MenuItem value={e.value} key={e.value}>
+                                {e.name}
+                            </MenuItem>
+                        ))}
                     </Select>
                 }
                 label={parameter.userFriendlyName}

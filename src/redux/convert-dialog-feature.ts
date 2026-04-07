@@ -1,11 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { HiMDCodecName } from 'himd-js';
 import { enableBatching } from 'redux-batched-actions';
-import { Codec } from '../services/interfaces/netmd';
 import { savePreference, loadPreference } from '../utils';
 
 export type TitleFormatType = 'filename' | 'title' | 'album-title' | 'artist-title' | 'artist-album-title' | 'title-artist';
-export type ForcedEncodingFormat = { codec: 'SPM' | 'SPS' | HiMDCodecName; bitrate: number; } | null;
+export type ForcedEncodingFormat = { codec: 'SPM' | 'SPS' | HiMDCodecName; bitrate: number } | null;
 
 export interface ConvertDialogFeature {
     visible: boolean;

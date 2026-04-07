@@ -61,20 +61,20 @@ export const Services: ServicePrototype[] = [
         name: 'DRM-Free Network Walkman',
         getConnectName: (params) => {
             const intPid = parseInt(params!.pid as string);
-            return `Connect to ${DeviceIds.find(e => e.productId == intPid)!.name}`;
+            return `Connect to ${DeviceIds.find((e) => e.productId == intPid)!.name}`;
         },
         create: (params) => {
             const intPid = parseInt(params!.pid as string);
-            return new NetworkWMService(DeviceIds.find(e => e.productId == intPid)!);
+            return new NetworkWMService(DeviceIds.find((e) => e.productId == intPid)!);
         },
         requiresChrome: true,
         spec: new HiMDSpec(),
         customParameters: [
             {
                 varName: 'pid',
-                type: DeviceIds.filter(e => e.disableDRM).map(e => ({ name: e.name, value: e.productId.toString() })),
-                userFriendlyName: "Device",
-                defaultValue: DeviceIds.filter(e => e.disableDRM)[0].productId.toString(),
+                type: DeviceIds.filter((e) => e.disableDRM).map((e) => ({ name: e.name, value: e.productId.toString() })),
+                userFriendlyName: 'Device',
+                defaultValue: DeviceIds.filter((e) => e.disableDRM)[0].productId.toString(),
             },
         ],
     },
@@ -180,11 +180,14 @@ export const Services: ServicePrototype[] = [
                 defaultValue: true,
             },
             {
-                userFriendlyName: "Test combobox",
-                type: [{ name: 'A', value: 'a' }, { name: "Bbb", value: 'b' }],
+                userFriendlyName: 'Test combobox',
+                type: [
+                    { name: 'A', value: 'a' },
+                    { name: 'Bbb', value: 'b' },
+                ],
                 varName: 'combobox',
                 defaultValue: 'a',
-            }
+            },
         ],
     },
     {
@@ -244,7 +247,7 @@ export const Services: ServicePrototype[] = [
     },
 ];
 
-if(window.native?.nwInterface) {
+if (window.native?.nwInterface) {
     class NetworkWMSpec extends HiMDSpec {
         public availableFormats: RecordingCodec[] = [
             { codec: 'AT3', availableBitrates: [132, 105, 66], defaultBitrate: 132 },
@@ -253,7 +256,7 @@ if(window.native?.nwInterface) {
         ];
         public readonly measurementUnits = 'bytes';
         public defaultFormat = [1, 1] as [number, number];
-        public specName = "NetworkWM";
+        public specName = 'NetworkWM';
 
         translateToDefaultMeasuringModeFrom(codec: Codec, defaultMeasuringModeDuration: number): number {
             return super.translateToDefaultMeasuringModeFrom(codec, defaultMeasuringModeDuration) + 32768; // For initial metadata sections!
@@ -287,8 +290,8 @@ export function filterOutCorrupted(savedCustomServices: ServiceConstructionInfo[
         const parameterKeys = Object.keys(info.parameters!);
         if (!requiredParameters) continue; // The service cannot be a custom service - no props to set.
         if (requiredParameters.length !== parameterKeys.length) continue; // Invalid config.
-        const typeValid = (n: CustomParameterInfo, value: CustomParameters extends {[e: string]: infer R} ? R : never) =>
-                Array.isArray(n.type) ? n.type.some(e => e.value === value) : typeof value === n.type;
+        const typeValid = (n: CustomParameterInfo, value: CustomParameters extends { [e: string]: infer R } ? R : never) =>
+            Array.isArray(n.type) ? n.type.some((e) => e.value === value) : typeof value === n.type;
         if (
             requiredParameters.filter((n) => parameterKeys.includes(n.varName) && typeValid(n, info.parameters![n.varName])).length !==
             requiredParameters.length

@@ -21,7 +21,15 @@ import { actions as contextMenuActions } from '../redux/context-menu-feature';
 import { DeviceStatus } from 'netmd-js';
 import { control, openLocalLibrary } from '../redux/actions';
 
-import { formatTimeFromSeconds, getGroupedTracks, getSortedTracks, isSequential, acceptedTypes, AdaptiveFile, bytesToHumanReadable } from '../utils';
+import {
+    formatTimeFromSeconds,
+    getGroupedTracks,
+    getSortedTracks,
+    isSequential,
+    acceptedTypes,
+    AdaptiveFile,
+    bytesToHumanReadable,
+} from '../utils';
 import { belowDesktop, forAnyDesktop, useShallowEqualSelector, themeSpacing, batchActions } from '../frontend-utils';
 
 import { makeStyles } from 'tss-react/mui';
@@ -571,27 +579,38 @@ export const Main = (props: {}) => {
             <Typography component="h2" variant="body2">
                 {disc !== null ? (
                     <React.Fragment>
-                        <span className={classes.clickableRemainingTime} onClick={() => setShowRemainingSpace(x => !x)}>
-                            {showRemainingSpace ? (<>
-                                {minidiscSpec?.measurementUnits === 'frames' ? 
-                                    <>
-                                        <span>{`${formatTimeFromSeconds(disc.left)} left of ${formatTimeFromSeconds(disc.total)} `}</span>
-                                        <Tooltip title={LeftInNondefaultCodecs(disc.left)} arrow>
-                                            <span className={classes.remainingTimeTooltip}>{defaultCodecName} Mode</span>
-                                        </Tooltip>
-                                    </> : <>
-                                        <span>{`${bytesToHumanReadable(disc.left)} left of ${bytesToHumanReadable(disc.total)} `}</span>
-                                    </>
-                                }
-                            </>) : (<>
-                                {minidiscSpec?.measurementUnits === 'frames' ? 
-                                    <>
-                                        <span>{`${formatTimeFromSeconds(disc.used)} of ${formatTimeFromSeconds(disc.total)} `} {defaultCodecName} Mode</span>
-                                    </> : <>
-                                        <span>{`${bytesToHumanReadable(disc.used)} of ${bytesToHumanReadable(disc.total)} `}</span>
-                                    </>
-                                }
-                            </>)}
+                        <span className={classes.clickableRemainingTime} onClick={() => setShowRemainingSpace((x) => !x)}>
+                            {showRemainingSpace ? (
+                                <>
+                                    {minidiscSpec?.measurementUnits === 'frames' ? (
+                                        <>
+                                            <span>{`${formatTimeFromSeconds(disc.left)} left of ${formatTimeFromSeconds(disc.total)} `}</span>
+                                            <Tooltip title={LeftInNondefaultCodecs(disc.left)} arrow>
+                                                <span className={classes.remainingTimeTooltip}>{defaultCodecName} Mode</span>
+                                            </Tooltip>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>{`${bytesToHumanReadable(disc.left)} left of ${bytesToHumanReadable(disc.total)} `}</span>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {minidiscSpec?.measurementUnits === 'frames' ? (
+                                        <>
+                                            <span>
+                                                {`${formatTimeFromSeconds(disc.used)} of ${formatTimeFromSeconds(disc.total)} `}{' '}
+                                                {defaultCodecName} Mode
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>{`${bytesToHumanReadable(disc.used)} of ${bytesToHumanReadable(disc.total)} `}</span>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </span>
                         <div className={classes.spacing} />
                         <LinearProgress

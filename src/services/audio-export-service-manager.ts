@@ -52,7 +52,7 @@ if (ATRACOS_INCLUDED) {
             {
                 varName: 'gapless',
                 type: 'boolean',
-                userFriendlyName: "Allow gapless recording",
+                userFriendlyName: 'Allow gapless recording',
                 defaultValue: false,
             },
         ],

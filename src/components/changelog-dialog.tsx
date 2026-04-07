@@ -65,13 +65,13 @@ export const ChangelogDialog = (props: {}) => {
         const changelog = [...CHANGELOG];
 
         // Merge with wrapper (ElectronWMD) changelog
-        if(window.native?.wrapperChangelog) {
-            main: for(let injection of window.native.wrapperChangelog) {
-                if(injection.before === null) {
+        if (window.native?.wrapperChangelog) {
+            main: for (let injection of window.native.wrapperChangelog) {
+                if (injection.before === null) {
                     changelog.push(injection.entry);
                 } else {
-                    for(let i = 0; i<changelog.length; i++) {
-                        if(changelog[i].name === injection.before) {
+                    for (let i = 0; i < changelog.length; i++) {
+                        if (changelog[i].name === injection.before) {
                             changelog.splice(i, 0, injection.entry);
                             continue main;
                         }
@@ -86,29 +86,50 @@ export const ChangelogDialog = (props: {}) => {
         let content: ReactNode[] = [];
 
         function renderElement(element: ChangelogEntry): ReactNode {
-            if(typeof element === 'string') return element;
-            if(Array.isArray(element)) {
+            if (typeof element === 'string') return element;
+            if (Array.isArray(element)) {
                 // An array of inlined elements to be concatenated together
-                return <>{element.map((e, i) => <React.Fragment key={i}>{renderElement(e)}</React.Fragment>)}</>
+                return (
+                    <>
+                        {element.map((e, i) => (
+                            <React.Fragment key={i}>{renderElement(e)}</React.Fragment>
+                        ))}
+                    </>
+                );
             }
-            if(element.type === 'code') return <code>{element.content}</code>;
-            if(element.type === 'link') {
+            if (element.type === 'code') return <code>{element.content}</code>;
+            if (element.type === 'link') {
                 let onClickHandler = undefined;
-                if(element.clickHandler === 'openSettings') {
+                if (element.clickHandler === 'openSettings') {
                     onClickHandler = handleOpenEncoderSettings;
                 }
-                return <Link href={element.url} onClick={onClickHandler}>{element.content}</Link>
+                return (
+                    <Link href={element.url} onClick={onClickHandler}>
+                        {element.content}
+                    </Link>
+                );
             }
-            if(element.type === 'sublist') {
-                return <>{element.name}{renderList(element.content)}</>;
+            if (element.type === 'sublist') {
+                return (
+                    <>
+                        {element.name}
+                        {renderList(element.content)}
+                    </>
+                );
             }
         }
 
-        function renderList(elements: ChangelogEntry[]){
-            return <ul>{elements.map((e, i) => <li key={i}>{renderElement(e)}</li>)}</ul>
+        function renderList(elements: ChangelogEntry[]) {
+            return (
+                <ul>
+                    {elements.map((e, i) => (
+                        <li key={i}>{renderElement(e)}</li>
+                    ))}
+                </ul>
+            );
         }
 
-        for(let version of changelog) {
+        for (let version of changelog) {
             content.push(
                 <React.Fragment key={version.name}>
                     <h2 className={classes.header}>{version.name}</h2>

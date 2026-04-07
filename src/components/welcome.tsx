@@ -103,8 +103,16 @@ const useStyles = makeStyles()((theme) => ({
 export const Welcome = (props: {}) => {
     const { classes } = useStyles();
     const dispatch = useDispatch();
-    const { browserSupported, runningChrome, availableServices, pairingFailed, pairingMessage, vintageMode, lastSelectedService, connectingInProgress } =
-        useShallowEqualSelector((state) => state.appState);
+    const {
+        browserSupported,
+        runningChrome,
+        availableServices,
+        pairingFailed,
+        pairingMessage,
+        vintageMode,
+        lastSelectedService,
+        connectingInProgress,
+    } = useShallowEqualSelector((state) => state.appState);
     const simpleServicesLength = getSimpleServices().length;
     if (pairingMessage.toLowerCase().match(/denied/)) {
         // show linux instructions
@@ -230,16 +238,20 @@ export const Welcome = (props: {}) => {
                             >
                                 <FormHelperText>{pairingMessage}</FormHelperText>
                             </FormControl>
-                            { !window.native?.interface && (
-                                <Tooltip title={
-                                    <span>
-                                        Vivaldi's implementation of WebUSB is broken.<br/>
-                                        If you are using Vivaldi, most of this app's features will be broken.<br/>
-                                        Please switch to a different Chromium-based browser.
-                                    </span>
-                                }>
+                            {!window.native?.interface && (
+                                <Tooltip
+                                    title={
+                                        <span>
+                                            Vivaldi's implementation of WebUSB is broken.
+                                            <br />
+                                            If you are using Vivaldi, most of this app's features will be broken.
+                                            <br />
+                                            Please switch to a different Chromium-based browser.
+                                        </span>
+                                    }
+                                >
                                     <Alert severity="info" className={classes.notice}>
-                                        <b>Notice for users of the Vivaldi web browser</b> <br/>
+                                        <b>Notice for users of the Vivaldi web browser</b> <br />
                                     </Alert>
                                 </Tooltip>
                             )}
@@ -247,7 +259,7 @@ export const Welcome = (props: {}) => {
                         <div>
                             <Typography component="h2" variant="subtitle1" align="center" className={classes.spacing}>
                                 <Link rel="noopener noreferrer" target="_blank" href="https://www.minidisc.wiki/guides/webminidisc">
-                                    <span style={{ verticalAlign: 'middle' }}>Support and FAQ</span>{' '}
+                                    <span style={{ verticalAlign: 'middle' }}>First time here? Read the guide</span>{' '}
                                     <OpenInNewIcon style={{ verticalAlign: 'middle' }} fontSize="inherit" />
                                 </Link>
                             </Typography>

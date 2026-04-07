@@ -55,7 +55,15 @@ import Radio from '@mui/material/Radio';
 import { FileRejection, useDropzone } from 'react-dropzone';
 import Backdrop from '@mui/material/Backdrop';
 import { W95ConvertDialog } from './win95/convert-dialog';
-import { Capability, Codec, CodecFamily, Disc, getCodecFromIndex, getDefaultCodec, getDefaultCodecName } from '../services/interfaces/netmd';
+import {
+    Capability,
+    Codec,
+    CodecFamily,
+    Disc,
+    getCodecFromIndex,
+    getDefaultCodec,
+    getDefaultCodecName,
+} from '../services/interfaces/netmd';
 import serviceRegistry from '../services/registry';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
@@ -286,8 +294,14 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     const deviceSupportsFullWidth = useMemo(() => deviceCapabilities.includes(Capability.fullWidthSupport), [deviceCapabilities]);
 
     const currentlySelectedCodecIndex = useMemo(() => format[minidiscSpec.specName] ?? minidiscSpec.defaultFormat, [format, minidiscSpec]);
-    const currentlySelectedCodec = useMemo(() => getCodecFromIndex(minidiscSpec, currentlySelectedCodecIndex), [currentlySelectedCodecIndex, minidiscSpec]);
-    const currentlySelectedCodecFamily = useMemo(() => minidiscSpec.availableFormats[currentlySelectedCodecIndex[0]], [currentlySelectedCodecIndex, minidiscSpec]);
+    const currentlySelectedCodec = useMemo(
+        () => getCodecFromIndex(minidiscSpec, currentlySelectedCodecIndex),
+        [currentlySelectedCodecIndex, minidiscSpec]
+    );
+    const currentlySelectedCodecFamily = useMemo(
+        () => minidiscSpec.availableFormats[currentlySelectedCodecIndex[0]],
+        [currentlySelectedCodecIndex, minidiscSpec]
+    );
     const thisSpecDefaultCodecName = useMemo(() => getDefaultCodecName(minidiscSpec), [minidiscSpec]);
     const isUsingFrames = useMemo(() => minidiscSpec.measurementUnits === 'frames', [minidiscSpec]);
 
@@ -502,12 +516,14 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
 
     const handleChangeFormat = useCallback(
         (_ev: SyntheticEvent, newFormatIndex?: number) => {
-            if(newFormatIndex === undefined) return;
-            const defaultBitrateIndex = minidiscSpec.availableFormats[newFormatIndex].availableBitrates.indexOf(minidiscSpec.availableFormats[newFormatIndex].defaultBitrate);
+            if (newFormatIndex === undefined) return;
+            const defaultBitrateIndex = minidiscSpec.availableFormats[newFormatIndex].availableBitrates.indexOf(
+                minidiscSpec.availableFormats[newFormatIndex].defaultBitrate
+            );
             dispatch(
                 convertDialogActions.updateFormatForSpec({
-                    spec: minidiscSpec.specName, 
-                    codec: [newFormatIndex, defaultBitrateIndex] as [number, number]
+                    spec: minidiscSpec.specName,
+                    codec: [newFormatIndex, defaultBitrateIndex] as [number, number],
                 })
             );
         },
@@ -549,7 +565,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     }, [dispatch, fullWidthSupport]);
 
     const calculateFreeSpaceBytes = useCallback(() => {
-        if(!disc) return;
+        if (!disc) return;
         const newBytesCount = titles.reduce((total, b) => {
             if (!b.forcedEncoding || (b.forcedEncoding.codec === 'MP3' && currentlySelectedCodec.codec !== 'MP3')) {
                 // MP3 forcedEncoding only suggests the target bitrate when the user selects 'MP3' as the recording format
@@ -563,7 +579,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
         setBeforeConversionAvailableDurationUnits(disc.left);
     }, [disc, titles, currentlySelectedCodec, minidiscSpec]);
     const calculateFreeSpaceFrames = useCallback(() => {
-        if(!disc) return;
+        if (!disc) return;
         const totalTracksDurationInStandard = titles.reduce((total, b) => {
             if (!b.forcedEncoding || (b.forcedEncoding.codec === 'MP3' && currentlySelectedCodec.codec !== 'MP3')) {
                 // MP3 forcedEncoding only suggests the target bitrate when the user selects 'MP3' as the recording format
@@ -613,7 +629,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
         }
         setAvailableCharacters(minidiscSpec.getRemainingCharactersForTitles(testedDisc));
         setBeforeConversionAvailableCharacters(minidiscSpec.getRemainingCharactersForTitles(disc));
-        if(minidiscSpec.measurementUnits === 'bytes') calculateFreeSpaceBytes();
+        if (minidiscSpec.measurementUnits === 'bytes') calculateFreeSpaceBytes();
         else calculateFreeSpaceFrames();
     }, [disc, titles, currentlySelectedCodec, minidiscSpec]);
 
@@ -640,7 +656,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
             const isSelected = selectedTrackIndex === i;
             const ref = isSelected ? selectedTrackRef : null;
             let fileLength;
-            if(isUsingFrames) {
+            if (isUsingFrames) {
                 fileLength = file.duration;
             } else {
                 fileLength = minidiscSpec.translateToDefaultMeasuringModeFrom(file.forcedEncoding ?? currentlySelectedCodec, file.duration);
@@ -741,7 +757,9 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                         {secondsToHumanReadable(file.duration)}
                         {file.forcedEncoding && (
                             <Tooltip title="Forced format - this file will be uploaded as-is. Recording mode will be disregarded for it">
-                                <span className={classes.forcedEncodingLabel}>&nbsp;{createForcedEncodingText(currentlySelectedCodec, file)}</span>
+                                <span className={classes.forcedEncodingLabel}>
+                                    &nbsp;{createForcedEncodingText(currentlySelectedCodec, file)}
+                                </span>
                             </Tooltip>
                         )}
                     </TableCell>
@@ -985,12 +1003,13 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                     style={{ marginTop: '1em' }}
                     align="center"
                 >
-                    Error: The selected encoder backend does not support this codec! Please choose a different codec, or change the encoder in settings!
+                    Error: The selected encoder backend does not support this codec! Please choose a different codec, or change the encoder
+                    in settings!
                 </Typography>
                 <span className={classes.durationsSpan}>
                     <Typography component="h3" align="center" hidden={loadingMetadata}>
                         Total:{' '}
-                        {isUsingFrames ? 
+                        {isUsingFrames ? (
                             <TooltipOrDefault
                                 tooltipEnabled={minidiscSpec.availableFormats.length > 1}
                                 title={LeftInNondefaultCodecs((disc?.left ?? 0) - availableSPSeconds)}
@@ -1000,11 +1019,9 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                                     {secondsToHumanReadable((disc?.left ?? 0) - availableSPSeconds)} {thisSpecDefaultCodecName} time{' '}
                                 </span>
                             </TooltipOrDefault>
-                        : 
-                            <span>
-                                {bytesToHumanReadable((disc?.left ?? 0) - availableDurationUnits)}{' '}
-                            </span>
-                        }
+                        ) : (
+                            <span>{bytesToHumanReadable((disc?.left ?? 0) - availableDurationUnits)} </span>
+                        )}
                     </Typography>
                     <Typography
                         component="h3"
@@ -1013,7 +1030,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                         className={cx({ [classes.durationNotFit]: availableSPSeconds <= 0 })}
                     >
                         Remaining:{' '}
-                        {isUsingFrames ? 
+                        {isUsingFrames ? (
                             <TooltipOrDefault
                                 tooltipEnabled={minidiscSpec.availableFormats.length > 1}
                                 title={
@@ -1025,7 +1042,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                                                         minidiscSpec.translateDefaultMeasuringModeTo(
                                                             {
                                                                 codec: e.codec,
-                                                                bitrate: e.defaultBitrate
+                                                                bitrate: e.defaultBitrate,
                                                             },
                                                             availableSPSeconds
                                                         )
@@ -1042,11 +1059,9 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                                     {secondsToHumanReadable(availableSPSeconds)} {thisSpecDefaultCodecName} time
                                 </span>
                             </TooltipOrDefault>
-                        :
-                            <span>
-                                {bytesToHumanReadable(availableDurationUnits)}{' '}
-                            </span>
-                        }
+                        ) : (
+                            <span>{bytesToHumanReadable(availableDurationUnits)} </span>
+                        )}
                     </Typography>
                 </span>
                 {!fullWidthSupport && deviceSupportsFullWidth && fullWidthCharactersUsed ? (
