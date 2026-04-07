@@ -504,6 +504,7 @@ export class HiMDFullService extends HiMDRestrictedService {
             await this.session!.finalizeSession();
             this.session = null;
         }
+        await this.himd!.flush();
         this.streamingWorker?.close();
         this.streamingWorker = null;
     }
@@ -555,7 +556,8 @@ export class HiMDFullService extends HiMDRestrictedService {
                         encrypted: obj.byte - firstByteOffset,
                         total: obj.totalBytes - firstByteOffset,
                     });
-                }
+                },
+                true
             );
         } else {
             if (!this.session) {
@@ -599,6 +601,7 @@ export class HiMDFullService extends HiMDRestrictedService {
                     written = writtenBytes;
                     runCallback();
                 },
+                true
             );
         }
     }
