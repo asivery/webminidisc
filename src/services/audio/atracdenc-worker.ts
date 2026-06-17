@@ -1,7 +1,13 @@
 /* eslint no-restricted-globals: 0 */
+
 function getPublicPathFor(script: string) {
-    return `${import.meta.env.BASE_URL}/${script}`;
+    const base = import.meta.env.BASE_URL || '/';
+    const cleanBase = base.endsWith('/') ? base : `${base}/`;
+    const cleanScript = script.startsWith('/') ? script.slice(1) : script;
+
+    return new URL(`${cleanBase}${cleanScript}`, self.location.origin).toString();
 }
+
 export class AtracdencProcess {
     private messageCallback?: (ev: MessageEvent) => void;
 
@@ -21,6 +27,7 @@ export class AtracdencProcess {
             this.messageCallback = resolve;
             this.worker.postMessage({ action: 'encode', bitrate, data }, [data]);
         });
+
         return eventData.data.result as ArrayBuffer;
     }
 
@@ -29,36 +36,60 @@ export class AtracdencProcess {
     }
 
     handleMessage(ev: MessageEvent) {
-        this.messageCallback!(ev);
+        this.messageCallback?.(ev);
         this.messageCallback = undefined;
     }
 }
 
 if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-    // Worker
     let Module: any;
+
     onmessage = async (ev: MessageEvent) => {
         const { action, ...others } = ev.data;
+
         if (action === 'init') {
-            self.importScripts(getPublicPathFor(`atracdenc.js`));
+            self.importScripts(getPublicPathFor('atracdenc.js'));
+
             (self as any).Module().then((m: any) => {
                 Module = m;
-                self.postMessage({ action: 'init' });
-                Module.setLogger && Module.setLogger((msg: string, stream: string) => console.log(`${stream}: ${msg}`));
-            });
-        } else if (action === 'encode') {
-            const { bitrate, data } = others;
-            const inWavFile = `inWavFile.wav`;
-            const outAt3File = `outAt3File.aea`;
-            const dataArray = new Uint8Array(data);
-            Module.FS.writeFile(`${inWavFile}`, dataArray);
-            Module.callMain([`-e`, `atrac3`, `-i`, inWavFile, `-o`, outAt3File, `--bitrate`, bitrate]);
 
-            // Read file and trim header (96 bytes)
+                self.postMessage({ action: 'init' });
+
+                if (Module.setLogger) {
+                    Module.setLogger((msg: string, stream: string) => {
+                        console.log(`${stream}: ${msg}`);
+                    });
+                }
+            });
+
+            return;
+        }
+
+        if (action === 'encode') {
+            const { bitrate, data } = others;
+            const inWavFile = 'inWavFile.wav';
+            const outAt3File = 'outAt3File.aea';
+            const dataArray = new Uint8Array(data);
+
+            Module.FS.writeFile(inWavFile, dataArray);
+
+            Module.callMain([
+                '-e',
+                'atrac3',
+                '-i',
+                inWavFile,
+                '-o',
+                outAt3File,
+                '--bitrate',
+                bitrate,
+            ]);
+
+            // Read file and trim header, 96 bytes.
             const fileStat = Module.FS.stat(outAt3File);
             const size = fileStat.size;
             const tmp = new Uint8Array(size - 96);
             const outAt3FileStream = Module.FS.open(outAt3File, 'r');
+
             Module.FS.read(outAt3FileStream, tmp, 0, tmp.length, 96);
             Module.FS.close(outAt3FileStream);
 
@@ -73,6 +104,4 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
             );
         }
     };
-} else {
-    // Main
 }
