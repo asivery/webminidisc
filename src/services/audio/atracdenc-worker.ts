@@ -1,6 +1,6 @@
 /* eslint no-restricted-globals: 0 */
 function getPublicPathFor(script: string) {
-    return `${import.meta.env.BASE_URL}/${script}`;
+    return `${import.meta.env.BASE_URL}${script}`;
 }
 export class AtracdencProcess {
     private messageCallback?: (ev: MessageEvent) => void;
@@ -10,14 +10,14 @@ export class AtracdencProcess {
     }
 
     async init() {
-        await new Promise<MessageEvent>(resolve => {
+        await new Promise<MessageEvent>((resolve) => {
             this.messageCallback = resolve;
             this.worker.postMessage({ action: 'init' });
         });
     }
 
     async encode(data: ArrayBuffer, bitrate: string) {
-        const eventData = await new Promise<MessageEvent>(resolve => {
+        const eventData = await new Promise<MessageEvent>((resolve) => {
             this.messageCallback = resolve;
             this.worker.postMessage({ action: 'encode', bitrate, data }, [data]);
         });

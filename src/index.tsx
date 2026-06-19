@@ -21,7 +21,7 @@ serviceRegistry.mediaRecorderService = new MediaRecorderService();
 serviceRegistry.mediaSessionService = new BrowserMediaSessionService(store);
 
 Object.defineProperty(window, 'wmdVersion', {
-    value: '1.5.4',
+    value: '1.6.0',
     writable: false,
 });
 
@@ -32,7 +32,7 @@ if (localStorage.getItem('version') !== (window as any).wmdVersion) {
 }
 
 (function setupEventHandlers() {
-    window.addEventListener('beforeunload', ev => {
+    window.addEventListener('beforeunload', (ev) => {
         const state = store.getState();
         const isUploading = state.uploadDialog.visible;
         const isDownloading = state.factoryProgressDialog.visible || state.recordDialog.visible;
@@ -44,8 +44,8 @@ if (localStorage.getItem('version') !== (window as any).wmdVersion) {
     });
 
     if (navigator && navigator.usb) {
-        navigator.usb.ondisconnect = function(event) {
-            if(serviceRegistry.netmdService!.isDeviceConnected(event.device)){
+        navigator.usb.ondisconnect = function (event) {
+            if (serviceRegistry.netmdService!.isDeviceConnected(event.device)) {
                 store.dispatch(appActions.setMainView('WELCOME'));
                 document.title = originalApplicationTitle;
             } else {
@@ -60,7 +60,7 @@ if (localStorage.getItem('version') !== (window as any).wmdVersion) {
     Object.defineProperty(window, 'reload', {
         value: window.native?.reload ?? window.location.reload.bind(window.location),
         writable: false,
-        configurable: false
+        configurable: false,
     });
 
     if (!('Notification' in window) || Notification.permission === 'denied') {
@@ -124,7 +124,7 @@ if (localStorage.getItem('version') !== (window as any).wmdVersion) {
                 }
                 // Since this function doesn't execute if there's any operational dialog on screen
                 // (including the track upload dialog), this won't conflict with anything.
-                if(document.title !== originalApplicationTitle) {
+                if (document.title !== originalApplicationTitle) {
                     document.title = originalApplicationTitle;
                 }
                 await sleep(250);
@@ -146,4 +146,3 @@ root.render(
         </SettingsResetErrorBoundary>
     </Provider>
 );
-

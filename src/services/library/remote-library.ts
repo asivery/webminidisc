@@ -24,14 +24,14 @@ export class RemoteLibraryService extends DefaultFfmpegAudioExportService implem
         this.address = parameters.address as string;
     }
 
-    getSupport(codec: CodecFamily): 'perfect' {
-        return 'perfect';
+    getSupport(_codec: CodecFamily) {
+        return { state: 'perfect' as const, gapless: false };
     }
 
     async getDatabase(): Promise<LocalDatabase> {
         const dbPage = new URL(this.address);
-        dbPage.pathname = "/database";
-        dbPage.searchParams.append("cache", Math.random() + "");
+        dbPage.pathname = '/database';
+        dbPage.searchParams.append('cache', Math.random() + '');
         const resp = await fetch(dbPage);
         const json = await resp.json();
         return json as LocalDatabase;
@@ -45,20 +45,20 @@ export class RemoteLibraryService extends DefaultFfmpegAudioExportService implem
             rawURL.pathname += 'get_local';
             rawURL.searchParams.set('file_name', filePath);
             let response: Response | null = null;
-            for(let i = 0; i<MAX_TRIES; i++){
-                try{
+            for (let i = 0; i < MAX_TRIES; i++) {
+                try {
                     response = await fetch(rawURL);
                     break;
-                }catch(ex){
-                    console.log("Error while fetching: " + ex);
+                } catch (ex) {
+                    console.log('Error while fetching: ' + ex);
                 }
             }
-            if(response === null) {
-                throw new Error("Failed to convert audio!");
+            if (response === null) {
+                throw new Error('Failed to convert audio!');
             }
-            const fileTokens = filePath.split("/");
+            const fileTokens = filePath.split('/');
             const fileName = fileTokens[fileTokens.length - 1];
-            const asFile = new File([ await response.blob() ], fileName);
+            const asFile = new File([await response.blob()], fileName);
             await this.prepare(asFile);
             return this.export(params);
         } else {
@@ -93,23 +93,23 @@ export class RemoteLibraryService extends DefaultFfmpegAudioExportService implem
             encodingURL.searchParams.set('file_name', filePath);
             if (enableReplayGain !== undefined) encodingURL.searchParams.set('applyReplaygain', enableReplayGain.toString());
             let response: Response | null = null;
-            for(let i = 0; i<MAX_TRIES; i++){
-                try{
+            for (let i = 0; i < MAX_TRIES; i++) {
+                try {
                     response = await fetch(encodingURL.href);
-                    if(response === null) {
-                        throw new Error("Failed to convert audio!");
+                    if (response === null) {
+                        throw new Error('Failed to convert audio!');
                     }
                     const source = await response.arrayBuffer();
                     const content = new Uint8Array(source);
                     const file = new File([content], 'test.at3');
                     const headerLength = (await getATRACWAVEncoding(file))!.headerLength;
                     return source.slice(headerLength);
-                }catch(ex){
-                    console.log("Error while fetching: " + ex);
+                } catch (ex) {
+                    console.log('Error while fetching: ' + ex);
                 }
             }
 
-            throw new Error("Failed to transcode audio!");
+            throw new Error('Failed to transcode audio!');
         }
     }
 }

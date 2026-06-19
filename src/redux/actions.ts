@@ -1271,7 +1271,11 @@ export function flushDevice() {
     };
 }
 
-export function convertAndUpload(files: TitledFile[], format: Codec, additionalParameters?: { enableReplayGain: boolean }) {
+export function convertAndUpload(
+    files: TitledFile[],
+    format: Codec,
+    additionalParameters: { enableReplayGain: boolean; enableGapless: boolean }
+) {
     return async function (dispatch: AppDispatch, getState: () => RootState) {
         const deviceCapabilities = getState().main.deviceCapabilities;
         if (files.some((e) => e.forcedEncoding?.codec === 'SPS' || e.forcedEncoding?.codec === 'SPM')) {
@@ -1362,10 +1366,18 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
             }
         };
 
-        const updateEncodeProgressCallback = (object: { state: number; total: number }) => {
+        // TODO: Make this less jank when there is more than one song being uploaded.
+        const updateEncodeProgressCallback = (trackNumber: number, totalTracks: number, object: { state: number; total: number }) => {
             const now = new Date().getTime();
             if (now - lastConvertProgress > 200) {
-                queueMicrotask(() => dispatch(uploadDialogActions.setTrackEncodingProgress(object)));
+                queueMicrotask(() =>
+                    dispatch(
+                        uploadDialogActions.setTrackEncodingProgress({
+                            total: totalTracks,
+                            state: trackNumber /* starts at 0 */ + object.state / object.total,
+                        })
+                    )
+                );
                 lastConvertProgress = now;
                 updateTitle();
             }
@@ -1471,8 +1483,8 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
 
                         const exportParams: ExportParams = {
                             format: audioExportFormat,
-                            enableReplayGain: additionalParameters?.enableReplayGain,
-                            lastInBatch: j === files.length - 1,
+                            enableReplayGain: additionalParameters.enableReplayGain,
+                            writeGapless: additionalParameters.enableGapless && j !== files.length - 1,
                         };
 
                         let data: ArrayBuffer;
@@ -1487,7 +1499,10 @@ export function convertAndUpload(files: TitledFile[], format: Codec, additionalP
                             try {
                                 await audioExportService!.prepare(file);
 
-                                data = await audioExportService!.export(exportParams, updateEncodeProgressCallback);
+                                data = await audioExportService!.export(
+                                    exportParams,
+                                    updateEncodeProgressCallback.bind(null, j, files.length)
+                                );
                                 totalBytesCalc += data.byteLength;
                                 convertNext();
                                 resolve({ file: f, data: data });

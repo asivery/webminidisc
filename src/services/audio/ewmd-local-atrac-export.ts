@@ -24,7 +24,7 @@ export class LocalAtracExportService extends DefaultFfmpegAudioExportService {
         const arrayBuffer = data.buffer as ArrayBuffer;
 
         const response = await window.native!.invokeLocalEncoder!(this.ffmpeg, this.exe, arrayBuffer, this.inFileName, params);
-        if(!response) throw new Error("Couldn't invoke the local encoder!");
+        if (!response) throw new Error("Couldn't invoke the local encoder!");
 
         const content = new Uint8Array(response);
         const file = new File([content], 'test.at3');
@@ -35,7 +35,7 @@ export class LocalAtracExportService extends DefaultFfmpegAudioExportService {
         return await this.encodeATRAC3(parameters);
     }
 
-    getSupport(codec: CodecFamily): 'perfect' {
-        return 'perfect';
+    getSupport(_codec: CodecFamily) {
+        return { state: 'perfect' as const, gapless: false };
     }
 }

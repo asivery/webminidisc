@@ -10,16 +10,16 @@ export interface LogPayload {
 export type ExportParams = {
     format: { bitrate: number; codec: 'AT3' | 'A3+' | 'PCM' | 'MP3' };
     enableReplayGain?: boolean;
-    lastInBatch: boolean;
+    writeGapless: boolean;
 };
 
 export interface AudioExportService {
     init(): Promise<void>;
-    export(params: ExportParams, callback: (obj: { state: number, total: number }) => void): Promise<ArrayBuffer>;
+    export(params: ExportParams, callback: (obj: { state: number; total: number }) => void): Promise<ArrayBuffer>;
     info(): Promise<{ format: string | null; input: string | null }>;
     prepare(file: File): Promise<void>;
 
-    getSupport(codec: CodecFamily): 'perfect' | 'mediocre' | 'unsupported';
+    getSupport(codec: CodecFamily): { state: 'perfect' | 'mediocre' | 'unsupported'; gapless: boolean };
 }
 
 export abstract class DefaultFfmpegAudioExportService implements AudioExportService {
@@ -112,7 +112,7 @@ export abstract class DefaultFfmpegAudioExportService implements AudioExportServ
         return `${additionalCommands} ${commonFormatting} ${moreParams ?? ''} -f ${outputFormat}`;
     }
 
-    async export(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void) {
+    async export(parameters: ExportParams, callback?: (obj: { state: number; total: number }) => void) {
         const { format } = parameters;
         let result: ArrayBuffer;
         if (format.codec === `PCM`) {
@@ -148,7 +148,7 @@ export abstract class DefaultFfmpegAudioExportService implements AudioExportServ
         return data.buffer;
     }
 
-    abstract encodeATRAC3(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void): Promise<ArrayBuffer>;
-    abstract encodeATRAC3Plus(parameters: ExportParams, callback?: (obj: { state: number, total: number}) => void): Promise<ArrayBuffer>;
-    abstract getSupport(codec: CodecFamily): 'perfect' | 'mediocre' | 'unsupported';
+    abstract encodeATRAC3(parameters: ExportParams, callback?: (obj: { state: number; total: number }) => void): Promise<ArrayBuffer>;
+    abstract encodeATRAC3Plus(parameters: ExportParams, callback?: (obj: { state: number; total: number }) => void): Promise<ArrayBuffer>;
+    abstract getSupport(codec: CodecFamily): { state: 'perfect' | 'mediocre' | 'unsupported'; gapless: boolean };
 }

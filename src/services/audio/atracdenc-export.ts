@@ -41,8 +41,10 @@ export class AtracdencAudioExportService extends DefaultFfmpegAudioExportService
     }
 
     getSupport(codec: CodecFamily) {
-        if (['PCM', 'MP3', 'SPS', 'SPM'].includes(codec)) return 'perfect';
-        if (['LP2', 'LP4', 'AT3'].includes(codec)) return 'mediocre';
-        return 'unsupported';
+        let state: ReturnType<DefaultFfmpegAudioExportService['getSupport']>['state'] = 'unsupported';
+        if (['PCM', 'MP3', 'SPS', 'SPM'].includes(codec)) state = 'perfect';
+        if (['LP2', 'LP4', 'AT3'].includes(codec)) state = 'mediocre';
+
+        return { state, gapless: false };
     }
 }

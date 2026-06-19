@@ -63,7 +63,6 @@ class CDAatracproject {
             const destination = this.reg32[0],
                 source = this.reg32[3],
                 length = this.reg32[1];
-            // console.log("XFER called!", destination, source, length);
             if(source >= 0x50000000) {
                 const sourceOffset = _atrac.inputCursor;
                 this.mem8.set(_atrac.data!.subarray(sourceOffset, sourceOffset + length), destination);
@@ -120,7 +119,6 @@ class CDAatracproject {
         await this._cpuStop();
         return this.emulator.v86.cpu.reg32.valueOf()[0];
     }
-
 
     async process(inputData: Uint8Array, bitrate: number, lastInBatch: boolean, callback: (progress: number) => void) {
         this.data = inputData;

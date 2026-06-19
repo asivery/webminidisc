@@ -53,33 +53,33 @@ export class RemoteAtracExportService extends DefaultFfmpegAudioExportService {
         encodingURL.searchParams.set('type', encoderFormat);
         if (enableReplayGain !== undefined) encodingURL.searchParams.set('applyReplaygain', enableReplayGain.toString());
         let response: Response | null = null;
-        for(let i = 0; i<MAX_TRIES; i++){
-            try{
+        for (let i = 0; i < MAX_TRIES; i++) {
+            try {
                 response = await fetch(encodingURL.href, {
                     method: 'POST',
                     body: payload,
                 });
-                if(response === null) {
-                    throw new Error("Failed to convert audio!");
+                if (response === null) {
+                    throw new Error('Failed to convert audio!');
                 }
                 const source = await response.arrayBuffer();
                 const content = new Uint8Array(source);
                 const file = new File([content], 'test.at3');
                 const headerLength = (await getATRACWAVEncoding(file))!.headerLength;
                 return source.slice(headerLength);
-            }catch(ex){
-                console.log("Error while fetching: " + ex);
+            } catch (ex) {
+                console.log('Error while fetching: ' + ex);
             }
         }
 
-        throw new Error("Failed to transcode audio!");
+        throw new Error('Failed to transcode audio!');
     }
 
     async encodeATRAC3Plus(parameters: ExportParams): Promise<ArrayBuffer> {
         return await this.encodeATRAC3(parameters);
     }
 
-    getSupport(codec: CodecFamily): 'perfect' {
-        return 'perfect';
+    getSupport(_codec: CodecFamily) {
+        return { state: 'perfect' as const, gapless: false };
     }
 }

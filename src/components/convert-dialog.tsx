@@ -555,10 +555,15 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     }, [setTracksOrderVisible]);
 
     const [enableReplayGain, setEnableReplayGain] = useState(false);
+    const [enableGapless, setEnableGapless] = useState(false);
 
     const handleToggleReplayGain = useCallback(() => {
         setEnableReplayGain((enableReplayGain) => !enableReplayGain);
     }, [setEnableReplayGain]);
+
+    const handleToggleGapless = useCallback(() => {
+        setEnableGapless((enableGapless) => !enableGapless);
+    }, [setEnableGapless]);
 
     const handleToggleFullWidthSupport = useCallback(() => {
         dispatch(appActions.setFullWidthSupport(!fullWidthSupport));
@@ -831,13 +836,21 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 currentlySelectedCodec,
                 {
                     enableReplayGain,
+                    enableGapless,
                 }
             )
         );
-    }, [dispatch, handleClose, titles, currentlySelectedCodec, files, enableReplayGain]);
+    }, [dispatch, handleClose, titles, currentlySelectedCodec, files, enableReplayGain, enableGapless]);
 
-    const isSelectedMediocre = serviceRegistry.audioExportService!.getSupport(currentlySelectedCodec.codec) === 'mediocre';
-    const isSelectedUnsupported = serviceRegistry.audioExportService!.getSupport(currentlySelectedCodec.codec) === 'unsupported';
+    const encoderSupportState = useMemo(
+        () => serviceRegistry.audioExportService!.getSupport(currentlySelectedCodec.codec),
+        [currentlySelectedCodec]
+    );
+    useEffect(() => {
+        if (!encoderSupportState.gapless) setEnableGapless(false);
+    }, [setEnableGapless, encoderSupportState]);
+    const isSelectedMediocre = encoderSupportState.state === 'mediocre';
+    const isSelectedUnsupported = encoderSupportState.state === 'unsupported';
     const formatsSupport = minidiscSpec.availableFormats.map((e) => serviceRegistry.audioExportService!.getSupport(e.codec));
 
     const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
@@ -905,10 +918,10 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                         <ToggleButtonGroup value={currentlySelectedCodecIndex[0]} exclusive onChange={handleChangeFormat} size="small">
                             {minidiscSpec.availableFormats.map((e, idx) => (
                                 <ToggleButton
-                                    disabled={formatsSupport[idx] === 'unsupported'}
+                                    disabled={formatsSupport[idx].state === 'unsupported'}
                                     classes={{
                                         root: cx(classes.toggleButton, {
-                                            [classes.toggleButtonWarning]: formatsSupport[idx] === 'mediocre',
+                                            [classes.toggleButtonWarning]: formatsSupport[idx].state === 'mediocre',
                                         }),
                                     }}
                                     key={`k-uploadformat-${e.codec}`}
@@ -1163,6 +1176,12 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                             label={`Use ReplayGain`}
                             className={classes.advancedOption}
                             control={<Checkbox checked={enableReplayGain} onChange={handleToggleReplayGain} />}
+                        />
+                        <FormControlLabel
+                            label={`Gapless`}
+                            className={classes.advancedOption}
+                            disabled={!encoderSupportState.gapless}
+                            control={<Checkbox checked={enableGapless} onChange={handleToggleGapless} />}
                         />
                     </AccordionDetails>
                 </Accordion>

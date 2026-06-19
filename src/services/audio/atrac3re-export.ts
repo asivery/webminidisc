@@ -2,8 +2,9 @@ import { CustomParameters } from '../../custom-parameters';
 import { CodecFamily } from '../interfaces/netmd';
 import { DefaultFfmpegAudioExportService, ExportParams } from './audio-export';
 
-class Atrac3OSProcess {
+export class Atrac3Re {
     private messageCallback?: (ev: MessageEvent) => void;
+    private progress?: (progress: number) => void;
 
     constructor(public worker: Worker) {
         worker.onmessage = this.handleMessage.bind(this);
@@ -16,17 +17,10 @@ class Atrac3OSProcess {
         });
     }
 
-    async encode(data: ArrayBuffer, bitrate: number, lastInBatch: boolean, callback?: (obj: { state: number; total: number }) => void) {
-        const total = data.byteLength;
+    async encode(data: ArrayBuffer, bitrate: number, lastInBatch: boolean, progress?: (pg: number) => void) {
+        this.progress = progress;
         const eventData = await new Promise<MessageEvent>((resolve) => {
-            this.messageCallback = (msg) => {
-                if (!msg.data.result) {
-                    callback?.({ state: msg.data.progress, total });
-                } else {
-                    resolve(msg);
-                    this.messageCallback = undefined;
-                }
-            };
+            this.messageCallback = resolve;
             this.worker.postMessage({ action: 'encode', bitrate, data, lastInBatch }, [data]);
         });
         return eventData.data.result as ArrayBuffer;
@@ -37,21 +31,23 @@ class Atrac3OSProcess {
     }
 
     handleMessage(ev: MessageEvent) {
-        this.messageCallback!(ev);
+        if (ev.data.pcm_cursor !== undefined) {
+            this.progress?.(ev.data.pcm_cursor as number);
+        } else {
+            this.messageCallback!(ev);
+            this.messageCallback = undefined;
+        }
     }
 }
 
-export class Atrac3OSExportService extends DefaultFfmpegAudioExportService {
-    public atrac3OSProcess?: Atrac3OSProcess;
+export class Atrac3REExportService extends DefaultFfmpegAudioExportService {
+    public atrac3REProcess?: Atrac3Re;
     public ready?: Promise<void>;
-    constructor(_parameters: CustomParameters) {
-        super();
-    }
 
     async prepare(file: File): Promise<void> {
-        if (!this.atrac3OSProcess) {
-            this.atrac3OSProcess = new Atrac3OSProcess(new Worker(new URL('./atrac3os-worker', import.meta.url), { type: 'classic' }));
-            this.ready = this.atrac3OSProcess.init();
+        if (!this.atrac3REProcess) {
+            this.atrac3REProcess = new Atrac3Re(new Worker(new URL('./atrac3re-worker', import.meta.url), { type: 'classic' }));
+            this.ready = this.atrac3REProcess.init();
         }
         await super.prepare(file);
     }
@@ -61,16 +57,22 @@ export class Atrac3OSExportService extends DefaultFfmpegAudioExportService {
         const outFileName = `${this.outFileNameNoExt}.wav`;
         await this.ffmpegProcess.transcode(this.inFileName, outFileName, ffmpegCommand);
         const { data } = (await this.ffmpegProcess.read(outFileName)) as { data: Uint8Array };
+        const length = data.length;
 
         await this.ready; // Make sure Worker is ready
 
         const finished = !parameters.writeGapless;
 
-        const resultData = await this.atrac3OSProcess!.encode(data.buffer as ArrayBuffer, parameters.format.bitrate!, finished, callback);
+        const resultData = await this.atrac3REProcess!.encode(
+            data.buffer as ArrayBuffer,
+            parameters.format.bitrate!,
+            finished,
+            callback && ((bytesEncoded) => callback({ state: bytesEncoded, total: length }))
+        );
 
         if (finished) {
-            this.atrac3OSProcess?.terminate();
-            this.atrac3OSProcess = undefined;
+            this.atrac3REProcess?.terminate();
+            this.atrac3REProcess = undefined;
         }
         return resultData as ArrayBuffer;
     }

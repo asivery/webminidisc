@@ -2,6 +2,12 @@ import { ChangelogVersion } from "./bridge-types";
 
 export const CHANGELOG: ChangelogVersion[] = [
     {
+        name: "Version 1.6.0",
+        contents: [
+            "Added a local high-quality ATRAC3/3+ encoder",
+        ],
+    },
+    {
         name: "Version 1.5.4",
         contents: [
             "Fixed HiMD seeking back-and-forth every time a track is uploaded",

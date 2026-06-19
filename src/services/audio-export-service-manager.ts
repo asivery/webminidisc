@@ -1,6 +1,7 @@
 import { CustomParameterInfo, CustomParameters } from '../custom-parameters';
 import { ATRACOS_INCLUDED } from '../version-info';
 import { Atrac3OSExportService } from './audio/atrac3os-export';
+import { Atrac3REExportService } from './audio/atrac3re-export';
 import { AtracdencAudioExportService } from './audio/atracdenc-export';
 import { AudioExportService } from './audio/audio-export';
 import { LocalAtracExportService } from './audio/ewmd-local-atrac-export';
@@ -14,6 +15,11 @@ interface AudioServicePrototype<T extends AudioExportService> {
 }
 
 export const AudioServices: AudioServicePrototype<AudioExportService>[] = [
+    {
+        name: 'At3RE',
+        create: Atrac3REExportService,
+        description: 'Reverse engineered at3tool encoder. Client-side only, has full ATRAC3/3+ support.',
+    },
     {
         name: 'Atracdenc',
         create: AtracdencAudioExportService,
@@ -48,14 +54,6 @@ if (ATRACOS_INCLUDED) {
         name: 'Built in High-Quality Encoder',
         create: Atrac3OSExportService,
         description: 'The Sony encoder in a purpose-built Web VM',
-        customParameters: [
-            {
-                varName: 'gapless',
-                type: 'boolean',
-                userFriendlyName: 'Allow gapless recording',
-                defaultValue: false,
-            },
-        ],
     });
 }
 
