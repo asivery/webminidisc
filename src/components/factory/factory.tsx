@@ -471,6 +471,7 @@ const Toc = () => {
                                 {selectedTab === 0 && selectedTile !== 0 && junctionTables[selectedTab][selectedTile] !== 0 && (
                                     <ComponentOrDisabled disabled={!exploitCapabilities.includes(ExploitCapability.downloadAtrac)}>
                                         <IconButton
+                                            aria-label='Download track'
                                             disabled={!exploitCapabilities.includes(ExploitCapability.downloadAtrac) || modified}
                                             onClick={e => handleDownloadTrack(selectedTile - 1)}
                                         >
