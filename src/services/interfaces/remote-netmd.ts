@@ -213,7 +213,16 @@ export class NetMDRemoteService extends NetMDService {
         progressCallback: (progress: { written: number; encrypted: number; total: number }) => void
     ) {
         return new Promise<void>((res, rej) => {
-            const format = _format.codec === 'AT3' ? { codec: _format.bitrate === 66 ? 'LP4' : 'LP2' } : _format;
+            // The direct-USB path (netmd.ts) collapses the SPS/SPM recording codecs
+            // to the 'SP' wireformat before looking them up in WireformatDict; the
+            // remote path must do the same, otherwise WireformatDict['SPS'] is
+            // undefined and the encryption worker produces no packets (upload hangs).
+            const format =
+                _format.codec === 'AT3'
+                    ? { codec: _format.bitrate === 66 ? 'LP4' : 'LP2' }
+                    : _format.codec === 'SPS' || _format.codec === 'SPM'
+                    ? { codec: 'SP' }
+                    : _format;
             const servURL = new URL(this.server);
             const wsURL = new URL(`${servURL.protocol === 'https:' ? 'wss:' : 'ws:'}//${servURL.host}/upload`);
             //Send file
