@@ -1,0 +1,145 @@
+/* MiniDisc Studio fork theme changes: 2026-09-16. */
+html,
+body {
+    position: static;
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: #080b12;
+}
+
+#root {
+    min-height: 100vh;
+    height: auto;
+}
+
+.studio-layout {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: #e7edf5;
+}
+
+.studio-header {
+    display: flex;
+    min-height: 76px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 8px;
+    border-bottom: 1px solid rgba(116, 147, 178, 0.14);
+}
+
+.studio-brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.studio-brand-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid rgba(39, 226, 195, 0.62);
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(39, 226, 195, 0.18), rgba(97, 86, 255, 0.12));
+    box-shadow: 0 0 26px rgba(39, 226, 195, 0.13), inset 0 0 14px rgba(39, 226, 195, 0.08);
+    color: #7bf5e1;
+    font: 700 13px/1 'Roboto', sans-serif;
+    letter-spacing: 0.08em;
+}
+
+.studio-brand-name {
+    color: #eef6ff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+}
+
+.studio-brand-caption {
+    margin-top: 5px;
+    color: #718296;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.17em;
+}
+
+.studio-header-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #91a2b4;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+}
+
+.studio-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #27e2c3;
+    box-shadow: 0 0 12px rgba(39, 226, 195, 0.8);
+}
+
+[data-studio-surface='true'] {
+    box-sizing: border-box;
+    flex: 1 0 auto;
+    width: 100%;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 20px 0 12px !important;
+    padding: clamp(16px, 2vw, 30px) !important;
+    overflow: hidden;
+    border: 1px solid rgba(111, 140, 171, 0.2);
+    border-radius: 18px !important;
+    background: linear-gradient(145deg, rgba(17, 25, 37, 0.98), rgba(11, 16, 25, 0.98)) !important;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 255, 255, 0.025) !important;
+}
+
+.studio-layout .MuiButton-containedPrimary,
+.studio-layout .MuiFab-primary {
+    color: #061310;
+    font-weight: 700;
+}
+
+.studio-layout .MuiTableHead-root .MuiTableCell-root {
+    color: #8193a7;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.studio-attribution {
+    padding: 3px 0 8px;
+    color: #718296;
+    font-size: 11px !important;
+}
+
+@media (max-width: 600px) {
+    .studio-layout {
+        padding-right: 12px !important;
+        padding-left: 12px !important;
+    }
+
+    .studio-header {
+        min-height: 66px;
+        padding: 0 4px;
+    }
+
+    .studio-header-status {
+        font-size: 8px;
+        letter-spacing: 0.07em;
+    }
+
+    [data-studio-surface='true'] {
+        margin-top: 12px !important;
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+}

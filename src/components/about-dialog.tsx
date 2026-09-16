@@ -1,3 +1,4 @@
+// MiniDisc Studio fork branding changes: 2026-09-16.
 import React from 'react';
 import { useDispatch } from '../frontend-utils';
 import { useShallowEqualSelector } from '../frontend-utils';
@@ -45,7 +46,7 @@ export const AboutDialog = (props: {}) => {
             TransitionComponent={Transition as any}
             aria-labelledby="about-dialog-slide-title"
         >
-            <DialogTitle id="about-dialog-slide-title">About Web MiniDisc Pro</DialogTitle>
+            <DialogTitle id="about-dialog-slide-title">About MiniDisc Studio</DialogTitle>
             <DialogContent>
                 <DialogContentText>Web MiniDisc Pro uses</DialogContentText>
                 <ul>

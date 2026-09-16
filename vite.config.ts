@@ -1,3 +1,4 @@
+// MiniDisc Studio fork install branding changes: 2026-09-16.
 import { defineConfig, } from 'vite'
 import react from '@vitejs/plugin-react'
 import svgr from "vite-plugin-svgr";
@@ -27,9 +28,9 @@ export default ({ mode }) => {
         registerType: 'autoUpdate',
         manifestFilename: 'manifest.json',
         manifest: {
-          "short_name": "Web MiniDisc",
-          "name": "Web MiniDisc",
-          "description": "Upload music to NetMD MiniDisc devices",
+          "short_name": "MiniDisc Studio",
+          "name": "MiniDisc Studio — NetMD Audio Workspace",
+          "description": "Record, transfer, manage, and recover audio for NetMD MiniDisc devices",
           "icons": [
             {
               "src": "MiniDisc192.png",

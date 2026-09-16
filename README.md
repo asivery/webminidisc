@@ -1,4 +1,6 @@
-# Web MiniDisc Pro
+# MiniDisc Studio
+
+MiniDisc Studio is a GPL-2.0 fork of [Web MiniDisc Pro](https://github.com/asivery/webminidisc), itself derived from [Web MiniDisc](https://github.com/cybercase/webminidisc). The interface is being redesigned while retaining upstream NetMD/WebUSB services. Copyright and license notices from upstream are preserved; changes made to this fork are dated in the affected source files.
 
 Copy audio to your NetMD MiniDisc device using only a web browser. Replace SonicStage, improve audio quality, and unlock new features. 
 

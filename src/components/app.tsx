@@ -1,3 +1,4 @@
+// MiniDisc Studio fork UI shell changes: 2026-09-16. Upstream device behavior remains unchanged.
 import React, { useMemo, lazy, Suspense } from 'react';
 import { belowDesktop, forAnyDesktop, forWideDesktop, useShallowEqualSelector, useThemeDetector } from '../frontend-utils';
 
@@ -12,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import { W95App } from './win95/app';
+import './studio-theme.css';
 
 const Toc = lazy(() => import('./factory/factory'));
 const Controls = lazy(() => import('./controls'));
@@ -20,14 +22,18 @@ const Main = lazy(() => import('./main'));
 const useStyles = makeStyles()((theme) => ({
     layout: {
         width: 'auto',
-        height: '100%',
+        height: 'auto',
+        minHeight: '100vh',
+        maxWidth: 1480,
+        margin: '0 auto',
+        padding: '0 24px 18px',
         [forAnyDesktop(theme)]: {
-            width: 600,
+            width: '100%',
             marginLeft: 'auto',
             marginRight: 'auto',
         },
         [forWideDesktop(theme)]: {
-            width: 700,
+            width: '100%',
         },
     },
 
@@ -41,10 +47,12 @@ const useStyles = makeStyles()((theme) => ({
             marginTop: theme.spacing(2),
             marginBottom: theme.spacing(1),
             padding: theme.spacing(3),
-            height: 200,
+            height: 'auto',
+            minHeight: 600,
         },
         [forWideDesktop(theme)]: {
-            height: 250,
+            height: 'auto',
+            minHeight: 680,
         },
     },
     paperShowsList: {
@@ -129,8 +137,8 @@ const darkTheme = createTheme({
         mode: 'dark',
         primary: {
             light: '#6ec6ff',
-            main: '#2196f3',
-            dark: '#0069c0',
+            main: '#27e2c3',
+            dark: '#14a891',
             contrastText: '#fff',
         },
         secondary: {
@@ -139,8 +147,8 @@ const darkTheme = createTheme({
             dark: '#c51162',
         },
         background: {
-            default: '#303030',
-            paper: '#424242',
+            default: '#080b12',
+            paper: '#101722',
         },
         action: {
             active: '#fff',
@@ -240,8 +248,19 @@ const InternalApp = () => {
                     </Backdrop>
                 }
             >
-                <main className={cx(classes.layout, { [classes.layoutFullWidth]: pageFullWidth })}>
+                <main className={cx('studio-layout', classes.layout, { [classes.layoutFullWidth]: pageFullWidth })}>
+                    <header className="studio-header">
+                        <div className="studio-brand">
+                            <div className="studio-brand-mark" aria-hidden="true">MD</div>
+                            <div>
+                                <div className="studio-brand-name">MINIDISC STUDIO</div>
+                                <div className="studio-brand-caption">NETMD AUDIO WORKSPACE</div>
+                            </div>
+                        </div>
+                        <div className="studio-header-status"><span className="studio-status-dot" /> READY FOR DEVICE</div>
+                    </header>
                     <Paper
+                        data-studio-surface="true"
                         className={cx(classes.paper, {
                             [classes.paperShowsList]: deviceCapabilities.includes(0 /*Capability.listContent*/),
                             [classes.paperFullHeight]: pageFullHeight,
@@ -253,7 +272,7 @@ const InternalApp = () => {
 
                         <Box className={classes.controlsContainer}>{mainView === 'MAIN' ? <Controls /> : null}</Box>
                     </Paper>
-                    <Typography variant="body2" color="textSecondary" className={classes.copyrightTypography}>
+                    <Typography variant="body2" color="textSecondary" className={`${classes.copyrightTypography} studio-attribution`}>
                         {'© '}
                         <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://stefano.brilli.me/">
                             Stefano Brilli

@@ -1,3 +1,4 @@
+// MiniDisc Studio fork branding changes: 2026-09-16.
 import React, { useCallback, useState } from 'react';
 import { useDispatch, batchActions } from '../frontend-utils';
 import { deleteService, pair } from '../redux/actions';
@@ -205,12 +206,12 @@ export const Welcome = (props: {}) => {
         <React.Fragment>
             <Box className={classes.headBox}>
                 <Typography component="h1" variant="h4">
-                    Web MiniDisc Pro
+                    MiniDisc Studio
                 </Typography>
                 <TopMenu />
             </Box>
             <Typography component="h2" variant="body2">
-                Brings NetMD Devices to the Web
+                A neon workspace for your NetMD collection
             </Typography>
             <Box className={classes.main}>
                 {browserSupported ? (
