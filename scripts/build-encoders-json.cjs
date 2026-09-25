@@ -27,7 +27,8 @@ for(const encoderFile of fs.readdirSync('dist/encoders')) {
         output.push({
             path: `encoders/${encoderFile}`,
             version: metadataContents.version,
-            id: metadataContents.encoderId
+            id: metadataContents.encoderId,
+            name: metadataContents.userFriendlyName,
         })
     }
 }

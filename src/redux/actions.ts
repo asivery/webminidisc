@@ -117,6 +117,7 @@ export function validateAndLoadEncoders(absoluteInit: boolean) {
                 id: string,
                 version: string,
                 path: string,
+                name: string,
             }[];
             try {
                 const result = await fetch(getPublicPathFor("encoders.json"));
@@ -132,7 +133,7 @@ export function validateAndLoadEncoders(absoluteInit: boolean) {
                             continue;
                         }
                     }
-                    toInstall.push(encoder.path);
+                    toInstall.push(encoder);
                 }
 
                 if(toInstall.length === 0) {
@@ -140,10 +141,10 @@ export function validateAndLoadEncoders(absoluteInit: boolean) {
                 } else {
                     console.log("Pulling encoders from server: ", toInstall);
                     dispatch(encoderDownloadDialog.setVisible(true));
-                    for(const pathToInstall of toInstall) {
-                        dispatch(encoderDownloadDialog.setProgress({ currentEncoderIndex: 0, totalEncoders: toInstall.length, currentEncoderName: pathToInstall }));
-                        console.log(`Downloading ${pathToInstall}...`);
-                        const rawSARFile = new Uint8Array(await (await fetch(getPublicPathFor(pathToInstall))).arrayBuffer());
+                    for(const entry of toInstall) {
+                        dispatch(encoderDownloadDialog.setProgress({ currentEncoderIndex: 0, totalEncoders: toInstall.length, currentEncoderName: entry.name }));
+                        console.log(`Downloading ${entry.id}...`);
+                        const rawSARFile = new Uint8Array(await (await fetch(getPublicPathFor(entry.path))).arrayBuffer());
                         EncoderStorageManager.INSTANCE.installEncoderSkipDependencyCheck(rawSARFile, true);
                     }
 
