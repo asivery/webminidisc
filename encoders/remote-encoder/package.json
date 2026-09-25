@@ -1,0 +1,15 @@
+{
+  "name": "remote-encoder",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "package": "OPWD=\"$(pwd)\" && npm run build && cd ../../ && npm run package-external-encoder -- \"$OPWD\" remote-encoder.wme"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
