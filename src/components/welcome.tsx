@@ -226,7 +226,7 @@ export const Welcome = (props: {}) => {
                                 color="primary"
                                 boxClassName={classes.buttonBox}
                                 width={200}
-                                disabled={Services[lastSelectedService].requiresChrome && !runningChrome}
+                                disabled={doesServiceRequireChrome(availableServices[lastSelectedService]) && !runningChrome}
                                 selectedIndex={lastSelectedService}
                                 dropdownMapping={mapToEntry}
                                 loading={connectingInProgress}
