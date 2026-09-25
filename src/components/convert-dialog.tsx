@@ -164,7 +164,7 @@ const useStyles = makeStyles()((theme) => ({
     nameNotFit: {
         color: theme.palette.warning.main,
     },
-    warningMediocreEncoder: {
+    warningIncompleteEncoder: {
         color: theme.palette.warning.main,
     },
     durationNotFit: {
@@ -851,7 +851,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     useEffect(() => {
         if (!encoderSupportState.gapless) setEnableGapless(false);
     }, [setEnableGapless, encoderSupportState]);
-    const isSelectedMediocre = encoderSupportState.state === 'poor';
+    const isSelectedIncomplete = encoderSupportState.state === 'poor';
     const isSelectedUnsupported = encoderSupportState.state === 'unsupported';
     const formatsSupport: { state: 'perfect' | 'poor' | 'unsupported'; gapless: boolean; bitrates: number[] }[] =
         minidiscSpec.availableFormats.map((e) => {
@@ -1012,12 +1012,12 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 </Typography>
                 <Typography
                     component="h3"
-                    className={classes.warningMediocreEncoder}
-                    hidden={!isSelectedMediocre}
+                    className={classes.warningIncompleteEncoder}
+                    hidden={!isSelectedIncomplete}
                     style={{ marginTop: '1em' }}
                     align="center"
                 >
-                    Warning: You are using a mediocre encoder. The resulting audio is not going to be perfect. Alternative encoders are
+                    Warning: You are using an incomplete encoder. The resulting audio is not going to be perfect. Alternative encoders are
                     available in the settings.
                 </Typography>
                 <Typography

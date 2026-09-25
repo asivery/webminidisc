@@ -127,7 +127,7 @@ export const CHANGELOG: ChangelogVersion[] = [
             "Added an option to strip TrProtect from all files via the homebrew mode",
             "Added CSV export as part of the archive disc command",
             "Added full width title to the upload progress dialog",
-            "Added a warning for when a mediocre encoder is used",
+            "Added a warning for when an incomplete encoder is used",
             "Added an option to rename tracks in the song recognition dialog",
             "Merged all settings into one dialog",
             "Fixed timestamps table in homebrew mode",
