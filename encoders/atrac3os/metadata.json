@@ -1,0 +1,8 @@
+{
+    "encoderId": "atrac3os",
+    "userFriendlyName": "Atrac3OS",
+    "description": "An x86 emulator running a copy of the original Sony ATRAC3/3+ encoder",
+    "version": "0.1.0",
+    "encoderDependencies": [],
+    "apiVersion": "1"
+}
