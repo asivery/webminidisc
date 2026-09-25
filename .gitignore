@@ -37,3 +37,4 @@ src/version-info.ts
 **/*.so
 
 **/*.wme
+public/encoders.json

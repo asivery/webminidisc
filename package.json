@@ -26,7 +26,8 @@
     "package-external-encoder": "cd extra/sar-packager && npm run build && bash ../../scripts/package-external-encoder.sh",
     
     "postbuild-default-encoders": "bash scripts/build-local-encoder.sh atracdenc && bash scripts/build-local-encoder.sh remote-encoder && npm run postbuild-finalize-encoders",
-    "postbuild-finalize-encoders": "node scripts/build-encoders-json.cjs"
+    "postbuild-finalize-encoders": "node scripts/build-encoders-json.cjs",
+    "prepare-dev-encoders": "npm run postbuild-default-encoders && cp -r dist/encoders* public/"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
