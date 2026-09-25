@@ -5,8 +5,8 @@ import { Disc, Group, Track } from './services/interfaces/netmd';
 import { createWorker } from '@ffmpeg/ffmpeg';
 import { ForcedEncodingFormat } from './redux/convert-dialog-feature';
 import { HiMDKBPSToFrameSize } from 'himd-js';
-import { ExportParams } from './services/audio/audio-export';
 import { SIGNATURES } from 'netmd-tocmanip';
+import { AudioEncoderV1ExportParams } from './services/audio/apiv1/external-interface';
 
 export type Promised<R> = R extends Promise<infer Q> ? Q : never;
 
@@ -50,7 +50,7 @@ export interface AdaptiveFile {
     album: string;
     artist: string;
     duration: number;
-    getForEncoding(encoding: ExportParams): Promise<ArrayBuffer>;
+    getForEncoding(encoding: AudioEncoderV1ExportParams): Promise<ArrayBuffer>;
 }
 
 export type TitledFile = {
@@ -87,8 +87,10 @@ export async function getMetadataFromFile(
         }
     }
 
-    let at3CodecInfo = await getATRACOMAEncoding(file);
-    if (!at3CodecInfo) at3CodecInfo = await getATRACWAVEncoding(file);
+    const fileData = new Uint8Array(await file.arrayBuffer());
+
+    let at3CodecInfo = await getATRACOMAEncoding(fileData);
+    if (!at3CodecInfo) at3CodecInfo = getATRACWAVEncoding(fileData);
 
     if (at3CodecInfo !== 'ILLEGAL' && at3CodecInfo !== null) {
         const dataSectionLengthKBits = ((file.size - at3CodecInfo.headerLength) * 8) / 1000;
@@ -104,8 +106,7 @@ export async function getMetadataFromFile(
     }
 
     try {
-        const fileData = await file.arrayBuffer();
-        const blob = new Blob([new Uint8Array(fileData)]);
+        const blob = new Blob([ fileData ]);
         const metadata = await mm.parseBlob(blob, { duration: true });
         const bitrate = (metadata.format.bitrate ?? 0) / 1000;
         const duration = metadata.format.duration ?? 0;
@@ -133,11 +134,10 @@ export async function getChannelsFromAEA(file: File) {
     return channels as 1 | 2;
 }
 
-export async function getATRACOMAEncoding(
-    file: File
-): Promise<{ format: { codec: 'AT3' | 'A3+'; bitrate: number }; headerLength: number } | 'ILLEGAL' | null> {
-    const fileData = new Uint8Array(await file.arrayBuffer());
-    if (file.size < 96) return null; // Too short to be an OMA
+export function getATRACOMAEncoding(
+    fileData: Uint8Array
+): { format: { codec: 'AT3' | 'A3+'; bitrate: number }; headerLength: number } | 'ILLEGAL' | null {
+    if (fileData.byteLength < 96) return null; // Too short to be an OMA
 
     let ea3Offset;
     if (Buffer.from(fileData.slice(0, 3)).toString() === 'ea3') {
@@ -187,11 +187,10 @@ export async function getATRACOMAEncoding(
     return 'ILLEGAL';
 }
 
-export async function getATRACWAVEncoding(
-    file: File
-): Promise<{ format: { codec: 'AT3' | 'A3+'; bitrate: number }; headerLength: number } | null> {
-    const fileData = await file.arrayBuffer();
-    if (file.size < 44) return null; // Too short to be a WAV
+export function getATRACWAVEncoding(
+    fileData: Uint8Array
+): { format: { codec: 'AT3' | 'A3+'; bitrate: number }; headerLength: number } | null {
+    if (fileData.byteLength < 44) return null; // Too short to be a WAV
 
     if (Buffer.from(fileData.slice(0, 4)).toString() !== 'RIFF') return null; // Missing header part 1
     if (Buffer.from(fileData.slice(8, 16)).toString() !== 'WAVEfmt ') return null; // Missing header part 2

@@ -72,6 +72,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { LeftInNondefaultCodecs } from './main-rows';
+import { transferCodecToExportCodec } from '../services/audio/apiv1/external-interface';
 
 const Transition = React.forwardRef(function Transition(props: SlideProps, ref: React.Ref<unknown>) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -330,8 +331,9 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                     } else {
                         const file = _file as File;
                         const metadata = await getMetadataFromFile(file);
+                        const fileContents = new Uint8Array(await file.arrayBuffer());
                         let forcedEncoding: null | 'ILLEGAL' | { format: ForcedEncodingFormat; headerLength: number } =
-                            await getATRACWAVEncoding(file);
+                            getATRACWAVEncoding(fileContents);
                         if (file.name.toLowerCase().endsWith('.aea')) {
                             const channels = await getChannelsFromAEA(file);
                             if (channels === 1 || channels === 2) {
@@ -349,7 +351,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                             };
                         }
                         if (forcedEncoding === null) {
-                            forcedEncoding = await getATRACOMAEncoding(file);
+                            forcedEncoding = getATRACOMAEncoding(fileContents);
                         }
 
                         if (forcedEncoding !== null && forcedEncoding !== 'ILLEGAL') {
@@ -843,15 +845,24 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     }, [dispatch, handleClose, titles, currentlySelectedCodec, files, enableReplayGain, enableGapless]);
 
     const encoderSupportState = useMemo(
-        () => serviceRegistry.audioExportService!.getSupport(currentlySelectedCodec.codec),
+        () => serviceRegistry.audioExportService!.getSupportFor(transferCodecToExportCodec(currentlySelectedCodec).codec),
         [currentlySelectedCodec]
     );
     useEffect(() => {
         if (!encoderSupportState.gapless) setEnableGapless(false);
     }, [setEnableGapless, encoderSupportState]);
-    const isSelectedMediocre = encoderSupportState.state === 'mediocre';
+    const isSelectedMediocre = encoderSupportState.state === 'poor';
     const isSelectedUnsupported = encoderSupportState.state === 'unsupported';
-    const formatsSupport = minidiscSpec.availableFormats.map((e) => serviceRegistry.audioExportService!.getSupport(e.codec));
+    const formatsSupport: { state: 'perfect' | 'poor' | 'unsupported'; gapless: boolean; bitrates: number[] }[] =
+        minidiscSpec.availableFormats.map((e) => {
+            const info = serviceRegistry.audioExportService!.getSupportFor(
+                transferCodecToExportCodec({ codec: e.codec, bitrate: 0 }).codec
+            );
+            return {
+                ...info,
+                bitrates: info.bitrates ? info.bitrates.filter((z) => e.availableBitrates.includes(z)) : e.availableBitrates
+            };
+        });
 
     const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
 
@@ -921,7 +932,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                                     disabled={formatsSupport[idx].state === 'unsupported'}
                                     classes={{
                                         root: cx(classes.toggleButton, {
-                                            [classes.toggleButtonWarning]: formatsSupport[idx].state === 'mediocre',
+                                            [classes.toggleButtonWarning]: formatsSupport[idx].state === 'poor',
                                         }),
                                     }}
                                     key={`k-uploadformat-${e.codec}`}

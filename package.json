@@ -16,12 +16,17 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "npm run update-version && vite",
-    "build": "npm run update-version && tsc && vite build",
+    "build-noencoders": "npm run update-version && tsc && vite build",
+    "build": "npm run build-noencoders && npm run postbuild-default-encoders",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "analyze": "source-map-explorer 'dist/assets/*.js'",
-    "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\nexport const ATRACOS_INCLUDED = $([ -f 'public/atrac3vm/system.cmi' ] && echo 1 || echo 0)\\n\\\" > src/version-info.ts\"",
-    "pretty": "prettier src/**/*.{ts,tsx} --write"
+    "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\n\\\" > src/version-info.ts\"",
+    "pretty": "prettier src/**/*.{ts,tsx} --write",
+    "package-external-encoder": "cd extra/sar-packager && npm run build && bash ../../scripts/package-external-encoder.sh",
+    
+    "postbuild-default-encoders": "bash scripts/build-local-encoder.sh atracdenc && bash scripts/build-local-encoder.sh remote-encoder && npm run postbuild-finalize-encoders",
+    "postbuild-finalize-encoders": "node scripts/build-encoders-json.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -35,6 +40,7 @@
     "clsx": "^2.1.0",
     "himd-js": "^0.2.13",
     "husky": "^9.0.11",
+    "idb": "^8.0.3",
     "jconv": "github:asivery/jconv-webminidisc",
     "jszip": "^3.10.1",
     "lint-staged": "^15.2.2",

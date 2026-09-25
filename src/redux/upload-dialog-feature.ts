@@ -17,6 +17,8 @@ export interface LoadingDialogState {
     titleCurrent: string;
     titleConverting: string;
 
+    conversionStepName: string | null;
+
     trackEncodeProgress: number;
     trackEncodeProgressOutOf: number;
 }
@@ -39,6 +41,8 @@ const initialState: LoadingDialogState = {
 
     trackEncodeProgress: 0,
     trackEncodeProgressOutOf: 0,
+
+    conversionStepName: null,
 };
 
 export const slice = createSlice({
@@ -56,7 +60,7 @@ export const slice = createSlice({
         setCancelUpload: (state, action: PayloadAction<boolean>) => {
             state.cancelled = action.payload;
         },
-        setTrackProgress: (
+        setOverallUploadProgress: (
             state,
             action: PayloadAction<{ total: number; current: number; converting: number; titleCurrent: string; titleConverting: string }>
         ) => {
@@ -66,9 +70,11 @@ export const slice = createSlice({
             state.titleCurrent = action.payload.titleCurrent;
             state.titleConverting = action.payload.titleConverting;
         },
-        setTrackEncodingProgress: (state, action: PayloadAction<{ state: number; total: number }>) => {
+        // The encoding progress of this one, individual track.
+        setTrackEncodingProgress: (state, action: PayloadAction<{ conversionStepName: string | null; state: number; total: number }>) => {
             state.trackEncodeProgress = action.payload.state;
             state.trackEncodeProgressOutOf = action.payload.total;
+            state.conversionStepName = action.payload.conversionStepName;
         },
     },
 });

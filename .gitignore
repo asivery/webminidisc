@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.js
 
@@ -11,6 +12,7 @@
 # production
 /build
 /dist
+**/dist
 
 # misc
 .DS_Store
@@ -33,3 +35,5 @@ src/version-info.ts
 **/libatrac.so.1
 **/*.o
 **/*.so
+
+**/*.wme

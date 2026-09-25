@@ -1,26 +1,16 @@
 import { CustomParameters } from '../../custom-parameters';
 import { getATRACWAVEncoding } from '../../utils';
+import { AudioEncoderV1ExportParams } from '../audio/apiv1/external-interface';
 import { CodecFamily } from '../interfaces/netmd';
-import { DefaultFfmpegAudioExportService, ExportParams } from '../audio/audio-export';
 import { LibraryService, LocalDatabase } from './library';
 
 const MAX_TRIES = 3;
 
-export class RemoteLibraryService extends DefaultFfmpegAudioExportService implements LibraryService {
-    // These methods are required by the DefaultFFMPEGAudioExport service, but since
-    // this is a library, they won't be used
-    encodeATRAC3(parameters: ExportParams): Promise<ArrayBuffer> {
-        throw new Error('Method not implemented.');
-    }
-    encodeATRAC3Plus(parameters: ExportParams): Promise<ArrayBuffer> {
-        throw new Error('Method not implemented.');
-    }
-
+export class RemoteLibraryService implements LibraryService {
     public address: string;
     public originalFileName: string = '';
 
     constructor(parameters: CustomParameters) {
-        super();
         this.address = parameters.address as string;
     }
 
@@ -37,7 +27,7 @@ export class RemoteLibraryService extends DefaultFfmpegAudioExportService implem
         return json as LocalDatabase;
     }
 
-    async processLocalLibraryFile(filePath: string, params: ExportParams): Promise<ArrayBuffer> {
+    async processLocalLibraryFile(filePath: string, params: AudioEncoderV1ExportParams): Promise<ArrayBuffer> {
         if (params.format.codec === 'PCM' || params.format.codec === 'MP3') {
             // Fetch the file normally, then transcode to PCM / MP3
             const rawURL = new URL(this.address);
@@ -59,8 +49,9 @@ export class RemoteLibraryService extends DefaultFfmpegAudioExportService implem
             const fileTokens = filePath.split('/');
             const fileName = fileTokens[fileTokens.length - 1];
             const asFile = new File([await response.blob()], fileName);
-            await this.prepare(asFile);
-            return this.export(params);
+            throw new Error("TODO!");
+            // await this.prepare(asFile);
+            // return this.export(params);
         } else {
             const { format, enableReplayGain } = params;
             const encodingURL = new URL(this.address);

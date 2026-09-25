@@ -1,5 +1,5 @@
-import React, { useMemo, lazy, Suspense } from 'react';
-import { belowDesktop, forAnyDesktop, forWideDesktop, useShallowEqualSelector, useThemeDetector } from '../frontend-utils';
+import React, { useMemo, lazy, Suspense, useEffect } from 'react';
+import { belowDesktop, forAnyDesktop, forWideDesktop, useDispatch, useShallowEqualSelector, useThemeDetector } from '../frontend-utils';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Backdrop from '@mui/material/Backdrop';
@@ -12,6 +12,8 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import { W95App } from './win95/app';
+import { checkForEncoderUpdatesFromServer } from '../redux/actions';
+import { EncoderDownloadDialog } from './encoder-download-dialog';
 
 const Toc = lazy(() => import('./factory/factory'));
 const Controls = lazy(() => import('./controls'));
@@ -228,6 +230,12 @@ const InternalApp = () => {
     const { mainView, loading, pageFullHeight, pageFullWidth } = useShallowEqualSelector((state) => state.appState);
     const { deviceCapabilities } = useShallowEqualSelector((state) => state.main);
     const { classes, cx } = useStyles();
+    const dispatch = useDispatch();
+
+    // At init, connect to server and check for encoders.
+    useEffect(() => {
+        dispatch(checkForEncoderUpdatesFromServer());
+    }, []);
 
     return (
         <React.Fragment>
@@ -273,6 +281,8 @@ const InternalApp = () => {
                     <CircularProgress color="info" />
                 </Backdrop>
             ) : null}
+
+            <EncoderDownloadDialog />
         </React.Fragment>
     );
 };
