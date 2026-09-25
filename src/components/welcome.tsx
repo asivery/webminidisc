@@ -40,6 +40,7 @@ import { AboutDialog } from './about-dialog';
 import { actions as otherDialogActions } from '../redux/other-device-feature';
 import { actions as appActions } from '../redux/app-feature';
 import { initializeParameters } from '../custom-parameters';
+import { ManageEncodersDialog } from './manage-encoders-dialog';
 
 const useStyles = makeStyles()((theme) => ({
     main: {
@@ -317,6 +318,7 @@ export const Welcome = (props: {}) => {
                 )}
             </Box>
             <SettingsDialog />
+            <ManageEncodersDialog />
             <AboutDialog />
             <ChangelogDialog />
             <OtherDeviceDialog />

@@ -6,20 +6,21 @@ function listFiles(files: string[]) {
     for(const sarFileName of files) {
         const sarFileContents = new Uint8Array(readFileSync(sarFileName));
         console.log(`==== ${sarFileName} ====`);
-        const sarFile = new SARFile(sarFileContents);
+        const sarFile = new SARFile(null, sarFileContents);
+        console.log(`SubMagic: ${sarFile.subMagic}`)
         for(const [name, offset, length] of sarFile.listFilesWithMetadata()) {
             console.log(`- ${name} @ 0x${offset.toString(16)} - ${length} bytes`);
         }
     }
 }
 
-function appendToFile(sarFileName: string, files: string[]) {
+function appendToFile(sarFileName: string, subMagic: string, files: string[]) {
     let data = undefined;
     if(existsSync(sarFileName)) {
         data = new Uint8Array(readFileSync(sarFileName));
     }
 
-    const sarFile = new SARFile(data);
+    const sarFile = new SARFile(subMagic, data);
     for(let file of files) {
         let inFileName;
         if(file.includes(':')) {
@@ -38,7 +39,7 @@ function appendToFile(sarFileName: string, files: string[]) {
 }
 
 function extractFile(sarFileName: string, destination: string) {
-    const sarFile = new SARFile(new Uint8Array(readFileSync(sarFileName)));
+    const sarFile = new SARFile(null, new Uint8Array(readFileSync(sarFileName)));
     for(const sarFileName of sarFile.listFiles()) {
         console.log(`Extracting ${sarFileName}...`);
         let outFileName = sarFileName;
@@ -61,24 +62,26 @@ function main() {
             break;
         }
         case 'append': {
-            if(files.length < 2) {
-                console.log("Syntax: sar-packager append <sarfile> <files...>");
+            if(files.length < 3) {
+                console.log("Syntax: sar-packager append <sarfile> <submagic> <files...>");
                 process.exit(-1);
             }
             const sarFile = files[0]!;
-            const filesToAdd = files.slice(1);
-            appendToFile(sarFile, filesToAdd);
+            const subMagic = files[1]!;
+            const filesToAdd = files.slice(2);
+            appendToFile(sarFile, subMagic, filesToAdd);
             break;
         }
         case 'create':
-            if(files.length < 2) {
-                console.log("Syntax: sar-packager create <sarfile> <files...>");
+            if(files.length < 3) {
+                console.log("Syntax: sar-packager create <sarfile> <submagic> <files...>");
                 process.exit(-1);
             }
             const sarFile = files[0]!;
-            const filesToAdd = files.slice(1);
+            const subMagic = files[1]!;
+            const filesToAdd = files.slice(2);
             try { unlinkSync(sarFile); } catch(_){}
-            appendToFile(sarFile, filesToAdd);
+            appendToFile(sarFile, subMagic, filesToAdd);
             break;
         case 'extract': {
             const sarFile = files[0]!;

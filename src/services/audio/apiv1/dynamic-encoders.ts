@@ -8,6 +8,7 @@ interface EncoderStorageDBV1 extends DBSchema {
         value: {
             metadata: AudioEncoderV1Metadata,
             rawArchive: Uint8Array,
+            isServerProvided: boolean,
         },
         key: string,
     }
@@ -27,11 +28,13 @@ Encoder file layout:
 \ ...                   - Any other files
 */
 
+export const DYNAMIC_ENCODER_SAR_SUBMAGIC = "Web MiniDisc Dynamic Encoder";
+
 export class EncoderStorageManager {
     static INSTANCE = new EncoderStorageManager();
 
     private db!: IDBPDatabase<EncoderStorageDBV1>;
-    private encoders: Record<string, { metadata: AudioEncoderV1Metadata, sarFile: SARFile, ctor: AudioEncoderV1Constructor }> = {};
+    private encoders: Record<string, { metadata: AudioEncoderV1Metadata, sarFile: SARFile, ctor: AudioEncoderV1Constructor, isServerProvided: boolean }> = {};
     private builtinEncoders: Record<BuiltinEncoderID, AudioEncoderV1Instance> = {
         ffmpeg: new FfmpegAudioEncoder(),
     };
@@ -43,16 +46,27 @@ export class EncoderStorageManager {
             }
         });
 
-        for(const entry of await this.db.getAll('encoders')) {
-            switch(entry.metadata.apiVersion) {
-                case '1':
-                    await this._loadV1FromSAR(new SARFile(entry.rawArchive));
-                    break;
+        try {
+            for(const entry of await this.db.getAll('encoders')) {
+                switch(entry.metadata.apiVersion) {
+                    case '1':
+                        await this._loadV1FromSAR(new SARFile(DYNAMIC_ENCODER_SAR_SUBMAGIC, entry.rawArchive), entry.isServerProvided);
+                        break;
+                }
             }
+        } catch(ex) {
+            console.log(ex);
+            await this.db.clear('encoders');
         }
     }
 
-    async _loadV1FromSAR(sarFile: SARFile) {
+    async reset() {
+        if(this.db) {
+            await this.db.clear('encoders');
+        }
+    }
+
+    private async _loadV1FromSAR(sarFile: SARFile, isServerProvided: boolean) {
         const indexJSFile = sarFile.getFile("index.js");
         const metadataRaw = sarFile.getFile("metadata.json");
         const metadata: AudioEncoderV1Metadata = JSON.parse(new TextDecoder().decode(metadataRaw));
@@ -64,6 +78,7 @@ export class EncoderStorageManager {
             ctor: klass,
             metadata,
             sarFile,
+            isServerProvided,
         };
     }
 
@@ -103,11 +118,15 @@ export class EncoderStorageManager {
     }
 
     listAvailableEncoders(): string[] {
-        return Object.keys(this.encoders);
+        return Object.keys(this.encoders).sort();
     }
 
-    listAvailableEncodersMetadata(): (AudioEncoderV1Metadata & { customParameters?: CustomParameterInfo[] })[] {
-        return Object.values(this.encoders).map(e => ({...e.metadata, customParameters: e.ctor.customConstructionParameters }));
+    listAvailableEncodersMetadata(): (AudioEncoderV1Metadata & { customParameters?: CustomParameterInfo[], isServerProvided: boolean })[] {
+        return Object.values(this.encoders).map(e => ({
+            ...e.metadata,
+            customParameters: e.ctor.customConstructionParameters,
+            isServerProvided: e.isServerProvided
+        })).sort((a, b) => a.encoderId.localeCompare(b.encoderId));
     }
 
     hasEncoder(id: string): boolean {
@@ -117,16 +136,16 @@ export class EncoderStorageManager {
     // The dependency check shall be done in the caller
     // If I were to implement it here, I'd have to make sure the caller
     // installs these encoders in order, and that's a pain.
-    async installEncoderSkipDependencyCheck(archiveFile: Uint8Array): Promise<void> {
-        const sarFile = new SARFile(archiveFile);
+    async installEncoderSkipDependencyCheck(archiveFile: Uint8Array, isServerProvided: boolean): Promise<void> {
+        const sarFile = new SARFile(DYNAMIC_ENCODER_SAR_SUBMAGIC, archiveFile);
         const metadata: AudioEncoderV1Metadata = JSON.parse(new TextDecoder().decode(sarFile.getFile("metadata.json")));
 
         if(metadata.apiVersion !== '1') throw new Error("Unknown apiVersion provided in the encoder");
 
         console.log(`Installing encoder ${metadata.encoderId} (${metadata.userFriendlyName}) @ ${metadata.version}`);
 
-        await this.db.put('encoders', { metadata, rawArchive: archiveFile }, metadata.encoderId);
-        await this._loadV1FromSAR(sarFile);
+        await this.db.put('encoders', { metadata, rawArchive: archiveFile, isServerProvided }, metadata.encoderId);
+        await this._loadV1FromSAR(sarFile, isServerProvided);
     }
 
     buildReverseDependentsList(id: string): string[] {

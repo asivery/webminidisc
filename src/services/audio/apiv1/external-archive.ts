@@ -3,27 +3,70 @@ const MAX_SAR_FILE_LENGTH = 50 * 1024 * 1024;
 const TEXT_ENCODER = new TextEncoder();
 const TEXT_DECODER = new TextDecoder();
 
+const MAGIC = "SARFile";
+
 export class SARFile {
     private _buffer: ArrayBuffer;
     private _files: Record<string, [number, number]> = {};
-    constructor(data?: Uint8Array) {
+    // subMagic = null
+    constructor(private _subMagic: string | null, data?: Uint8Array) {
         if(data) {
             this._buffer = new ArrayBuffer(data.length, { maxByteLength: MAX_SAR_FILE_LENGTH });
             new Uint8Array(this._buffer).set(data);
             this._cacheFiles();
         } else {
-            this._buffer = new ArrayBuffer(0, { maxByteLength: MAX_SAR_FILE_LENGTH });
+            if(!_subMagic) throw new Error("Cannot provide subMagic = null when creating an archive.");
+            const encodedSubMagic = TEXT_ENCODER.encode(_subMagic);
+            this._buffer = new ArrayBuffer(MAGIC.length + 2 + encodedSubMagic.byteLength, { maxByteLength: MAX_SAR_FILE_LENGTH });
+            
+            const asUint = new Uint8Array(this._buffer);
+            const asDv = new DataView(this._buffer);
+            asUint.set(TEXT_ENCODER.encode(MAGIC), 0);
+            asDv.setUint16(MAGIC.length, encodedSubMagic.length);
+            asUint.set(encodedSubMagic, MAGIC.length + 2);
         }
+    }
+
+    static readSubMagicOfArchve(rawBuffer: Uint8Array): string | null {
+        let cursor = 0;
+        const dataView = new DataView(rawBuffer.buffer);
+        const magicField = rawBuffer.slice(0, MAGIC.length);
+        try {
+            if(TEXT_DECODER.decode(magicField) != MAGIC) {
+                return null;
+            } else {
+                cursor += MAGIC.length;
+            }
+        } catch(_ex) {
+            return null;
+        }
+        const subMagicLength = dataView.getUint16(cursor);
+        cursor += 2;
+        const subMagic = TEXT_DECODER.decode(rawBuffer.slice(cursor, cursor + subMagicLength));
+        return subMagic;
     }
 
     get buffer() {
         return this._buffer;
     }
 
+    get subMagic() {
+        return this._subMagic;
+    }
+
     _cacheFiles() {
         let cursor = 0;
         const rawBuffer = new Uint8Array(this._buffer);
         const dataView = new DataView(this._buffer);
+        const subMagic = SARFile.readSubMagicOfArchve(rawBuffer);
+
+        if(!subMagic) throw new Error("Not a SAR file");
+        if(!this.subMagic) this._subMagic = subMagic;
+        else if(subMagic !== this.subMagic) {
+            throw new Error(`Expected submagic ${this.subMagic}, got ${subMagic}`);
+        }
+        cursor += subMagic.length + 2 + MAGIC.length;
+
         while(cursor < this._buffer.byteLength) {
             const nameLength = dataView.getUint16(cursor);
             cursor += 2;

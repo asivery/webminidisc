@@ -39,7 +39,7 @@ import { LibraryServices } from '../services/library-services';
 import { s16LEToSamplesArray, Shazam } from 'shazam-api';
 import { AudioEncoderV1ExportParams, transferCodecToExportCodec } from '../services/audio/apiv1/external-interface';
 import { EncoderStorageManager } from '../services/audio/apiv1/dynamic-encoders';
-import { isAllValid } from '../custom-parameters';
+import { CustomParameters, isAllValid } from '../custom-parameters';
 
 export function control(action: 'play' | 'stop' | 'next' | 'prev' | 'goto' | 'pause' | 'seek', params?: unknown) {
     return async function (dispatch: AppDispatch, getState: () => RootState) {
@@ -105,51 +105,58 @@ export function control(action: 'play' | 'stop' | 'next' | 'prev' | 'goto' | 'pa
     };
 }
 
-export function checkForEncoderUpdatesFromServer() {
+export function validateAndLoadEncoders(absoluteInit: boolean) {
     return async function (dispatch: AppDispatch, getState: () => RootState) {
-        await EncoderStorageManager.INSTANCE.init();
-        type JSONEncoderInfo = {
-            id: string,
-            version: string,
-            path: string,
-        }[];
-        try {
-            const result = await fetch(getPublicPathFor("encoders.json"));
-            if(result.status !== 200) {
-                console.log(`Invalid status for encoders.json: ${result.status}: ${await result.text()}`);
-                return;
-            }
-            const jsonData = await result.json() as JSONEncoderInfo;
-            const toInstall = [];
-            for(const encoder of jsonData) {
-                if(EncoderStorageManager.INSTANCE.hasEncoder(encoder.id)) {
-                    if(EncoderStorageManager.INSTANCE.getEncoderMetadata(encoder.id).metadata.version === encoder.version) {
-                        continue;
+        let audioExportServiceId: string | null;
+        let audioExportServiceConfig: CustomParameters;
+        if(absoluteInit) {
+            audioExportServiceId = loadPreference('audioExportServiceId', null);
+            audioExportServiceConfig = audioExportServiceId ? loadPreference('audioExportServiceConfig', {}) : {};
+            await EncoderStorageManager.INSTANCE.init();
+            type JSONEncoderInfo = {
+                id: string,
+                version: string,
+                path: string,
+            }[];
+            try {
+                const result = await fetch(getPublicPathFor("encoders.json"));
+                if(result.status !== 200) {
+                    console.log(`Invalid status for encoders.json: ${result.status}: ${await result.text()}`);
+                    return;
+                }
+                const jsonData = await result.json() as JSONEncoderInfo;
+                const toInstall = [];
+                for(const encoder of jsonData) {
+                    if(EncoderStorageManager.INSTANCE.hasEncoder(encoder.id)) {
+                        if(EncoderStorageManager.INSTANCE.getEncoderMetadata(encoder.id).metadata.version === encoder.version) {
+                            continue;
+                        }
                     }
-                }
-                toInstall.push(encoder.path);
-            }
-
-            if(toInstall.length === 0) {
-                console.log("All encoders are up to date with server provided copies.");
-            } else {
-                console.log("Pulling encoders from server: ", toInstall);
-                dispatch(encoderDownloadDialog.setVisible(true));
-                for(const pathToInstall of toInstall) {
-                    encoderDownloadDialog.setProgress({ currentEncoderIndex: 0, totalEncoders: toInstall.length, currentEncoderName: pathToInstall });
-                    console.log(`Downloading ${pathToInstall}...`);
-                    const rawSARFile = new Uint8Array(await (await fetch(getPublicPathFor(pathToInstall))).arrayBuffer());
-                    EncoderStorageManager.INSTANCE.installEncoderSkipDependencyCheck(rawSARFile);
+                    toInstall.push(encoder.path);
                 }
 
-                dispatch(encoderDownloadDialog.setVisible(false));
+                if(toInstall.length === 0) {
+                    console.log("All encoders are up to date with server provided copies.");
+                } else {
+                    console.log("Pulling encoders from server: ", toInstall);
+                    dispatch(encoderDownloadDialog.setVisible(true));
+                    for(const pathToInstall of toInstall) {
+                        dispatch(encoderDownloadDialog.setProgress({ currentEncoderIndex: 0, totalEncoders: toInstall.length, currentEncoderName: pathToInstall }));
+                        console.log(`Downloading ${pathToInstall}...`);
+                        const rawSARFile = new Uint8Array(await (await fetch(getPublicPathFor(pathToInstall))).arrayBuffer());
+                        EncoderStorageManager.INSTANCE.installEncoderSkipDependencyCheck(rawSARFile, true);
+                    }
+
+                    dispatch(encoderDownloadDialog.setVisible(false));
+                }
+            } catch(ex) {
+                console.log("While updating local encoder installs: ", ex);
             }
-        } catch(ex) {
-            console.log("While updating local encoder installs: ", ex);
+        } else {
+            audioExportServiceId = getState().appState.audioExportServiceId;
+            audioExportServiceConfig = getState().appState.audioExportServiceConfig;
         }
 
-        let audioExportServiceId: string | null = loadPreference('audioExportServiceId', null);
-        let audioExportServiceConfig = audioExportServiceId ? loadPreference('audioExportServiceConfig', {}) : {};
         if(audioExportServiceId) {
             if(!EncoderStorageManager.INSTANCE.hasEncoder(audioExportServiceId) || !isAllValid(EncoderStorageManager.INSTANCE.getEncoderMetadata(audioExportServiceId).customParameters, audioExportServiceConfig)) {
                 audioExportServiceId = null;

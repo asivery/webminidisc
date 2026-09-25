@@ -5,13 +5,13 @@ const path = require("path");
 
 function readMetadata(file) {
     const fd = fs.openSync(file);
-    const buffer = Buffer.alloc(19);
-    fs.readSync(fd, buffer, 0, 19);
-    if(buffer.subarray(0, 15).toString('base64') !== 'AA1tZXRhZGF0YS5qc29u') {
+    const buffer = Buffer.alloc(0x38);
+    fs.readSync(fd, buffer, 0, 0x38);
+    if(buffer.subarray(0, 0x34).toString('base64') !== 'U0FSRmlsZQAcV2ViIE1pbmlEaXNjIER5bmFtaWMgRW5jb2RlcgANbWV0YWRhdGEuanNvbg==') {
         throw new Error("Invalid WME file!");
     }
 
-    const length = buffer.readInt32BE(15);
+    const length = buffer.readInt32BE(0x34);
     const contentsBuffer = Buffer.alloc(length);
     fs.readSync(fd, contentsBuffer, 0, length);
 

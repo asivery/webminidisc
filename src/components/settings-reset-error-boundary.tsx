@@ -1,4 +1,5 @@
 import React from 'react';
+import { EncoderStorageManager } from '../services/audio/apiv1/dynamic-encoders';
 
 export class SettingsResetErrorBoundary extends React.Component<
     {
@@ -31,6 +32,10 @@ export class SettingsResetErrorBoundary extends React.Component<
                 `Unrecoverable error while initializing app. Your app settings have been deleted.\n${errorString}\nPress OK to restart.`
             );
             window.localStorage.clear();
+            if(EncoderStorageManager.INSTANCE) {
+                EncoderStorageManager.INSTANCE.reset().then(() => window.reload());
+            }
+            return;
         } else {
             window.alert(`Unrecoverable error.\n${errorString}\nPress OK to restart.`);
         }

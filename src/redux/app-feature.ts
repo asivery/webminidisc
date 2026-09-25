@@ -20,6 +20,7 @@ export interface AppState {
     discProtectedDialogVisible: boolean;
     discProtectedDialogDisabled: boolean;
     settingsDialogVisible: boolean;
+    manageEncodersDialogVisible: boolean;
     changelogDialogVisible: boolean;
     notifyWhenFinished: boolean;
     hasNotificationSupport: boolean;
@@ -55,6 +56,7 @@ export const buildInitialState = (): AppState => {
         discProtectedDialogVisible: false,
         discProtectedDialogDisabled: loadPreference('discProtectedDialogDisabled', false),
         settingsDialogVisible: false,
+        manageEncodersDialogVisible: false,
         notifyWhenFinished: loadPreference('notifyWhenFinished', false),
         hasNotificationSupport: true,
         fullWidthSupport: loadPreference('fullWidthSupport', false),
@@ -130,6 +132,9 @@ export const slice = createSlice({
         },
         showSettingsDialog: (state, action: PayloadAction<boolean>) => {
             state.settingsDialogVisible = action.payload;
+        },
+        showManageEncodersDialog: (state, action: PayloadAction<boolean>) => {
+            state.manageEncodersDialogVisible = action.payload;
         },
         showChangelogDialog: (state, action: PayloadAction<boolean>) => {
             state.changelogDialogVisible = action.payload;

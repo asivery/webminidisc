@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import { W95App } from './win95/app';
-import { checkForEncoderUpdatesFromServer } from '../redux/actions';
+import { validateAndLoadEncoders } from '../redux/actions';
 import { EncoderDownloadDialog } from './encoder-download-dialog';
 
 const Toc = lazy(() => import('./factory/factory'));
@@ -234,7 +234,7 @@ const InternalApp = () => {
 
     // At init, connect to server and check for encoders.
     useEffect(() => {
-        dispatch(checkForEncoderUpdatesFromServer());
+        dispatch(validateAndLoadEncoders(true));
     }, []);
 
     return (
