@@ -1,0 +1,8 @@
+{
+    "encoderId": "atracdenc",
+    "userFriendlyName": "Atracdenc",
+    "description": "The original copy of atracdenc - the first open source ATRAC encoder.",
+    "version": "0.1.0",
+    "encoderDependencies": [],
+    "apiVersion": "1"
+}
