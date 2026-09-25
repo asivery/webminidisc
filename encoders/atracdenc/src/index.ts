@@ -109,8 +109,8 @@ export default class AtracdencAudioExportService implements AudioEncoderV1Instan
 
     getUserFriendyStageName(stage: string): string | null {
         return {
-            ffmpeg: 'Transcoding to PCM',
-            atrac: 'Transcoding to ATRAC',
+            ffmpeg: 'Transcoding to PCM...',
+            atrac: 'Transcoding to ATRAC...',
         }[stage] ?? this.ffmpeg.getUserFriendyStageName(stage);
     }
 
