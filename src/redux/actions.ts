@@ -145,7 +145,7 @@ export function validateAndLoadEncoders(absoluteInit: boolean) {
                         dispatch(encoderDownloadDialog.setProgress({ currentEncoderIndex: 0, totalEncoders: toInstall.length, currentEncoderName: entry.name }));
                         console.log(`Downloading ${entry.id}...`);
                         const rawSARFile = new Uint8Array(await (await fetch(getPublicPathFor(entry.path))).arrayBuffer());
-                        EncoderStorageManager.INSTANCE.installEncoderSkipDependencyCheck(rawSARFile, true);
+                        await EncoderStorageManager.INSTANCE.installEncoderSkipDependencyCheck(rawSARFile, true);
                     }
 
                     dispatch(encoderDownloadDialog.setVisible(false));
@@ -1525,15 +1525,11 @@ export function convertAndUpload(
             titleConverting: '',
         };
         const overallTrackStatsChanged = () => {
-            dispatch(
-                batchActions([
-                    uploadDialogActions.setOverallUploadProgress(trackUpdate),
-                    uploadDialogActions.setTrackEncodingProgress({ conversionStepName: null, state: 0, total: 0 }),
-                ])
-            );
+            dispatch(uploadDialogActions.setOverallUploadProgress(trackUpdate));
             updateTitle();
         };
         overallTrackStatsChanged();
+        dispatch(uploadDialogActions.setTrackEncodingProgress({ conversionStepName: null, state: 0, total: 0 }));
 
         await audioExportService!.init();
 
@@ -1547,6 +1543,7 @@ export function convertAndUpload(
                     trackUpdate.titleConverting = ``;
                     totalBytesAllTracks = totalBytesCalc;
                     overallTrackStatsChanged();
+                    dispatch(uploadDialogActions.setTrackEncodingProgress({ conversionStepName: null, state: 0, total: 0 }));
                     return;
                 }
 

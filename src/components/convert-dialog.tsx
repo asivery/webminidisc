@@ -551,6 +551,8 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
         [dispatch]
     );
 
+    const globalAudioExportServiceId = useShallowEqualSelector(state => state.appState.audioExportServiceId);
+
     const [tracksOrderVisible, setTracksOrderVisible] = useState(false);
     const handleToggleTracksOrder = useCallback(() => {
         setTracksOrderVisible((tracksOrderVisible) => !tracksOrderVisible);
@@ -846,7 +848,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
 
     const encoderSupportState = useMemo(
         () => serviceRegistry.audioExportService!.getSupportFor(transferCodecToExportCodec(currentlySelectedCodec).codec),
-        [currentlySelectedCodec]
+        [currentlySelectedCodec, globalAudioExportServiceId]
     );
     useEffect(() => {
         if (!encoderSupportState.gapless) setEnableGapless(false);
