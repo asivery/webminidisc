@@ -20,9 +20,10 @@ export type AudioEncoderV1ExportParams = {
 export interface PublicFfmpegAudioEncoderV1 extends AudioEncoderV1Instance {
     createFfmpegParams(parameters: AudioEncoderV1ExportParams, outputFormat: string, moreParams?: string): string;
     ffmpegProcess: {
-        read(fileName: string): Promise<{ data: Uint8Array }>
-        write(fileName: string, buffer: Uint8Array): Promise<void>
-        transcode(source: string, destination: string, command: string): Promise<void>
+        read(fileName: string): Promise<{ data: Uint8Array }>;
+        write(fileName: string, buffer: Uint8Array): Promise<void>;
+        transcode(source: string, destination: string, command: string): Promise<void>;
+        remove(source: string): Promise<void>;
     }
 }
 

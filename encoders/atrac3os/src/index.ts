@@ -84,8 +84,6 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
 
     async init(): Promise<void> {
         await this.ffmpeg.init();
-        this.atrac3OSProcess = new Atrac3OSProcess(new Worker(this.links.worker, { type: 'classic' }));
-        this.ready = this.atrac3OSProcess.init(this.links);
     }
 
     async deinit(): Promise<void> {
@@ -96,6 +94,10 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
     async transcode(source: Uint8Array<ArrayBuffer>, sourceFileName: string, exportParams: AudioEncoderV1ExportParams, transcodeCallback?: (obj: { stage: string; progress: number; total: number; }) => void): Promise<Uint8Array<ArrayBuffer>> {
         if(exportParams.format.codec in ['PCM', 'MP3']) {
             return this.ffmpeg.transcode(source, sourceFileName, exportParams, transcodeCallback);
+        }
+        if(!this.atrac3OSProcess) {
+            this.atrac3OSProcess = new Atrac3OSProcess(new Worker(this.links.worker, { type: 'classic' }));
+            this.ready = this.atrac3OSProcess.init(this.links);
         }
 
         const ffmpegCommand = this.ffmpeg.createFfmpegParams(exportParams, 'wav');
@@ -121,6 +123,7 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
             this.atrac3OSProcess?.terminate();
             this.atrac3OSProcess = undefined;
         }
+        await this.ffmpeg.ffmpegProcess.remove('outAudioFile.wav');
         return new Uint8Array(resultData as ArrayBuffer);
     }
 

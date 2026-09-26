@@ -104,6 +104,7 @@ export default class AtracdencAudioExportService implements AudioEncoderV1Instan
         transcodeCallback?.({ stage: 'atrac', progress: 2, total: 2 });
 
         this.atracdencProcess?.terminate();
+        await this.ffmpeg.ffmpegProcess.remove('outAudioFile.wav');
         return new Uint8Array(result);
     }
 
