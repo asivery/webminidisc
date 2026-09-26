@@ -20,6 +20,7 @@ export interface AppState {
     discProtectedDialogVisible: boolean;
     discProtectedDialogDisabled: boolean;
     settingsDialogVisible: boolean;
+    manageEncodersDialogVisible: boolean;
     changelogDialogVisible: boolean;
     notifyWhenFinished: boolean;
     hasNotificationSupport: boolean;
@@ -27,7 +28,7 @@ export interface AppState {
     availableServices: ServiceConstructionInfo[];
     lastSelectedService: number;
     factoryModeRippingInMainUi: boolean;
-    audioExportService: number;
+    audioExportServiceId: string | null;
     audioExportServiceConfig: CustomParameters;
     libraryService: number;
     libraryServiceConfig: CustomParameters;
@@ -55,6 +56,7 @@ export const buildInitialState = (): AppState => {
         discProtectedDialogVisible: false,
         discProtectedDialogDisabled: loadPreference('discProtectedDialogDisabled', false),
         settingsDialogVisible: false,
+        manageEncodersDialogVisible: false,
         notifyWhenFinished: loadPreference('notifyWhenFinished', false),
         hasNotificationSupport: true,
         fullWidthSupport: loadPreference('fullWidthSupport', false),
@@ -62,8 +64,8 @@ export const buildInitialState = (): AppState => {
         lastSelectedService: loadPreference('lastSelectedService', 0),
         factoryModeRippingInMainUi: false, // As this value is heavily device-dependent and not really that stable yet
         // it should not be stored in the preferences, and should default to false.
-        audioExportService: loadPreference('audioExportService', 0),
-        audioExportServiceConfig: loadPreference('audioExportServiceConfig', {}),
+        audioExportServiceId: null, // Initialized in actions
+        audioExportServiceConfig: {}, // Initialized in actions
         libraryService: loadPreference('libraryService', -1),
         libraryServiceConfig: loadPreference('libraryServiceConfig', {}),
         pageFullHeight: loadPreference('pageFullHeight', false),
@@ -131,6 +133,9 @@ export const slice = createSlice({
         showSettingsDialog: (state, action: PayloadAction<boolean>) => {
             state.settingsDialogVisible = action.payload;
         },
+        showManageEncodersDialog: (state, action: PayloadAction<boolean>) => {
+            state.manageEncodersDialogVisible = action.payload;
+        },
         showChangelogDialog: (state, action: PayloadAction<boolean>) => {
             state.changelogDialogVisible = action.payload;
         },
@@ -153,9 +158,9 @@ export const slice = createSlice({
         setFactoryModeRippingInMainUi: (state, action: PayloadAction<boolean>) => {
             state.factoryModeRippingInMainUi = action.payload;
         },
-        setAudioExportService: (state, action: PayloadAction<number>) => {
-            state.audioExportService = action.payload;
-            savePreference('audioExportService', state.audioExportService);
+        setAudioExportServiceId: (state, action: PayloadAction<string | null>) => {
+            state.audioExportServiceId = action.payload;
+            savePreference('audioExportServiceId', state.audioExportServiceId);
         },
         setAudioExportServiceConfig: (state, action: PayloadAction<CustomParameters>) => {
             state.audioExportServiceConfig = action.payload;

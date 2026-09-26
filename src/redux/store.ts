@@ -19,6 +19,7 @@ import factoryProgressDialog from './factory/factory-progress-dialog-feature';
 import factoryNoticeDialog from './factory/factory-notice-dialog-feature';
 import factoryEditOtherValuesDialog from './factory/factory-edit-other-values-dialog-feature';
 import factoryBadSectorDialog from './factory/factory-bad-sector-dialog-feature';
+import encoderDownloadDialog from './encoder-download-dialog-feature';
 
 import main from './main-feature';
 import { BatchAction, batchActions, batchDispatchMiddleware } from 'redux-batched-actions';
@@ -45,6 +46,7 @@ const reducer = combineReducers({
     convertDialog,
     dumpDialog,
     recordDialog,
+    encoderDownloadDialog,
     songRecognitionDialog,
     songRecognitionProgressDialog,
     factory,

@@ -1,0 +1,15 @@
+{
+  "name": "atrac3os",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && sed -i '$d' dist/worker.js",
+    "package": "OPWD=\"$(pwd)\" && npm run build && cd ../../ && npm run package-external-encoder -- \"$OPWD\" atrac3os.wme"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

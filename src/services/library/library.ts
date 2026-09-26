@@ -1,4 +1,4 @@
-import { ExportParams } from "../audio/audio-export";
+import { AudioEncoderV1ExportParams } from "../audio/apiv1/external-interface";
 
 export type LocalDatabase = { [filename: string]: LocalDatabase | { artist: string, album: string, title: string, duration: number }};
 
@@ -6,5 +6,5 @@ export type LocalDatabase = { [filename: string]: LocalDatabase | { artist: stri
 // FIX THIS
 export interface LibraryService {
     getDatabase(): Promise<LocalDatabase>;
-    processLocalLibraryFile(filePath: string, params: ExportParams): Promise<ArrayBuffer>;
+    processLocalLibraryFile(filePath: string, params: AudioEncoderV1ExportParams): Promise<ArrayBuffer>;
 }

@@ -32,6 +32,7 @@ import { FactoryModeBadSectorDialog } from './factory-bad-sector-dialog';
 import { SettingsDialog } from '../settings-dialog';
 import { AppDispatch } from '../../redux/store';
 import { getDeviceNameFromTOCSignature } from '../../utils';
+import { ManageEncodersDialog } from '../manage-encoders-dialog';
 
 const useStyles = makeStyles()(theme => ({
     tocTable: {
@@ -626,6 +627,7 @@ const Toc = () => {
             <FactoryModeBadSectorDialog />
             <FactoryModeEditOtherValuesDialog />
             <SettingsDialog />
+            <ManageEncodersDialog />
         </React.Fragment>
     );
 };

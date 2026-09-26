@@ -19,11 +19,13 @@ import Switch from '@mui/material/Switch';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { makeStyles } from 'tss-react/mui';
-import { AudioServices } from '../services/audio-export-service-manager';
 import { renderCustomParameter } from './custom-parameters-renderer';
-import { initializeParameters, isAllValid } from '../custom-parameters';
+import { CustomParameters, initializeParameters, isAllValid } from '../custom-parameters';
 import { SettingInterface } from '../bridge-types';
 import { LibraryServices } from '../services/library-services';
+import { EncoderStorageManager } from '../services/audio/apiv1/dynamic-encoders';
+import { AudioEncoderV1Metadata } from '../services/audio/apiv1/external-interface';
+import serviceRegistry from '../services/registry';
 
 const Transition = React.forwardRef(function Transition(props: SlideProps, ref: React.Ref<unknown>) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -185,65 +187,49 @@ export const SettingsDialog = (props: {}) => {
         factoryModeShortcuts,
         factoryModeNERAWDownload,
         discProtectedDialogDisabled,
+        manageEncodersDialogVisible,
     } = useShallowEqualSelector((state) => state.appState);
 
     // Encoder properties
     const {
-        audioExportService: globalStateAudioExportService,
+        audioExportServiceId: globalStateAudioExportServiceId,
         audioExportServiceConfig: globalStateAudioExportServiceConfig,
         libraryService: globalStateLibraryService,
         libraryServiceConfig: globalStateLibraryServiceConfig,
     } = useShallowEqualSelector((state) => state.appState);
-    const [currentExportService, setCurrentExportService] = useState(globalStateAudioExportService);
-    const [currentExportServiceConfig, setExportServiceConfig] = useState(globalStateAudioExportServiceConfig);
+    const [currentExportServiceId, setCurrentExportServiceId] = useState('');
+    const [currentExportServiceConfig, setExportServiceConfig] = useState<CustomParameters>({});
     const [currentLibraryService, setCurrentLibraryService] = useState(globalStateLibraryService);
     const [currentLibraryServiceConfig, setLibraryServiceConfig] = useState(globalStateLibraryServiceConfig);
-    const currentService = AudioServices[currentExportService ?? 0];
+    const [availableEncoderServices, setAvailableEncoderServices] = useState<AudioEncoderV1Metadata[]>([]);
+    const currentService = currentExportServiceId && EncoderStorageManager.INSTANCE.hasEncoder(currentExportServiceId) ? EncoderStorageManager.INSTANCE.getEncoderMetadata(currentExportServiceId) : null;
     const currentLibrary = LibraryServices[currentLibraryService ?? -1];
 
-    // Functions required for the app to calculate weather or not it needs to restart to apply the changes,
-    // create the initial state, etc...
-    // Later more reboot-sensitive fileds can be added
-    const getStateRebootRequired = useMemo(
-        () => () => ({
-            currentExportServiceConfig,
-            currentExportService,
-            currentLibraryService,
-            currentLibraryServiceConfig,
-        }),
-        [currentExportServiceConfig, currentExportService, currentLibraryService, currentLibraryServiceConfig]
+
+    const reloadAvailableEncodersList = useCallback(
+        () => setAvailableEncoderServices(EncoderStorageManager.INSTANCE.listAvailableEncodersMetadata()),
+        [setAvailableEncoderServices]
     );
-    const saveBeforeReset = useCallback(() => {
-        dispatch(
-            batchActions([
-                appActions.setAudioExportService(currentExportService),
-                appActions.setAudioExportServiceConfig(currentExportServiceConfig),
-                appActions.setLibraryService(currentLibraryService),
-                appActions.setLibraryServiceConfig(currentLibraryServiceConfig),
-            ])
-        );
-    }, [dispatch, currentExportService, currentExportServiceConfig, currentLibraryService, currentLibraryServiceConfig]);
 
-    const [initialState, setInitialState] = useState<ReturnType<typeof getStateRebootRequired> | null>(null);
-
-    // "Constructor" code
     useEffect(() => {
-        if (visible && initialState === null) {
-            // Save the initial state when the dialog opens
-            setInitialState(getStateRebootRequired());
-        }
-    }, [visible, initialState, getStateRebootRequired]);
+        setCurrentExportServiceId(globalStateAudioExportServiceId ?? '');
+        setExportServiceConfig(globalStateAudioExportServiceConfig);
+        reloadAvailableEncodersList();
+    }, [globalStateAudioExportServiceId, globalStateAudioExportServiceConfig]);
 
-    const isRestartRequired = useCallback(() => {
-        if (initialState === null) return false;
-        return !deepCompare(getStateRebootRequired(), initialState);
-    }, [initialState, getStateRebootRequired]);
+    // Whenever the dialog is closed / opened, reload the list of the encoders.
+    useEffect(() => {
+        if(EncoderStorageManager.INSTANCE) {
+            reloadAvailableEncodersList();
+        }
+    }, [manageEncodersDialogVisible]);
 
     const verifyIfInputsValid = useCallback(() => {
         // Later more inputs can be added
+        if (!currentService) return true;
         const canExit = isAllValid(currentService.customParameters, currentExportServiceConfig);
         return canExit;
-    }, [currentExportServiceConfig, currentService.customParameters]);
+    }, [currentExportServiceConfig, currentService]);
 
     //Appearance configuration
     const handleThemeChange = useCallback(
@@ -278,18 +264,45 @@ export const SettingsDialog = (props: {}) => {
     const handleToggleFactoryModeNERAWDownload = useCallback(() => {
         dispatch(appActions.setFactoryModeNERAWDownload(!factoryModeNERAWDownload));
     }, [dispatch, factoryModeNERAWDownload]);
+    const showManageEncodersDialog = useCallback(() => {
+        dispatch(appActions.showManageEncodersDialog(true));
+    }, [dispatch]);
+
+    const applyAndStoreAudioServiceConfig = useCallback((serviceId: string | null, config: CustomParameters) => {
+        if(!serviceId || !EncoderStorageManager.INSTANCE.hasEncoder(serviceId)) return;
+        const service = EncoderStorageManager.INSTANCE.getEncoderMetadata(serviceId);
+        if(service.customParameters) {
+            if(!isAllValid(service.customParameters, config)) {
+                return;
+            }
+        }
+
+        dispatch(batchActions([
+            appActions.setAudioExportServiceId(serviceId),
+            appActions.setAudioExportServiceConfig(config),
+        ]));
+
+        serviceRegistry.audioExportService = EncoderStorageManager.INSTANCE.getEncoder(serviceId, config).instance;
+    }, []);
 
     //Encoder configuration
     const handleExportServiceChanges = useCallback((event: any) => {
-        const serviceId = event.target.value as number;
-        setCurrentExportService(serviceId);
-        setExportServiceConfig(initializeParameters(AudioServices[serviceId].customParameters));
+        const serviceId = event.target.value as string;
+        setCurrentExportServiceId(serviceId);
+        dispatch(appActions.setAudioExportServiceId(serviceId));
+        if(!serviceId || !EncoderStorageManager.INSTANCE.hasEncoder(serviceId)) return;
+
+        const metadata = EncoderStorageManager.INSTANCE.getEncoderMetadata(serviceId);
+        const params = initializeParameters(metadata.customParameters);
+        applyAndStoreAudioServiceConfig(serviceId, params);
+        setExportServiceConfig(params);
     }, []);
 
     const handleExportServiceParameterChange = useCallback((varName: string, value: string | number | boolean) => {
         setExportServiceConfig((oldData) => {
             const newData = { ...oldData };
             newData[varName] = value;
+            dispatch(appActions.setAudioExportServiceConfig(newData));
             return newData;
         });
     }, []);
@@ -309,15 +322,8 @@ export const SettingsDialog = (props: {}) => {
     }, []);
 
     const handleClose = useCallback(() => {
-        setInitialState(null);
-        if (isRestartRequired()) {
-            saveBeforeReset();
-            // Trigger a reset.
-            window.reload();
-        } else {
-            dispatch(appActions.showSettingsDialog(false));
-        }
-    }, [isRestartRequired, dispatch, saveBeforeReset]);
+        dispatch(appActions.showSettingsDialog(false));
+    }, [dispatch]);
 
     return (
         <Dialog
@@ -326,9 +332,9 @@ export const SettingsDialog = (props: {}) => {
             classes={{ paper: classes.main }}
             fullWidth={true}
             TransitionComponent={Transition as any}
-            aria-labelledby="about-dialog-slide-title"
+            aria-labelledby="settings-dialog-slide-title"
         >
-            <DialogTitle id="about-dialog-slide-title">Settings</DialogTitle>
+            <DialogTitle id="settings-dialog-slide-title">Settings</DialogTitle>
             <DialogContent>
                 <DialogContentText className={classes.header}>Appearance</DialogContentText>
                 <SimpleField name="Color theme" classes={classes}>
@@ -393,26 +399,40 @@ export const SettingsDialog = (props: {}) => {
                 <NativeFields classes={classes} section="Functionality" />
 
                 <DialogContentText className={classes.header}>Encoding</DialogContentText>
+                <SimpleField name="Installed encoders" classes={classes} formControl={true}>
+                    <Button onClick={showManageEncodersDialog}>Manage</Button>
+                </SimpleField>
+
                 <SimpleField name="LP / HiMD encoder to use" classes={classes}>
-                    <Select className={classes.wider} value={currentExportService} onChange={handleExportServiceChanges}>
-                        {AudioServices.map((n, i) => (
-                            <MenuItem value={i} key={`${i}`}>
-                                {n.name}
+                    <Select className={classes.wider} value={currentExportServiceId} onChange={handleExportServiceChanges}>
+                        {availableEncoderServices.map((n, i) => (
+                            <MenuItem value={n.encoderId} key={`encoder-${i}`} >
+                                {n.userFriendlyName}
                             </MenuItem>
                         ))}
+                        {availableEncoderServices.length === 0 &&
+                            <MenuItem disabled value="">No encoders installed</MenuItem>
+                        }
                     </Select>
                 </SimpleField>
-                <Typography className={classes.encoderDescription}>{currentService.description}</Typography>
-                <Box className={classes.fieldMargin}>
-                    {currentService.customParameters?.map((n) =>
-                        renderCustomParameter(
-                            n,
-                            currentExportServiceConfig![n.varName],
-                            handleExportServiceParameterChange,
-                            classes.noLeftMargin
-                        )
-                    )}
-                </Box>
+                {currentService && <>
+                    <Typography className={classes.encoderDescription}>
+                        {currentService.metadata.description}
+                    </Typography>
+                    <Typography className={classes.encoderDescription}>
+                        Version {currentService.metadata.version}
+                    </Typography>
+                    <Box className={classes.fieldMargin}>
+                        {currentService.customParameters?.map((n) =>
+                            renderCustomParameter(
+                                n,
+                                currentExportServiceConfig![n.varName],
+                                handleExportServiceParameterChange,
+                                classes.noLeftMargin
+                            )
+                        )}
+                    </Box>
+                </>}
 
                 <DialogContentText className={classes.header}>Library</DialogContentText>
                 <SimpleField name="Library to use" classes={classes}>
@@ -446,7 +466,7 @@ export const SettingsDialog = (props: {}) => {
             </DialogContent>
             <DialogActions>
                 <Button disabled={!verifyIfInputsValid()} onClick={handleClose}>
-                    {isRestartRequired() ? 'Save and Reload' : 'Close'}
+                    Close
                 </Button>
             </DialogActions>
         </Dialog>

@@ -1,0 +1,8 @@
+{
+    "encoderId": "remote-encoder",
+    "userFriendlyName": "Remote ATRAC encoder",
+    "description": "A separate high-quality ATRAC encoder hosted on another server (as defined by https://github.com/thinkbrown/atrac-api)",
+    "version": "0.1.0",
+    "encoderDependencies": [],
+    "apiVersion": "1"
+}

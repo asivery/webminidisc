@@ -22,6 +22,7 @@ import { setNotifyWhenFinished } from '../redux/actions';
 const useStyles = makeStyles()((theme) => ({
     progressPerc: {
         marginTop: theme.spacing(1),
+        display: 'flex',
     },
     progressBar: {
         marginTop: theme.spacing(3),
@@ -60,6 +61,7 @@ export const UploadDialog = (props: {}) => {
 
         trackEncodeProgress,
         trackEncodeProgressOutOf,
+        conversionStepName,
     } = useShallowEqualSelector((state) => state.uploadDialog);
     const { vintageMode, notifyWhenFinished, hasNotificationSupport } = useShallowEqualSelector((state) => state.appState);
 
@@ -107,25 +109,30 @@ export const UploadDialog = (props: {}) => {
             maxWidth={'sm'}
             fullWidth={true}
             TransitionComponent={Transition as any}
-            aria-labelledby="alert-dialog-slide-title"
-            aria-describedby="alert-dialog-slide-description"
+            aria-labelledby="upload-dialog-slide-title"
+            aria-describedby="upload-dialog-slide-description"
         >
-            <DialogTitle id="alert-dialog-slide-title">Recording...</DialogTitle>
+            <DialogTitle id="upload-dialog-slide-title">Recording...</DialogTitle>
             <DialogContent>
-                <DialogContentText id="alert-dialog-slide-description">
+                <DialogContentText id="upload-dialog-slide-description">
                     {convertedValue === 100 && trackConverting === trackTotal
                         ? `Conversion completed`
                         : `Converting ${trackConverting + 1} of ${trackTotal}: ${titleConverting}`}
                 </DialogContentText>
+
                 <LinearProgress
                     className={classes.progressBar}
                     variant={(currentTrackConversionProgress ?? convertedValue) === 0 ? 'indeterminate' : 'determinate'}
                     color="primary"
                     value={currentTrackConversionProgress ?? convertedValue}
                 />
-                <Box className={classes.progressPerc}>{currentTrackConversionProgress ?? convertedValue}%</Box>
+                <Box className={classes.progressPerc}>
+                    <span>{currentTrackConversionProgress ?? convertedValue}%</span>
+                    <span style={{flexGrow: 1}} />
+                    {conversionStepName}
+                </Box>
 
-                <DialogContentText id="alert-dialog-slide-description" className={classes.uploadLabel}>
+                <DialogContentText id="upload-dialog-slide-description" className={classes.uploadLabel}>
                     Uploading {trackCurrent} of {trackTotal}: {titleCurrent}
                 </DialogContentText>
                 <LinearProgress
