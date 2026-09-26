@@ -92,8 +92,7 @@ export class RemoteLibraryService implements LibraryService {
                     }
                     const source = await response.arrayBuffer();
                     const content = new Uint8Array(source);
-                    const file = new File([content], 'test.at3');
-                    const headerLength = (await getATRACWAVEncoding(file))!.headerLength;
+                    const headerLength = (getATRACWAVEncoding(content))!.headerLength;
                     return source.slice(headerLength);
                 } catch (ex) {
                     console.log('Error while fetching: ' + ex);
