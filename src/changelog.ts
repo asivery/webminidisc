@@ -4,7 +4,8 @@ export const CHANGELOG: ChangelogVersion[] = [
     {
         name: "Version 1.6.0",
         contents: [
-            "Added a local high-quality ATRAC3/3+ encoder",
+            "Completely split off encoders from the main application, allow for custom encoders to be installed by end users.",
+            "Various small bugfixes",
         ],
     },
     {
