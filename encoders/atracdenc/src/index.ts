@@ -51,8 +51,6 @@ export default class AtracdencAudioExportService implements AudioEncoderV1Instan
         await this.ffmpeg.init();
         this.atracdencJsURL = createJSResource(this.api.getOwnFile('atracdenc.js'));
         this.workerURL = createJSResource(this.api.getOwnFile('worker.js'));
-        this.atracdencProcess = new AtracdencProcess(new Worker(this.workerURL, { type: 'classic' }), this.atracdencJsURL);
-        await this.atracdencProcess.init();
     }
 
     async deinit(): Promise<void> {
@@ -72,6 +70,8 @@ export default class AtracdencAudioExportService implements AudioEncoderV1Instan
             return this.ffmpeg.transcode(source, fileName, exportParams, transcodeCallback);
         }
         if(exportParams.format.codec === 'A3+') throw new Error("Unavailable.");
+        this.atracdencProcess = new AtracdencProcess(new Worker(this.workerURL!, { type: 'classic' }), this.atracdencJsURL!);
+        await this.atracdencProcess.init();
 
         const ffmpegCommand = this.ffmpeg.createFfmpegParams(exportParams, 'wav');
 

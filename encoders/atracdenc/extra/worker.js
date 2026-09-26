@@ -15,7 +15,7 @@ if (typeof (WorkerGlobalScope) !== 'undefined' && self instanceof WorkerGlobalSc
             const inWavFile = `inWavFile.wav`;
             const outAt3File = `outAt3File.aea`;
             const dataArray = new Uint8Array(data);
-            Module.FS.writeFile(`${inWavFile}`, dataArray);
+            Module.FS.writeFile(inWavFile, dataArray);
             Module.callMain([`-e`, `atrac3`, `-i`, inWavFile, `-o`, outAt3File, `--bitrate`, bitrate]);
 
             // Read file and trim header (96 bytes)
