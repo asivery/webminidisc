@@ -23,9 +23,10 @@
     "analyze": "source-map-explorer 'dist/assets/*.js'",
     "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\n\\\" > src/version-info.ts\"",
     "pretty": "prettier src/**/*.{ts,tsx} --write",
-    "package-external-encoder": "cd extra/sar-packager && npm run build && bash ../../scripts/package-external-encoder.sh",
+    "package-external-encoder": "cd extra/sar-packager && bash ../../scripts/package-external-encoder.sh",
     
-    "postbuild-default-encoders": "bash scripts/build-local-encoder.sh atracdenc && bash scripts/build-local-encoder.sh remote-encoder && npm run postbuild-finalize-encoders",
+    "build-sar-packager": "cd extra/sar-packager && npm i && npm run build",
+    "postbuild-default-encoders": "npm run build-sar-packager && bash scripts/build-local-encoder.sh atracdenc && bash scripts/build-local-encoder.sh remote-encoder && npm run postbuild-finalize-encoders",
     "postbuild-finalize-encoders": "node scripts/build-encoders-json.cjs",
     "prepare-dev-encoders": "npm run postbuild-default-encoders && cp -r dist/encoders* public/"
   },
