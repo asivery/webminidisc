@@ -92,7 +92,7 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
     }
 
     async transcode(source: Uint8Array<ArrayBuffer>, sourceFileName: string, exportParams: AudioEncoderV1ExportParams, transcodeCallback?: (obj: { stage: string; progress: number; total: number; }) => void): Promise<Uint8Array<ArrayBuffer>> {
-        if(exportParams.format.codec in ['PCM', 'MP3']) {
+        if(['PCM', 'MP3'].includes(exportParams.format.codec)) {
             return this.ffmpeg.transcode(source, sourceFileName, exportParams, transcodeCallback);
         }
         if(!this.atrac3OSProcess) {

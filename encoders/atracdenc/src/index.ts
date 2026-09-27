@@ -66,7 +66,7 @@ export default class AtracdencAudioExportService implements AudioEncoderV1Instan
         exportParams: AudioEncoderV1ExportParams,
         transcodeCallback?: (obj: { stage: string; progress: number; total: number; }) => void
     ): Promise<Uint8Array<ArrayBuffer>> {
-        if(exportParams.format.codec in ['PCM', 'MP3']) {
+        if(['PCM', 'MP3'].includes(exportParams.format.codec)) {
             return this.ffmpeg.transcode(source, fileName, exportParams, transcodeCallback);
         }
         if(exportParams.format.codec === 'A3+') throw new Error("Unavailable.");
