@@ -1,0 +1,40 @@
+name: Deploy to web.minidisc.wiki (Cloudflare)
+
+# workflow is pushed on demand
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libudev-dev libusb-1.0-0-dev git
+
+      - name: change node version
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 'do not treat warnings as errors' per 'deploy-to-gh-pages.yml'
+      - name: install and build
+        run: |
+          git config --global url."https://".insteadOf ssh://
+          npm ci
+          npm run build
+        env:
+          CI: false
+          PUBLIC_URL: /
+
+      # Direct Upload deploy to Cloudflare Pages via Wrangler
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=webminidisc --branch=master
