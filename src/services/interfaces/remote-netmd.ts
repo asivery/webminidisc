@@ -213,7 +213,17 @@ export class NetMDRemoteService extends NetMDService {
         progressCallback: (progress: { written: number; encrypted: number; total: number }) => void
     ) {
         return new Promise<void>((res, rej) => {
-            const format = _format.codec === 'AT3' ? { codec: _format.bitrate === 66 ? 'LP4' : 'LP2' } : _format;
+            let format;
+            switch(_format.codec) {
+                default:
+                    throw new Error(`Remote NetMD does not currently support the codec ${_format.codec}`);
+                case 'AT3':
+                    format = { codec: _format.bitrate === 66 ? 'LP4' : 'LP2' };
+                    break;
+                case 'SPS':
+                    format = { codec: 'SP' };
+                    break;
+            }
             const servURL = new URL(this.server);
             const wsURL = new URL(`${servURL.protocol === 'https:' ? 'wss:' : 'ws:'}//${servURL.host}/upload`);
             //Send file
