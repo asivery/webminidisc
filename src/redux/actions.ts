@@ -141,8 +141,9 @@ export function validateAndLoadEncoders(absoluteInit: boolean) {
                 } else {
                     console.log("Pulling encoders from server: ", toInstall);
                     dispatch(encoderDownloadDialog.setVisible(true));
-                    for(const entry of toInstall) {
-                        dispatch(encoderDownloadDialog.setProgress({ currentEncoderIndex: 0, totalEncoders: toInstall.length, currentEncoderName: entry.name }));
+                    for(let i = 0; i<toInstall.length; i++) {
+                        const entry = toInstall[i];
+                        dispatch(encoderDownloadDialog.setProgress({ currentEncoderIndex: i, totalEncoders: toInstall.length, currentEncoderName: entry.name }));
                         console.log(`Downloading ${entry.id}...`);
                         const rawSARFile = new Uint8Array(await (await fetch(getPublicPathFor(entry.path))).arrayBuffer());
                         await EncoderStorageManager.INSTANCE.installEncoderSkipDependencyCheck(rawSARFile, true);
