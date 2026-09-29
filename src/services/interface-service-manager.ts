@@ -27,90 +27,7 @@ const BYTES_DEFAULT_SPEC = new DefaultMinidiscSpec();
 (BYTES_DEFAULT_SPEC as any).measurementUnits = 'bytes';
 BYTES_DEFAULT_SPEC.translateToDefaultMeasuringModeFrom = new HiMDSpec().translateToDefaultMeasuringModeFrom;
 
-export const Services: ServicePrototype[] = [
-    {
-        name: 'USB NetMD',
-        getConnectName: () => 'Connect',
-        create: () => window.native?.interface ?? new NetMDUSBService({ debug: true }),
-        spec: new DefaultMinidiscSpec(),
-        requiresChrome: true,
-    },
-    {
-        name: 'HiMD (Read Only)',
-        getConnectName: () => 'Connect to HiMD (Read Only)',
-        create: () => new HiMDRestrictedService({ debug: true }),
-        spec: new HiMDSpec(),
-        requiresChrome: true,
-    },
-    {
-        name: 'HiMD (Full)',
-        getConnectName: () => 'Connect to HiMD (Full)',
-        create: () => {
-            if (window.native?.himdFullInterface) {
-                return window.native?.himdFullInterface;
-            }
-            if (!confirm('Warning: For Full HiMD mode, it is recommended to use ElectronWMD instead! Continue?')) {
-                return null;
-            }
-            return new HiMDFullService({ debug: true });
-        },
-        spec: new HiMDSpec(),
-        requiresChrome: true,
-    },
-    {
-        name: 'DRM-Free Network Walkman',
-        getConnectName: (params) => {
-            const intPid = parseInt(params!.pid as string);
-            return `Connect to ${DeviceIds.find((e) => e.productId == intPid)!.name}`;
-        },
-        create: (params) => {
-            const intPid = parseInt(params!.pid as string);
-            return new NetworkWMService(DeviceIds.find((e) => e.productId == intPid)!);
-        },
-        requiresChrome: true,
-        spec: new HiMDSpec(),
-        customParameters: [
-            {
-                varName: 'pid',
-                type: DeviceIds.filter((e) => e.disableDRM).map((e) => ({ name: e.name, value: e.productId.toString() })),
-                userFriendlyName: 'Device',
-                defaultValue: DeviceIds.filter((e) => e.disableDRM)[0].productId.toString(),
-            },
-        ],
-    },
-    {
-        name: 'Remote NetMD',
-        getConnectName: (parameters) => `Connect to ${parameters!.friendlyName || parameters!.serverAddress}`,
-        description: React.createElement(
-            'p',
-            null,
-            'Connect to a remote NetMD device with the help of ',
-            React.createElement('a', { href: 'https://github.com/asivery/remote-netmd-server' }, 'Remote NetMD')
-        ),
-        create: (parameters) => new NetMDRemoteService({ debug: true, ...parameters } as any),
-        spec: new DefaultMinidiscSpec(),
-        requiresChrome: false,
-        customParameters: [
-            {
-                userFriendlyName: 'Server Address',
-                varName: 'serverAddress',
-                type: 'string',
-                validator: (content) => {
-                    try {
-                        const asURL = new URL(content);
-                        return asURL.pathname === '/';
-                    } catch (e) {
-                        return false;
-                    }
-                },
-            },
-            {
-                userFriendlyName: 'Friendly Name',
-                varName: 'friendlyName',
-                type: 'string',
-            },
-        ],
-    },
+const MOCKS: ServicePrototype[] = import.meta.env.PROD ? [] :[
     {
         name: 'MockMD',
         getConnectName: () => 'Connect to MockMD',
@@ -245,6 +162,93 @@ export const Services: ServicePrototype[] = [
             },
         ],
     },
+];
+
+export const Services: ServicePrototype[] = [
+    {
+        name: 'USB NetMD',
+        getConnectName: () => 'Connect',
+        create: () => window.native?.interface ?? new NetMDUSBService({ debug: true }),
+        spec: new DefaultMinidiscSpec(),
+        requiresChrome: true,
+    },
+    {
+        name: 'HiMD (Read Only)',
+        getConnectName: () => 'Connect to HiMD (Read Only)',
+        create: () => new HiMDRestrictedService({ debug: true }),
+        spec: new HiMDSpec(),
+        requiresChrome: true,
+    },
+    {
+        name: 'HiMD (Full)',
+        getConnectName: () => 'Connect to HiMD (Full)',
+        create: () => {
+            if (window.native?.himdFullInterface) {
+                return window.native?.himdFullInterface;
+            }
+            if (!confirm('Warning: For Full HiMD mode, it is recommended to use ElectronWMD instead! Continue?')) {
+                return null;
+            }
+            return new HiMDFullService({ debug: true });
+        },
+        spec: new HiMDSpec(),
+        requiresChrome: true,
+    },
+    {
+        name: 'DRM-Free Network Walkman',
+        getConnectName: (params) => {
+            const intPid = parseInt(params!.pid as string);
+            return `Connect to ${DeviceIds.find((e) => e.productId == intPid)!.name}`;
+        },
+        create: (params) => {
+            const intPid = parseInt(params!.pid as string);
+            return new NetworkWMService(DeviceIds.find((e) => e.productId == intPid)!);
+        },
+        requiresChrome: true,
+        spec: new HiMDSpec(),
+        customParameters: [
+            {
+                varName: 'pid',
+                type: DeviceIds.filter((e) => e.disableDRM).map((e) => ({ name: e.name, value: e.productId.toString() })),
+                userFriendlyName: 'Device',
+                defaultValue: DeviceIds.filter((e) => e.disableDRM)[0].productId.toString(),
+            },
+        ],
+    },
+    {
+        name: 'Remote NetMD',
+        getConnectName: (parameters) => `Connect to ${parameters!.friendlyName || parameters!.serverAddress}`,
+        description: React.createElement(
+            'p',
+            null,
+            'Connect to a remote NetMD device with the help of ',
+            React.createElement('a', { href: 'https://github.com/asivery/remote-netmd-server' }, 'Remote NetMD')
+        ),
+        create: (parameters) => new NetMDRemoteService({ debug: true, ...parameters } as any),
+        spec: new DefaultMinidiscSpec(),
+        requiresChrome: false,
+        customParameters: [
+            {
+                userFriendlyName: 'Server Address',
+                varName: 'serverAddress',
+                type: 'string',
+                validator: (content) => {
+                    try {
+                        const asURL = new URL(content);
+                        return asURL.pathname === '/';
+                    } catch (e) {
+                        return false;
+                    }
+                },
+            },
+            {
+                userFriendlyName: 'Friendly Name',
+                varName: 'friendlyName',
+                type: 'string',
+            },
+        ],
+    },
+    ...MOCKS
 ];
 
 if (window.native?.nwInterface) {
