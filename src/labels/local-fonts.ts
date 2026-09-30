@@ -8,6 +8,28 @@ export interface LocalFontData extends LocalFontRef {
 }
 const available = new Map<string, LocalFontData>();
 const cache = new Map<string, Promise<GlyphFont>>();
+const previewCache = new Map<string, Promise<string | null>>();
+
+/** Browser-only aliases keep each local face distinct without parsing its outline data. */
+export function loadLocalFontPreview(data: LocalFontData): Promise<string | null> {
+    const existing = previewCache.get(data.postscriptName);
+    if (existing) return existing;
+    const family = `md-local-preview-${previewCache.size}`;
+    const pending = (async () => {
+        try {
+            const face = new FontFace(family, `local(${JSON.stringify(data.postscriptName)}), local(${JSON.stringify(data.fullName)})`);
+            await face.load();
+            document.fonts.add(face);
+            return family;
+        } catch {
+            // A failed preview must not prevent selecting a font for outline rendering.
+            return null;
+        }
+    })();
+    previewCache.set(data.postscriptName, pending);
+    return pending;
+}
+
 export async function listLocalFonts(postscriptNames?: string[]): Promise<LocalFontData[]> {
     const api = (window as unknown as { queryLocalFonts?: (options?: { postscriptNames: string[] }) => Promise<LocalFontData[]> })
         .queryLocalFonts;

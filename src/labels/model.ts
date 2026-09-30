@@ -62,6 +62,12 @@ export interface Layer {
     lineHeight: number;
     shadow: boolean;
     outline: boolean;
+    outlineColor?: string;
+    outlineWidth?: number;
+    outlineDiffuse?: boolean;
+    outlineHollow?: boolean;
+    shadowColor?: string;
+    shadowDistance?: number;
     columns: number;
     numbers: boolean;
     artists: boolean;
@@ -149,6 +155,21 @@ export const uid = () => crypto.randomUUID();
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 export const formatDuration = (s: number | null) =>
     s === null ? '' : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+export function textEffects(l: Layer, size = l.fontSize) {
+    return {
+        outlineColor: l.outlineColor ?? l.color,
+        outlineWidth: l.outlineWidth ?? size * 0.035,
+        outlineDiffuse: l.outlineDiffuse ?? false,
+        outlineHollow: l.outlineHollow ?? true,
+        shadowColor: l.shadowColor ?? '#000000',
+        shadowDistance: l.shadowDistance ?? 0.18 * Math.SQRT2,
+    };
+}
+export function hasTextEffectSettings(l: Layer): boolean {
+    return [l.outlineColor, l.outlineWidth, l.outlineDiffuse, l.outlineHollow, l.shadowColor, l.shadowDistance].some(
+        (v) => v !== undefined
+    );
+}
 export function layer(kind: Layer['kind'], panel: string, face: Face, patch: Partial<Layer> = {}): Layer {
     return {
         id: uid(),
@@ -174,6 +195,12 @@ export function layer(kind: Layer['kind'], panel: string, face: Face, patch: Par
         lineHeight: 1.35,
         shadow: false,
         outline: false,
+        outlineColor: patch.color ?? '#173d43',
+        outlineWidth: 0.1,
+        outlineDiffuse: false,
+        outlineHollow: false,
+        shadowColor: '#000000',
+        shadowDistance: 0.18 * Math.SQRT2,
         columns: 1,
         numbers: true,
         artists: true,

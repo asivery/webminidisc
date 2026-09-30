@@ -26,11 +26,24 @@ import {
     parsePlaylist,
     templateIds,
     templateNames,
+    textEffects,
     uid,
 } from './model';
 import { Fonts, loadFonts, printPages, renderDesign, renderExport, svgDocument } from './render';
 import { exampleProject, importAsset, openProject, persistDraft, restoreDraft, saveProject } from './storage';
-import { canvasPoint, handlePoint, panelDelta, resizeHandles, resizeLayer, ResizeHandle } from './interaction';
+import {
+    canvasPoint,
+    handlePoint,
+    panelDelta,
+    resizeHandles,
+    resizeLayer,
+    ResizeHandle,
+    rotationCorners,
+    rotationZone,
+    normalizeRotation,
+    rotationDelta,
+    rotateLayer,
+} from './interaction';
 import { AssetLibrary } from './asset-library';
 import { DiscIcon, StudioIcon, IconName } from './icons';
 import { TemplatePicker } from './template-picker';
@@ -42,6 +55,11 @@ import { ChineseConversion } from '../title-conversion';
 import './labels.css';
 
 type Tab = 'text' | 'art' | 'logo' | 'decal' | 'background' | 'code' | 'layout';
+function pointerOnCanvas(svg: SVGSVGElement, x: number, y: number) {
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return null;
+    return new DOMPoint(x, y).matrixTransform(matrix.inverse());
+}
 const tabs: [Tab, string, IconName][] = [
     ['text', '文字与曲目', 'text'],
     ['art', '封面艺术', 'image'],
@@ -228,6 +246,7 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
         fileMusic = useRef<HTMLInputElement>(null),
         fileImage = useRef<HTMLInputElement>(null);
     const drag = useRef<{
+        pointerId: number;
         id: string;
         x: number;
         y: number;
@@ -239,6 +258,7 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
         panel: string;
         original?: Layer;
         handle?: ResizeHandle;
+        rotation?: { center: { x: number; y: number }; previous: number; delta: number; applied: number };
     } | null>(null);
     const queue = useRef(Promise.resolve()),
         dirty = useRef(false);
@@ -368,7 +388,7 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
     useEffect(() => {
         if (!open || printPreview || printOpen) return;
         const key = (e: KeyboardEvent) => {
-            if ((e.target as HTMLElement).closest('input,textarea,select,[contenteditable]')) return;
+            if ((e.target as HTMLElement).closest('input,textarea,select,[contenteditable],[role="listbox"]')) return;
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
                 e.shiftKey ? redo() : undo();
@@ -1195,6 +1215,56 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                         <Check label="阴影" value={activeLayer.shadow} onChange={(v) => editLayer({ shadow: v })} />
                                         <Check label="描边" value={activeLayer.outline} onChange={(v) => editLayer({ outline: v })} />
                                     </div>
+                                    {activeLayer.outline && (
+                                        <div className="md-field-row">
+                                            <label className="md-field">
+                                                <span>描边颜色</span>
+                                                <input
+                                                    type="color"
+                                                    value={textEffects(activeLayer).outlineColor}
+                                                    onChange={(e) => editLayer({ outlineColor: e.target.value })}
+                                                />
+                                            </label>
+                                            <NumberField
+                                                label="描边宽度（mm）"
+                                                value={textEffects(activeLayer).outlineWidth}
+                                                min={0}
+                                                max={5}
+                                                step={0.05}
+                                                onChange={(v) => editLayer({ outlineWidth: v })}
+                                            />
+                                            <Check
+                                                label="柔化扩散"
+                                                value={textEffects(activeLayer).outlineDiffuse}
+                                                onChange={(v) => editLayer({ outlineDiffuse: v })}
+                                            />
+                                            <Check
+                                                label="空心"
+                                                value={textEffects(activeLayer).outlineHollow}
+                                                onChange={(v) => editLayer({ outlineHollow: v })}
+                                            />
+                                        </div>
+                                    )}
+                                    {activeLayer.shadow && (
+                                        <div className="md-field-row">
+                                            <label className="md-field">
+                                                <span>阴影颜色</span>
+                                                <input
+                                                    type="color"
+                                                    value={textEffects(activeLayer).shadowColor}
+                                                    onChange={(e) => editLayer({ shadowColor: e.target.value })}
+                                                />
+                                            </label>
+                                            <NumberField
+                                                label="阴影距离（mm）"
+                                                value={textEffects(activeLayer).shadowDistance}
+                                                min={0}
+                                                max={20}
+                                                step={0.1}
+                                                onChange={(v) => editLayer({ shadowDistance: v })}
+                                            />
+                                        </div>
+                                    )}
                                     {activeLayer.binding === 'tracks' && (
                                         <div className="md-field-row">
                                             <Select
@@ -1500,7 +1570,14 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                         适合窗口
                                     </button>
                                 </div>
-                                <div className="md-canvas-scroll" ref={setCanvasViewport}>
+                                <div
+                                    className="md-canvas-scroll"
+                                    ref={setCanvasViewport}
+                                    onPointerDown={(e) => {
+                                        // Layer hit areas and resize handles stop propagation before this point.
+                                        if (e.isPrimary && e.button === 0 && !drag.current && project === deferred) setSelected('');
+                                    }}
+                                >
                                     <div className="md-artboard-wrap" style={{ width: viewW * displayScale + 28 }}>
                                         <div className="md-ruler" style={{ width: viewW * displayScale }}>
                                             {Array.from({ length: Math.floor(viewW / 10) + 1 }, (_, i) => (
@@ -1520,7 +1597,44 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                                 viewBox={`0 0 ${viewW} ${viewH}`}
                                                 onPointerMove={(e) => {
                                                     const q = drag.current;
-                                                    if (!q) return;
+                                                    if (!q || q.pointerId !== e.pointerId) return;
+                                                    // A pending capture can be released before got/lostpointercapture fires.
+                                                    if (!e.currentTarget.hasPointerCapture(e.pointerId) || !(e.buttons & 1)) {
+                                                        drag.current = null;
+                                                        return;
+                                                    }
+                                                    if (q.rotation && q.original) {
+                                                        const point = pointerOnCanvas(e.currentTarget, e.clientX, e.clientY);
+                                                        if (
+                                                            !point ||
+                                                            Math.hypot(point.x - q.rotation.center.x, point.y - q.rotation.center.y) *
+                                                                q.scale <
+                                                                2
+                                                        )
+                                                            return;
+                                                        if (!q.started && Math.hypot(e.clientX - q.startX, e.clientY - q.startY) < 2)
+                                                            return;
+                                                        const angle =
+                                                            (Math.atan2(point.y - q.rotation.center.y, point.x - q.rotation.center.x) *
+                                                                180) /
+                                                            Math.PI;
+                                                        q.rotation.delta += rotationDelta(q.rotation.previous, angle);
+                                                        q.rotation.previous = angle;
+                                                        const next = rotateLayer(
+                                                            q.original,
+                                                            q.original.rotation + q.rotation.delta,
+                                                            e.shiftKey
+                                                        );
+                                                        if (next.rotation === q.rotation.applied) return;
+                                                        q.rotation.applied = next.rotation;
+                                                        const remember = !q.started;
+                                                        q.started = true;
+                                                        commit((p) => {
+                                                            const l = p.designs[p.active]!.layers.find((l) => l.id === q.id);
+                                                            if (l && !l.locked) Object.assign(l, next);
+                                                        }, remember);
+                                                        return;
+                                                    }
                                                     const { x: dx, y: dy } = panelDelta(
                                                         (e.clientX - q.startX) / q.scale,
                                                         (e.clientY - q.startY) / q.scale,
@@ -1545,11 +1659,16 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                                         }
                                                     }, remember);
                                                 }}
-                                                onPointerUp={() => {
-                                                    drag.current = null;
+                                                onPointerUp={(e) => {
+                                                    if (drag.current?.pointerId === e.pointerId) drag.current = null;
+                                                    if (e.currentTarget.hasPointerCapture(e.pointerId))
+                                                        e.currentTarget.releasePointerCapture(e.pointerId);
                                                 }}
-                                                onPointerCancel={() => {
-                                                    drag.current = null;
+                                                onPointerCancel={(e) => {
+                                                    if (drag.current?.pointerId === e.pointerId) drag.current = null;
+                                                }}
+                                                onLostPointerCapture={(e) => {
+                                                    if (drag.current?.pointerId === e.pointerId) drag.current = null;
                                                 }}
                                             >
                                                 {grid && (
@@ -1592,12 +1711,14 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                                             style={{ cursor: l.locked ? 'not-allowed' : 'move' }}
                                                             onPointerDown={(e) => {
                                                                 e.stopPropagation();
+                                                                if (!e.isPrimary || e.button !== 0) return;
                                                                 setPanel(l.panel);
                                                                 setSelected(l.id);
                                                                 if (l.locked) return;
                                                                 const svg = e.currentTarget.ownerSVGElement!;
                                                                 svg.setPointerCapture(e.pointerId);
                                                                 drag.current = {
+                                                                    pointerId: e.pointerId,
                                                                     id: l.id,
                                                                     x: l.x,
                                                                     y: l.y,
@@ -1614,7 +1735,7 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                                 })}
                                                 {activeLayer?.visible &&
                                                     !activeLayer.locked &&
-                                                    !separated &&
+                                                    !(separated && design.template === 'full') &&
                                                     (() => {
                                                         const p = def.panels.find((p) => p.id === activeLayer.panel)!;
                                                         const points = ['nw', 'ne', 'se', 'sw'].map((h) => {
@@ -1635,6 +1756,60 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                                                     strokeWidth={1 / displayScale}
                                                                     pointerEvents="none"
                                                                 />
+                                                                {rotationCorners.map((corner) => (
+                                                                    <polygon
+                                                                        key={corner}
+                                                                        data-rotate-corner={corner}
+                                                                        aria-label={`旋转图层 ${corner}`}
+                                                                        className="md-rotation-zone"
+                                                                        points={rotationZone(activeLayer, p, corner, displayScale)
+                                                                            .map((pt) => `${pt.x},${pt.y}`)
+                                                                            .join(' ')}
+                                                                        fill="transparent"
+                                                                        onPointerDown={(e) => {
+                                                                            e.stopPropagation();
+                                                                            if (!e.isPrimary || e.button !== 0) return;
+                                                                            e.preventDefault();
+                                                                            const svg = e.currentTarget.ownerSVGElement!;
+                                                                            const point = pointerOnCanvas(svg, e.clientX, e.clientY);
+                                                                            if (!point) return;
+                                                                            const center = canvasPoint(
+                                                                                activeLayer,
+                                                                                p,
+                                                                                activeLayer.width / 2,
+                                                                                activeLayer.height / 2
+                                                                            );
+                                                                            svg.setPointerCapture(e.pointerId);
+                                                                            drag.current = {
+                                                                                pointerId: e.pointerId,
+                                                                                id: activeLayer.id,
+                                                                                x: activeLayer.x,
+                                                                                y: activeLayer.y,
+                                                                                startX: e.clientX,
+                                                                                startY: e.clientY,
+                                                                                scale: svg.getBoundingClientRect().width / viewW,
+                                                                                started: false,
+                                                                                orientation: p.rotation === -90 ? 'bottom' : 'left',
+                                                                                panel: p.id,
+                                                                                original: { ...activeLayer },
+                                                                                rotation: {
+                                                                                    center,
+                                                                                    previous:
+                                                                                        (Math.atan2(
+                                                                                            point.y - center.y,
+                                                                                            point.x - center.x
+                                                                                        ) *
+                                                                                            180) /
+                                                                                        Math.PI,
+                                                                                    delta: 0,
+                                                                                    applied: normalizeRotation(activeLayer.rotation),
+                                                                                },
+                                                                            };
+                                                                        }}
+                                                                    >
+                                                                        <title>拖动旋转；按住 Shift 每 15° 吸附</title>
+                                                                    </polygon>
+                                                                ))}
                                                                 {resizeHandles.map((h) => {
                                                                     const local = handlePoint(h, activeLayer.width, activeLayer.height);
                                                                     const pt = canvasPoint(activeLayer, p, local.x, local.y);
@@ -1653,9 +1828,11 @@ export default function LabelEditor({ open, onClose, selectedTracks }: { open: b
                                                                             style={{ cursor: 'crosshair' }}
                                                                             onPointerDown={(e) => {
                                                                                 e.stopPropagation();
+                                                                                if (!e.isPrimary || e.button !== 0) return;
                                                                                 const svg = e.currentTarget.ownerSVGElement!;
                                                                                 svg.setPointerCapture(e.pointerId);
                                                                                 drag.current = {
+                                                                                    pointerId: e.pointerId,
                                                                                     id: activeLayer.id,
                                                                                     x: activeLayer.x,
                                                                                     y: activeLayer.y,

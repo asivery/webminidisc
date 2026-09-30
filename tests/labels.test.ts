@@ -25,7 +25,9 @@ import {
     parsePlaylist,
     boundText,
 } from '../src/labels/model';
-import { renderDesign, printPages, svgDocument, layerBounds } from '../src/labels/render';
+import { renderDesign, printPages, svgDocument, layerBounds, textArtwork, textEffectPadding } from '../src/labels/render';
+import { textEffects, hasTextEffectSettings, Layer } from '../src/labels/model';
+import { rotateLayer, rotationDelta, rotationZone, rotationCorners, layerPoint, canvasPoint } from '../src/labels/interaction';
 import { validateProject, saveProject, openProject } from '../src/labels/storage';
 import { createTitleCSV } from '../src/csv-titles';
 const readFont = (file: string) => {
@@ -33,6 +35,230 @@ const readFont = (file: string) => {
     return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
 };
 const fonts = { sans: readFont('NotoSansCJKsc-Regular.otf'), serif: readFont('NotoSerifCJKsc-Regular.otf') };
+test('mouse rotation preserves the rendered center through quarter turns on every panel orientation', () => {
+    for (const orientation of ['left', 'bottom'] as const) {
+        const d = newDesign('jcard');
+        d.orientation = orientation;
+        for (const p of definition(d).panels)
+            for (const originalAngle of [-360, -180, -90, 0, 37, 90, 180, 360]) {
+                const original = layer('text', p.id, 'front', { x: 8, y: 11, width: 30, height: 7, rotation: originalAngle });
+                const center = canvasPoint(original, p, original.width / 2, original.height / 2);
+                for (const angle of [-450, -180.1, -180, -90.1, -90, -89.9, 0, 89.9, 90, 90.1, 179.9, 180, 450, 1080]) {
+                    const rotated = { ...original, ...rotateLayer(original, angle) };
+                    const actual = canvasPoint(rotated, p, rotated.width / 2, rotated.height / 2);
+                    assert.ok(Math.hypot(center.x - actual.x, center.y - actual.y) < 1e-9);
+                    const bounds = layerBounds(rotated);
+                    const local = layerPoint(rotated, rotated.width / 2, rotated.height / 2);
+                    assert.ok(Math.hypot(bounds.x + bounds.width / 2 - local.x, bounds.y + bounds.height / 2 - local.y) < 1e-9);
+                    assert.equal(rotated.width, original.width);
+                    assert.equal(rotated.height, original.height);
+                }
+            }
+    }
+});
+test('rotation unwraps angle crossings and supports repeated circles and Shift snapping', () => {
+    assert.equal(rotationDelta(179, -179), 2);
+    assert.equal(rotationDelta(-179, 179), -2);
+    let previous = 170,
+        total = 0;
+    for (let angle = 180; angle <= 1250; angle += 10) {
+        const current = ((angle + 180) % 360) - 180;
+        total += rotationDelta(previous, current);
+        previous = current;
+    }
+    assert.equal(total, 1080);
+    const l = layer('text', 'main', 'front');
+    assert.equal(rotateLayer(l, 22.36).rotation, 22.4);
+    assert.equal(rotateLayer(l, 22.36, true).rotation, 15);
+    assert.equal(rotateLayer(l, 22.6, true).rotation, 30);
+    assert.equal(rotateLayer(l, -88, true).rotation, -90);
+});
+test('rotation corner zones keep fixed pixel size and stay outside resize handles', () => {
+    const d = newDesign('jcard');
+    d.orientation = 'bottom';
+    const p = definition(d).panels[0];
+    for (const rotation of [-90, 0, 37, 90, 180])
+        for (const scale of [0.5, 2, 12])
+            for (const corner of rotationCorners) {
+                const l = layer('shape', p.id, 'front', { rotation, width: 20, height: 8 });
+                const zone = rotationZone(l, p, corner, scale);
+                const anchor = canvasPoint(l, p, corner.includes('w') ? 0 : l.width, corner.includes('n') ? 0 : l.height);
+                assert.ok(Math.abs(Math.hypot(zone[0].x - zone[1].x, zone[0].y - zone[1].y) * scale - 14) < 1e-9);
+                assert.ok(Math.hypot(zone[0].x - anchor.x, zone[0].y - anchor.y) * scale > Math.SQRT2 * 4.5);
+            }
+});
+test('mouse rotated layers retain geometry across project saving and SVG/PDF export', async () => {
+    const p = newProject();
+    const l = layer('text', 'main', 'front', { text: '旋转', width: 20, height: 8 });
+    Object.assign(l, rotateLayer(l, 90));
+    p.designs.label!.layers = [l];
+    const reopened = await openProject(await saveProject(p));
+    assert.deepEqual(reopened.designs.label!.layers, [l]);
+    assert.match(renderDesign(reopened, reopened.designs.label!, 'front', fonts).body, /rotate\(90\)/);
+    assert.doesNotThrow(() => validateLabelPdfRequest(printPages(reopened, fonts)));
+});
+const effectKeys = ['outlineColor', 'outlineWidth', 'outlineDiffuse', 'outlineHollow', 'shadowColor', 'shadowDistance'] as const;
+const legacyTextLayer = () => {
+    const l = layer('text', 'main', 'front', { outline: true, shadow: true, fontSize: 4, color: '#123456' });
+    effectKeys.forEach((key) => delete l[key]);
+    return l;
+};
+
+test('text effects preserve legacy hollow outlines, shadow geometry and clipping', () => {
+    const old = legacyTextLayer();
+    assert.equal(hasTextEffectSettings(old), false);
+    assert.equal(textEffects(old).outlineHollow, true);
+    assert.equal(textEffectPadding(old), 0);
+    const svg = textArtwork('中A', old, fonts, []);
+    assert.match(svg, /fill="none" stroke="#123456" stroke-width="0.14"/);
+    assert.match(svg, /translate\(\.18 \.18\).*fill="#000000" opacity=".24"/);
+    assert.doesNotMatch(svg, /<filter/);
+    const fresh = layer('text', 'main', 'front', { color: '#abcdef' });
+    assert.equal(fresh.outlineColor, '#abcdef');
+    assert.equal(fresh.outlineWidth, 0.1);
+    assert.equal(fresh.outlineHollow, false);
+    assert.equal(fresh.outlineDiffuse, false);
+    assert.ok(Math.abs(textEffects(fresh).shadowDistance / Math.SQRT2 - 0.18) < 1e-12);
+});
+
+test('independent outline, hollow, blur and shadow settings render in physical units', () => {
+    const l = layer('text', 'main', 'front', {
+        outline: true,
+        outlineColor: '#abcdef',
+        outlineWidth: 0.8,
+        shadow: true,
+        shadowColor: '#345678',
+        shadowDistance: Math.SQRT2 * 2,
+        color: '#123456',
+        italic: true,
+        weight: 700,
+    });
+    const draw = () => textArtwork('中A\n文B', l, fonts, []);
+    const solid = draw();
+    assert.match(solid, /stroke="#abcdef" stroke-width="0.8"/);
+    assert.match(solid, /translate\(2 2\).*fill="#345678"/);
+    assert.ok(solid.indexOf('fill="#345678"') < solid.indexOf('stroke="#abcdef"'));
+    assert.ok(solid.lastIndexOf('stroke="#abcdef"') < solid.indexOf('fill="#123456"'));
+    l.outlineHollow = true;
+    assert.doesNotMatch(draw(), /fill="#123456"/);
+    l.outlineDiffuse = true;
+    assert.match(draw(), /<feGaussianBlur stdDeviation="0.4"/);
+    assert.ok(textEffectPadding(l) > 0.4 + 3 * 0.4 + 2);
+    l.outlineWidth = 0;
+    assert.doesNotMatch(draw(), /<filter|stroke="#abcdef"/);
+    l.outline = false;
+    l.shadow = false;
+    assert.equal(textEffectPadding(l), 0);
+    assert.match(draw(), /fill="#123456"/);
+    assert.doesNotMatch(draw(), /#abcdef|#345678|<filter/);
+    assert.equal(l.shadowDistance, Math.SQRT2 * 2);
+});
+
+test('text effect settings round-trip, accept old projects and reject malformed values', async () => {
+    const p = newProject();
+    const old = legacyTextLayer();
+    const fresh = layer('text', 'main', 'front', {
+        outline: true,
+        outlineColor: '#abcdef',
+        outlineWidth: 5,
+        outlineHollow: true,
+        outlineDiffuse: true,
+        shadow: true,
+        shadowColor: '#123456',
+        shadowDistance: 20,
+    });
+    p.designs.label!.layers = [old, fresh];
+    const restored = await openProject(await saveProject(p));
+    assert.equal(restored.version, 1);
+    assert.deepEqual(restored.designs.label!.layers, p.designs.label!.layers);
+    assert.equal(hasTextEffectSettings(restored.designs.label!.layers[0]), false);
+    const bad: [keyof Layer, unknown][] = [
+        ['outlineColor', 'red'],
+        ['shadowColor', '#123'],
+        ['outlineColor', 'url(https://example.com)'],
+        ['outlineWidth', -1],
+        ['outlineWidth', 5.1],
+        ['outlineWidth', NaN],
+        ['outlineWidth', Infinity],
+        ['shadowDistance', -1],
+        ['shadowDistance', 20.1],
+        ['shadowDistance', '1'],
+        ['outlineDiffuse', 1],
+        ['outlineHollow', null],
+    ];
+    for (const [key, value] of bad) {
+        const invalid = structuredClone(p);
+        (invalid.designs.label!.layers[1] as any)[key] = value;
+        assert.throws(() => validateProject(invalid), /无效的工程文件/);
+    }
+    fresh.outlineWidth = 0;
+    fresh.shadowDistance = 0;
+    assert.doesNotThrow(() => validateProject(p));
+});
+
+test('glow IDs, expanded clips and panel clipping survive all templates and multipage export', () => {
+    const p = newProject();
+    p.print.templates = templateIds;
+    p.print.copies = 2;
+    for (const id of templateIds) {
+        const d = (p.designs[id] = newDesign(id));
+        d.layers = [
+            layer('text', 'main', 'front', {
+                text: '中文 A\n第二行',
+                outline: true,
+                outlineDiffuse: true,
+                outlineWidth: 1,
+                shadow: true,
+                shadowDistance: 3,
+                x: 0,
+                y: 0,
+                rotation: 37,
+                width: 20,
+                height: 12,
+            }),
+        ];
+        const r = renderDesign(p, d, 'front', fonts, { separated: id === 'full' });
+        assert.match(r.body, /<filter/);
+        assert.match(r.body, /<clipPath[^>]*><rect x="-/);
+        assert.match(r.body, /clip-path="url\(#/);
+        const before = layerBounds(d.layers[0]);
+        d.layers[0].outline = false;
+        assert.deepEqual(layerBounds(d.layers[0]), before);
+        d.layers[0].outline = true;
+        assert.doesNotThrow(() =>
+            validateLabelPdfRequest({ pages: [svgDocument(renderExport(p, d, 'front', fonts))], paperSize: { width: 210, height: 297 } })
+        );
+    }
+    const result = printPages(p, fonts);
+    assert.ok(result.pages.length > 1);
+    assert.doesNotThrow(() => validateLabelPdfRequest(result));
+    const ids = result.pages.flatMap((page) => [...page.matchAll(/<filter id="([^"]+)"/g)].map((m) => m[1]));
+    assert.ok(ids.length > 1);
+    assert.equal(new Set(ids).size, ids.length);
+});
+
+test('PDF accepts only bounded internal Gaussian blur filters', () => {
+    const filter =
+        '<defs><filter id="glow" filterUnits="userSpaceOnUse" x="-2" y="-2" width="24" height="14"><feGaussianBlur stdDeviation=".5"/></filter></defs>';
+    const body = `${filter}<g filter="url(#glow)"><path d="M0 0h10v10z" fill="#123456"/></g>`;
+    const validate = (body: string) =>
+        validateLabelPdfRequest({ pages: [svgDocument({ width: 30, height: 20, body })], paperSize: { width: 210, height: 297 } });
+    assert.doesNotThrow(() => validate(body));
+    for (const invalid of [
+        body.replace('url(#glow)', 'url(https://example.com/glow)'),
+        body.replace('url(#glow)', 'url(#missing)'),
+        body.replace('stdDeviation=".5"', 'stdDeviation="-1"'),
+        body.replace('stdDeviation=".5"', 'stdDeviation="Infinity"'),
+        body.replace('stdDeviation=".5"', 'stdDeviation="100"'),
+        body.replace('stdDeviation=".5"', 'stdDeviation=".5" in="BackgroundImage"'),
+        body.replace('width="24"', 'width="-1"'),
+        body.replace('feGaussianBlur', 'feImage'),
+        body.replace('filterUnits="userSpaceOnUse"', 'filterUnits="objectBoundingBox"'),
+        '<feGaussianBlur stdDeviation=".5"/>',
+        '<g id="glow"/><path d="M0 0h1" filter="url(#glow)"/>',
+    ])
+        assert.throws(() => validate(invalid));
+});
 test('editor fit respects both viewport axes without changing physical geometry', () => {
     for (const [vw, vh] of [
         [640, 500],

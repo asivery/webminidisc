@@ -371,6 +371,12 @@
     touch-action: none;
     overflow: visible;
 }
+.md-rotation-zone {
+    cursor:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M19 10a7 7 0 1 0-1 7M19 4v6h-6' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M19 10a7 7 0 1 0-1 7M19 4v6h-6' fill='none' stroke='%2324343c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+            12 12,
+        crosshair;
+}
 .md-ruler {
     position: absolute;
     top: 0;
@@ -719,9 +725,41 @@
     gap: 8px;
     margin-top: 8px;
 }
-.md-font-options select {
+.md-local-font-list {
     width: 100%;
-    height: auto;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--md-border);
+    border-radius: 6px;
+    padding: 4px;
+    overscroll-behavior: contain;
+}
+.md-local-font-list .md-local-font-option {
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px;
+    text-align: left;
+    font-size: 16px;
+    font-weight: normal;
+    font-synthesis: none;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    border: 0;
+    box-shadow: none;
+}
+.md-local-font-list .md-local-font-option[aria-selected='true'],
+.md-local-font-list .md-local-font-option[aria-selected='true']:hover {
+    background: var(--md-selected);
+    color: var(--md-accent);
+}
+.md-local-font-option[aria-disabled='true'] {
+    cursor: wait;
+}
+.md-local-font-empty {
+    padding: 12px 8px;
+    color: var(--md-muted);
 }
 .md-font-options small {
     font-size: 12px;

@@ -75,6 +75,11 @@ export function validateProject(input: unknown): LabelProject {
                 fail('图层类型');
             if (l.binding && !['album', 'artist', 'tracks', 'credits', 'lyrics', 'direction'].includes(l.binding)) fail('文字绑定');
             if (!color(l.color) || typeof l.text !== 'string' || l.text.length > 200000 || typeof l.name !== 'string') fail('图层内容');
+            for (const key of ['outlineColor', 'shadowColor'] as const) if (l[key] !== undefined && !color(l[key])) fail('文字效果颜色');
+            for (const key of ['outlineDiffuse', 'outlineHollow'] as const)
+                if (l[key] !== undefined && typeof l[key] !== 'boolean') fail('文字效果开关');
+            if (l.outlineWidth !== undefined && !bounded(l.outlineWidth, 0, 5)) fail('描边宽度');
+            if (l.shadowDistance !== undefined && !bounded(l.shadowDistance, 0, 20)) fail('阴影距离');
             for (const key of ['x', 'y', 'offsetX', 'offsetY'] as const) if (!bounded(l[key], -2000, 2000)) fail('图层坐标');
             for (const key of ['width', 'height'] as const) if (!bounded(l[key], 0.1, 3000)) fail('图层大小');
             if (

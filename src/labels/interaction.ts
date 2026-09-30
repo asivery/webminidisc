@@ -2,6 +2,31 @@ import { Layer, Panel } from './model';
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 export const resizeHandles: ResizeHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+export const rotationCorners = ['nw', 'ne', 'se', 'sw'] as const;
+export function rotationZone(l: Layer, p: Panel, corner: (typeof rotationCorners)[number], scale: number) {
+    const anchor = handlePoint(corner, l.width, l.height);
+    const sx = corner.includes('w') ? -1 : 1;
+    const sy = corner.includes('n') ? -1 : 1;
+    // Fixed screen-pixel zones outside the resize handles, including at rotated corners.
+    return [
+        [6, 6],
+        [20, 6],
+        [20, 20],
+        [6, 20],
+    ].map(([x, y]) => canvasPoint(l, p, anchor.x + (sx * x) / scale, anchor.y + (sy * y) / scale));
+}
+export function normalizeRotation(angle: number): number {
+    return ((((angle + 180) % 360) + 360) % 360) - 180;
+}
+export function rotationDelta(previous: number, current: number): number {
+    return normalizeRotation(current - previous);
+}
+export function rotateLayer(l: Layer, angle: number, snap = false) {
+    const rotation = Number(normalizeRotation(snap ? Math.round(angle / 15) * 15 : Math.round(angle * 10) / 10).toFixed(1));
+    const center = layerPoint(l, l.width / 2, l.height / 2);
+    const nextCenter = layerPoint({ ...l, x: 0, y: 0, rotation }, l.width / 2, l.height / 2);
+    return { rotation, x: center.x - nextCenter.x, y: center.y - nextCenter.y };
+}
 export function handlePoint(handle: ResizeHandle, width: number, height: number) {
     return {
         x: handle.includes('w') ? 0 : handle.includes('e') ? width : width / 2,

@@ -1,4 +1,5 @@
 import { openLabelEditor } from '../labels/host';
+import { DiscIcon } from '../labels/icons';
 import { CsvImportDialog, CsvExportDialog } from './csv-title-dialogs';
 import React, { useCallback, useState } from 'react';
 import { useDispatch, batchActions, useDeviceCapabilities } from '../frontend-utils';
@@ -600,7 +601,10 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
             openLabelEditor(props.tracksSelected);
             handleMenuClose();
         }}>
-            MD Label Editor
+            <ListItemIcon className={classes.listItemIcon}>
+                <DiscIcon size={20} />
+            </ListItemIcon>
+            <ListItemText>MD Label Editor</ListItemText>
         </MenuItem>
     );
 

@@ -1,7 +1,93 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Layer, LocalFontRef } from './model';
 import { Fonts, GlyphFont } from './render';
-import { listLocalFonts, loadLocalFont, LocalFontData } from './local-fonts';
+import { listLocalFonts, loadLocalFont, loadLocalFontPreview, LocalFontData } from './local-fonts';
+
+function LocalFontList({
+    items,
+    selected,
+    busy,
+    onChoose,
+}: {
+    items: LocalFontData[];
+    selected?: string;
+    busy: boolean;
+    onChoose: (name: string) => void;
+}) {
+    const root = useRef<HTMLDivElement>(null);
+    const [previews, setPreviews] = useState<Record<string, string>>({});
+    const [focused, setFocused] = useState('');
+    const tabStop = [focused, selected, items[0]?.postscriptName].find((name) => items.some((f) => f.postscriptName === name));
+
+    useEffect(() => {
+        const list = root.current;
+        if (!list) return;
+        let active = true;
+        const byName = new Map(items.map((f) => [f.postscriptName, f]));
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (!entry.isIntersecting) continue;
+                    observer.unobserve(entry.target);
+                    const data = byName.get((entry.target as HTMLElement).dataset.fontName!);
+                    if (!data) continue;
+                    void loadLocalFontPreview(data).then((family) => {
+                        if (active && family) setPreviews((current) => ({ ...current, [data.postscriptName]: family }));
+                    });
+                }
+            },
+            { root: list }
+        );
+        list.querySelectorAll('[data-font-name]').forEach((row) => observer.observe(row));
+        return () => {
+            active = false;
+            observer.disconnect();
+        };
+    }, [items]);
+
+    return (
+        <div
+            ref={root}
+            className="md-local-font-list"
+            role="listbox"
+            aria-label="本机字体与样式"
+            aria-busy={busy}
+            aria-disabled={busy}
+            onKeyDown={(e) => {
+                if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+                e.preventDefault();
+                const rows = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="option"]'));
+                const current = rows.indexOf(document.activeElement as HTMLButtonElement);
+                const next = e.key === 'Home' ? 0 : e.key === 'End' ? rows.length - 1 : current + (e.key === 'ArrowDown' ? 1 : -1);
+                const row = rows[Math.max(0, Math.min(rows.length - 1, next))];
+                row?.focus({ preventScroll: true });
+                row?.scrollIntoView({ block: 'nearest' });
+            }}
+        >
+            {items.map((f) => (
+                <button
+                    key={f.postscriptName}
+                    type="button"
+                    role="option"
+                    className="md-local-font-option"
+                    data-font-name={f.postscriptName}
+                    aria-selected={selected === f.postscriptName}
+                    aria-disabled={busy}
+                    tabIndex={tabStop === f.postscriptName ? 0 : -1}
+                    title={`${f.family} · ${f.style}`}
+                    style={{ fontFamily: previews[f.postscriptName] }}
+                    onFocus={() => setFocused(f.postscriptName)}
+                    onClick={() => {
+                        if (!busy) onChoose(f.postscriptName);
+                    }}
+                >
+                    {f.family} · {f.style}
+                </button>
+            ))}
+            {!items.length && <div className="md-local-font-empty">没有匹配的字体</div>}
+        </div>
+    );
+}
 
 export function FontPicker({
     layer,
@@ -45,10 +131,13 @@ export function FontPicker({
             setBusy(false);
         }
     };
-    const filtered =
-        list?.filter((f) =>
-            `${f.family} ${f.style} ${f.fullName} ${f.postscriptName}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())
-        ) || [];
+    const filtered = useMemo(
+        () =>
+            list?.filter((f) =>
+                `${f.family} ${f.style} ${f.fullName} ${f.postscriptName}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+            ) || [],
+        [list, search]
+    );
     return (
         <div className="md-font-picker">
             <label className="md-field">
@@ -86,22 +175,7 @@ export function FontPicker({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    <select
-                        size={6}
-                        aria-label="本机字体与样式"
-                        value={layer.localFont?.postscriptName || ''}
-                        disabled={busy}
-                        onChange={(e) => choose(e.target.value)}
-                    >
-                        <option value="" disabled>
-                            选择字体与样式
-                        </option>
-                        {filtered.map((f) => (
-                            <option key={f.postscriptName} value={f.postscriptName}>
-                                {f.family} · {f.style}
-                            </option>
-                        ))}
-                    </select>
+                    <LocalFontList items={filtered} selected={layer.localFont?.postscriptName} busy={busy} onChoose={choose} />
                     <small>{filtered.length} 个样式 · 工程仅保存字体引用</small>
                     <button type="button" onClick={() => setList(null)}>
                         收起字体列表

@@ -1,6 +1,6 @@
 import * as opentype from 'opentype.js';
 import bwipjs from 'bwip-js';
-import { LabelProject, Design, Layer, Face, definition, boundText } from './model';
+import { LabelProject, Design, Layer, Face, definition, boundText, textEffects, hasTextEffectSettings } from './model';
 import { ExportPiece, ExportTarget, exportPieces, pieceGap, MARK_GAP, MARK_LENGTH } from './export-pieces';
 
 export interface GlyphFont {
@@ -70,7 +70,15 @@ function glyphs(text: string, l: Layer, markdown: boolean): Glyph[][] {
         });
     });
 }
-export function textArtwork(text: string, l: Layer, fonts: Fonts, warnings: string[]): string {
+export function textEffectPadding(l: Layer): number {
+    if (!hasTextEffectSettings(l)) return 0;
+    // The largest markdown heading is 1.48 times the base size. Allow for italic shear,
+    // half the stroke width, and three blur standard deviations around the text box.
+    const width = l.outlineWidth ?? l.fontSize * 1.48 * 0.035;
+    const outline = l.outline ? width * (l.outlineDiffuse ? 2 : 0.5) * 1.25 : 0;
+    return outline + (l.shadow ? textEffects(l).shadowDistance / Math.SQRT2 : 0);
+}
+export function textArtwork(text: string, l: Layer, fonts: Fonts, warnings: string[], key = `text-${++renderSequence}`): string {
     const custom = l.localFont && fonts.local?.[l.localFont.postscriptName];
     const font = custom || (l.font === 'serif' ? fonts.serif : fonts.sans);
     if (l.localFont && !custom)
@@ -98,6 +106,10 @@ export function textArtwork(text: string, l: Layer, fonts: Fonts, warnings: stri
     }
     const perCol = Math.ceil(lines.length / cols);
     let result = '';
+    const enhanced = hasTextEffectSettings(l);
+    const shadows: string[] = [];
+    const fills: string[] = [];
+    const outlines = new Map<number, string[]>();
     for (let col = 0; col < cols; col++) {
         let y = 0;
         for (const line of lines.slice(col * perCol, (col + 1) * perCol)) {
@@ -112,18 +124,50 @@ export function textArtwork(text: string, l: Layer, fonts: Fonts, warnings: stri
             for (const g of line) {
                 if (!font.hasChar(g.char) && g.char.trim()) warnings.push(`${l.name}：字体缺少字符 ${g.char}`);
                 const path = font.getPath(g.char, 0, 0, g.size, { kerning: false }).toPathData(3);
-                const stroke = l.outline
-                    ? `fill="none" stroke="${l.color}" stroke-width="${g.size * 0.035}"`
-                    : `fill="${l.color}"${g.bold ? ` stroke="${l.color}" stroke-width="${g.size * 0.018}"` : ''}`;
                 const transform = `translate(${n(x)} ${n(y)})${g.italic ? ' skewX(-12)' : ''}`;
-                if (l.shadow) result += `<path d="${path}" transform="translate(.18 .18) ${transform}" fill="#000000" opacity=".24"/>`;
-                result += `<path d="${path}" transform="${transform}" ${stroke}/>`;
+                if (!enhanced) {
+                    // Preserve the exact appearance and paint order of legacy projects.
+                    const stroke = l.outline
+                        ? `fill="none" stroke="${l.color}" stroke-width="${g.size * 0.035}"`
+                        : `fill="${l.color}"${g.bold ? ` stroke="${l.color}" stroke-width="${g.size * 0.018}"` : ''}`;
+                    if (l.shadow) result += `<path d="${path}" transform="translate(.18 .18) ${transform}" fill="#000000" opacity=".24"/>`;
+                    result += `<path d="${path}" transform="${transform}" ${stroke}/>`;
+                } else {
+                    const effects = textEffects(l, g.size);
+                    if (l.shadow) {
+                        const offset = n(effects.shadowDistance / Math.SQRT2);
+                        shadows.push(
+                            `<path d="${path}" transform="translate(${offset} ${offset}) ${transform}" fill="${effects.shadowColor}"/>`
+                        );
+                    }
+                    if (l.outline && effects.outlineWidth > 0) {
+                        const paths = outlines.get(effects.outlineWidth) || [];
+                        paths.push(
+                            `<path d="${path}" transform="${transform}" fill="none" stroke="${effects.outlineColor}" stroke-width="${n(effects.outlineWidth)}" stroke-linejoin="round"/>`
+                        );
+                        outlines.set(effects.outlineWidth, paths);
+                    }
+                    if (!l.outline || !effects.outlineHollow)
+                        fills.push(
+                            `<path d="${path}" transform="${transform}" fill="${l.color}"${g.bold ? ` stroke="${l.color}" stroke-width="${g.size * 0.018}"` : ''}/>`
+                        );
+                }
                 x += advance(g);
             }
             y += size * (l.lineHeight - 1);
         }
     }
-    return result;
+    if (!enhanced) return result;
+    let border = '';
+    let index = 0;
+    for (const [width, paths] of outlines) {
+        if (l.outlineDiffuse) {
+            const id = `${key}-glow-${index++}`;
+            const padding = textEffectPadding(l);
+            border += `<defs><filter id="${id}" filterUnits="userSpaceOnUse" x="${n(-padding)}" y="${n(-padding)}" width="${n(l.width + 2 * padding)}" height="${n(l.height + 2 * padding)}"><feGaussianBlur stdDeviation="${n(width / 2)}"/></filter></defs><g filter="url(#${id})">${paths.join('')}</g>`;
+        } else border += paths.join('');
+    }
+    return `${shadows.length ? `<g opacity=".24">${shadows.join('')}</g>` : ''}${border}${fills.join('')}`;
 }
 let renderSequence = 0;
 function rotation(l: Layer): string {
@@ -154,7 +198,7 @@ export function layerBounds(l: Layer) {
     return { x, y, width: Math.max(...points.map((p) => p[0])) - x, height: Math.max(...points.map((p) => p[1])) - y };
 }
 function layerArtwork(l: Layer, project: LabelProject, fonts: Fonts, warnings: string[], key: string, padding = 0): string {
-    if (l.kind === 'text') return textArtwork(boundText(l, project.data), l, fonts, warnings);
+    if (l.kind === 'text') return textArtwork(boundText(l, project.data), l, fonts, warnings, key);
     if (l.kind === 'image') {
         const a = project.assets[l.assetId || ''];
         if (!a) {
@@ -286,7 +330,12 @@ export function renderDesign(
                 bounds.y <= 0.001 ||
                 bounds.x + bounds.width >= contentWidth - 0.001 ||
                 bounds.y + bounds.height >= contentHeight - 0.001;
-            const padding = b && touchesEdge && (l.kind === 'image' || (l.kind === 'shape' && l.shape !== 'ellipse')) ? b * 2 : 0;
+            const padding =
+                l.kind === 'text'
+                    ? textEffectPadding(l)
+                    : b && touchesEdge && (l.kind === 'image' || (l.kind === 'shape' && l.shape !== 'ellipse'))
+                      ? b * 2
+                      : 0;
             artwork += `<g transform="translate(${n(l.x)} ${n(l.y)}) ${rotation(l)}" opacity="${l.opacity}"><defs><clipPath id="${clip}"><rect x="${-padding}" y="${-padding}" width="${l.width + 2 * padding}" height="${l.height + 2 * padding}"/></clipPath></defs><g clip-path="url(#${clip})">${layerArtwork(l, project, fonts, warnings, clip, padding)}</g></g>`;
         }
         if (p.rotation === -90) artwork = `<g transform="translate(0 ${contentWidth}) rotate(-90)">${artwork}</g>`;
