@@ -100,7 +100,7 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
             this.ready = this.atrac3OSProcess.init(this.links);
         }
 
-        const ffmpegCommand = this.ffmpeg.createFfmpegParams(exportParams, 'wav');
+        const ffmpegCommand = this.ffmpeg.createFfmpegParams(exportParams, 's16le');
 
         const dotIndex = sourceFileName.lastIndexOf('.') + 1;
         const fileExtension = dotIndex > 0 ? sourceFileName.substring(dotIndex) : 'unknown';
@@ -109,8 +109,8 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
         transcodeCallback?.({ stage: 'ffmpeg', progress: 0, total: 1 });
 
         await this.ffmpeg.ffmpegProcess.write(inFileName, source);
-        await this.ffmpeg.ffmpegProcess.transcode(inFileName, 'outAudioFile.wav', ffmpegCommand);
-        const { data } = await this.ffmpeg.ffmpegProcess.read('outAudioFile.wav');
+        await this.ffmpeg.ffmpegProcess.transcode(inFileName, 'outAudioFile.raw', ffmpegCommand);
+        const { data } = await this.ffmpeg.ffmpegProcess.read('outAudioFile.raw');
         transcodeCallback?.({ stage: 'atrac', progress: 1, total: data.byteLength });
 
         await this.ready; // Make sure Worker is ready
@@ -123,7 +123,7 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
             this.atrac3OSProcess?.terminate();
             this.atrac3OSProcess = undefined;
         }
-        await this.ffmpeg.ffmpegProcess.remove('outAudioFile.wav');
+        await this.ffmpeg.ffmpegProcess.remove('outAudioFile.raw');
         return new Uint8Array(resultData as ArrayBuffer);
     }
 
