@@ -24,6 +24,8 @@ export default ({ mode }) => {
         exclude: ['buffer'],
       }),
       VitePWA({
+        // Electron's local sandbox protocol cannot register web service workers.
+        injectRegister: base.startsWith('sandbox:') ? false : 'auto',
         registerType: 'autoUpdate',
         manifestFilename: 'manifest.json',
         manifest: {

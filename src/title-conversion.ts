@@ -4,6 +4,23 @@ import { encodeToSJIS, decodeFromSJIS, sanitizeFullWidthTitle, sanitizeHalfWidth
 
 export type PinyinSettings = { separator: ' ' | '-' | ''; letterCase: 'lower' | 'title' | 'upper' };
 export const defaultPinyinSettings: PinyinSettings = { separator: ' ', letterCase: 'title' };
+const preferenceKey = 'renamePinyinSettings.v1';
+
+export function loadPinyinSettings(): PinyinSettings {
+    try {
+        return normalizePinyinSettings(JSON.parse(localStorage.getItem(preferenceKey) || 'null'));
+    } catch {
+        return { ...defaultPinyinSettings };
+    }
+}
+
+export function savePinyinSettings(settings: PinyinSettings) {
+    try {
+        localStorage.setItem(preferenceKey, JSON.stringify(settings));
+    } catch {
+        // Settings still apply to the current dialog when storage is unavailable.
+    }
+}
 
 export function normalizePinyinSettings(value: unknown): PinyinSettings {
     const settings = value as Partial<PinyinSettings> | null;
@@ -15,6 +32,15 @@ export function normalizePinyinSettings(value: unknown): PinyinSettings {
 
 const toSimplified = OpenCC.Converter({ from: 't', to: 'cn' });
 const toJapanese = OpenCC.Converter({ from: 'cn', to: 'jp' });
+const japaneseToSimplified = OpenCC.Converter({ from: 'jp', to: 'cn' });
+const japaneseToTraditional = OpenCC.Converter({ from: 'jp', to: 't' });
+export type ChineseConversion = 'none' | 'simplified' | 'traditional';
+
+export function toChinese(text: string, conversion: ChineseConversion): string {
+    if (conversion === 'simplified') return japaneseToSimplified(text);
+    if (conversion === 'traditional') return japaneseToTraditional(text);
+    return text;
+}
 // Construct at runtime because this project still targets ES5 syntax.
 const hanRun = new RegExp('\\p{Script=Han}+', 'gu');
 

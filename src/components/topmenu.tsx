@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import { CsvImportDialog, CsvExportDialog } from './csv-title-dialogs';
+import React, { useCallback, useState } from 'react';
 import { useDispatch, batchActions, useDeviceCapabilities } from '../frontend-utils';
 
 import IconButton from '@mui/material/IconButton';
@@ -71,6 +72,8 @@ const useStyles = makeStyles()((theme) => ({
 
 export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: () => void }) {
     const { classes } = useStyles();
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
+    const csvDraft = useShallowEqualSelector(state => state.csvDialog.draft);
     const dispatch = useDispatch();
 
     const { mainView, vintageMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector((state) => state.appState);
@@ -224,7 +227,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
     }, [dispatch, factoryModeRippingInMainUi, handleMenuClose]);
 
     const handleExportCSV = useCallback(() => {
-        dispatch(exportCSV());
+        setExportDialogOpen(true);
         handleMenuClose();
     }, [dispatch, handleMenuClose]);
 
@@ -235,8 +238,8 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
 
     const handleCSVImportFromFile = useCallback(
         (event: any) => {
-            const file = event.target.files[0];
-            dispatch(importCSV(file));
+            const file = event.target.files?.[0];
+            if (file) dispatch(importCSV(file));
             event.target.value = '';
         },
         [dispatch]
@@ -631,6 +634,11 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                 {shortcutsItems}
             </Menu>
 
+            {csvDraft && <CsvImportDialog />}
+            {exportDialogOpen && <CsvExportDialog onClose={() => setExportDialogOpen(false)} onExport={conversion => {
+                setExportDialogOpen(false);
+                dispatch(exportCSV(undefined, conversion));
+            }} />}
             <input type="file" accept=".csv" ref={hiddenFileInputRef} style={{ display: 'none' }} onChange={handleCSVImportFromFile} />
         </React.Fragment>
     );

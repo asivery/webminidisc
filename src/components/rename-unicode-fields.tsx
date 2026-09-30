@@ -2,29 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import MenuItem from '@mui/material/MenuItem';
-import Typography from '@mui/material/Typography';
 import { useDispatch, useShallowEqualSelector } from '../frontend-utils';
 import { actions, RenameType } from '../redux/rename-dialog-feature';
 import { actions as appActions } from '../redux/app-feature';
 import { store } from '../redux/store';
-import { defaultPinyinSettings, normalizePinyinSettings, PinyinSettings, toPinyin, toJIS, normalizeFullWidth } from '../title-conversion';
+import { loadPinyinSettings, toPinyin, toJIS, normalizeFullWidth } from '../title-conversion';
 import { readUnicodeTag, formatUnicodeTag } from '../unicode-tags';
 import { useRenameSources } from './rename-sources';
 import type { AdaptiveFile } from '../utils';
 
-const preferenceKey = 'renamePinyinSettings.v1';
-function loadSettings(): PinyinSettings {
-    try {
-        return normalizePinyinSettings(JSON.parse(localStorage.getItem(preferenceKey) || 'null'));
-    } catch {
-        return { ...defaultPinyinSettings };
-    }
-}
+import { PinyinSettingsDialog } from './pinyin-settings-dialog';
 
 export function UnicodeRenameFields({
     what,
@@ -44,8 +31,7 @@ export function UnicodeRenameFields({
     const dispatch = useDispatch();
     const state = useShallowEqualSelector((state) => state.renameDialog);
     const sources = useRenameSources();
-    const [settings, setSettings] = useState(loadSettings);
-    const [draft, setDraft] = useState(settings);
+    const [settings, setSettings] = useState(loadPinyinSettings);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const fileInput = useRef<HTMLInputElement>(null);
     const { title, fullWidthTitle, unicodeTitle, unicodeSource, sourceId, renameType, visible, sessionId, tagLoading, tagError } = state;
@@ -70,6 +56,7 @@ export function UnicodeRenameFields({
 
     useEffect(() => {
         setSettingsOpen(false);
+        if (visible) setSettings(loadPinyinSettings());
         if (visible && state.reloadOnOpen && sourceId) void reloadTag();
         // Each session reads once. Result actions check session AND edit revision.
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,7 +120,7 @@ export function UnicodeRenameFields({
                 </Button>
                 <Button
                     onClick={() => {
-                        setDraft(settings);
+                        setSettings(loadPinyinSettings());
                         setSettingsOpen(true);
                     }}
                 >
@@ -164,57 +151,15 @@ export function UnicodeRenameFields({
                     </Button>
                 </Box>
             )}
-            <Dialog
-                open={settingsOpen && visible}
-                onClose={() => setSettingsOpen(false)}
-                maxWidth="xs"
-                fullWidth
-                aria-labelledby="pinyin-settings-title"
-            >
-                <DialogTitle id="pinyin-settings-title">Pinyin Setting</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        select
-                        fullWidth
-                        margin="normal"
-                        label="Separator"
-                        value={draft.separator}
-                        onChange={(event) => setDraft({ ...draft, separator: event.target.value as PinyinSettings['separator'] })}
-                    >
-                        <MenuItem value=" ">Space</MenuItem>
-                        <MenuItem value="-">Hyphen (-)</MenuItem>
-                        <MenuItem value="">None</MenuItem>
-                    </TextField>
-                    <TextField
-                        select
-                        fullWidth
-                        margin="normal"
-                        label="Letter case"
-                        value={draft.letterCase}
-                        onChange={(event) => setDraft({ ...draft, letterCase: event.target.value as PinyinSettings['letterCase'] })}
-                    >
-                        <MenuItem value="lower">lowercase</MenuItem>
-                        <MenuItem value="title">Capitalize Each Syllable</MenuItem>
-                        <MenuItem value="upper">UPPERCASE</MenuItem>
-                    </TextField>
-                    <Typography variant="body2">No tones; ü is written as v. Applies to generated pinyin only.</Typography>
-                    <Typography sx={{ mt: 2, overflowWrap: 'anywhere' }}>
-                        Preview: {toPinyin(unicodeTitle || '孙燕姿 女', draft)}
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setSettingsOpen(false)}>Cancel</Button>
-                    <Button
-                        onClick={() => {
-                            setSettings(draft);
-                            localStorage.setItem(preferenceKey, JSON.stringify(draft));
-                            setSettingsOpen(false);
-                        }}
-                    >
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {settingsOpen && visible && (
+                <PinyinSettingsDialog
+                    open
+                    settings={settings}
+                    source={unicodeTitle}
+                    onSave={setSettings}
+                    onClose={() => setSettingsOpen(false)}
+                />
+            )}
         </>
     );
 }

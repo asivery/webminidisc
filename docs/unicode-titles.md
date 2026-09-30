@@ -51,3 +51,33 @@ From ElectronWMD run `bash build-renderer.sh --force` to build and replace an
 existing renderer. The normal build keeps its existing reuse behavior. Use this
 explicit rebuild before packaging title changes. Physical-device read-back remains
 a separate check from MockMD validation.
+
+## CSV title import and export
+
+Import titles from CSV now opens an editable preview before touching the device.
+Disc, group (once per range), and track rows have a Unicode source, Name and
+Full-Width Name. The source initially uses the full-width CSV title, falling back
+to Name. To Pinyin and To JIS replace only their respective device fields. The
+Pinyin Setting dialog and its saved preference are shared with Rename. Unicode
+sources are temporary and do not add columns to CSV files or fields on the disc.
+
+The preview checks NetMD device characters and the existing 120/105 limits.
+Enable full-width editing to import full-width titles, or clear those fields.
+HiMD keeps its title/album/artist write path and does not enable the NetMD JIS
+button. Cancel discards the preview without device writes. The legacy eight-column
+and current eleven-column formats (including ALBUM/ARTIST aliases and escaped
+commas) are accepted. Invalid columns, indices, durations and group ranges fail
+before preview. Track count and format mismatch prompts finish before title
+information is cleared. Declining a track mismatch skips that track, as before.
+If a device write fails, the dialog reports possible partial changes and attempts
+to refresh the disc; this operation cannot roll back physical-device writes.
+
+Export titles to CSV offers No conversion (default), Simplified Chinese and
+Traditional Chinese. Conversion covers disc/group/track title columns, album,
+artist and the download filename, while preserving character width, kana,
+punctuation and technical metadata. Only the exported copy is changed. Archive
+Disc continues to export without conversion. Japanese/Chinese conversion is
+character-form mapping, not translation or guaranteed recovery of original text.
+
+`npm run test:titles` also covers CSV compatibility, conversions, preview edits,
+validation, grouping, mismatch preflight, HiMD metadata and interrupted writes.

@@ -1,3 +1,7 @@
+import { createTitleCSV, parseTitleCSV } from '../csv-titles';
+import { writeTitleCSV } from '../csv-title-import';
+import { ChineseConversion } from '../title-conversion';
+import { actions as csvDialogActions } from './csv-dialog-feature';
 import { batchActions } from '../frontend-utils';
 import { AppDispatch, RootState } from './store';
 import { actions as localLibraryActions } from './local-library-feature';
@@ -851,203 +855,81 @@ export function setNotifyWhenFinished(value: boolean) {
     };
 }
 
-const csvHeaderOld = ['INDEX', 'GROUP RANGE', 'GROUP NAME', 'GROUP FULL WIDTH NAME', 'NAME', 'FULL WIDTH NAME', 'DURATION', 'ENCODING'];
-const csvHeader = [
-    ['INDEX'],
-    ['GROUP RANGE'],
-    ['GROUP NAME'],
-    ['GROUP FULL WIDTH NAME'],
-    ['NAME'],
-    ['FULL WIDTH NAME'],
-    ['HIMD ALBUM', 'ALBUM'],
-    ['HIMD ARTIST', 'ARTIST'],
-    ['DURATION'],
-    ['ENCODING'],
-    ['BITRATE'],
-];
-
-export function exportCSV(callback: (blob: Blob, name: string) => void = downloadBlob) {
-    return async function (dispatch: AppDispatch, getState: () => RootState) {
+export function exportCSV(callback: (blob: Blob, name: string) => void = downloadBlob, conversion: ChineseConversion = 'none') {
+    return async function (dispatch: AppDispatch, _getState: () => RootState) {
         dispatch(appStateActions.setLoading(true));
-        const disc = await serviceRegistry.netmdService!.listContent();
-        const rows: string[][] = [];
-        rows.push([
-            '0', // track index - 0 is disc title
-            '0-0', // No group range
-            '', // No group name
-            '', // No group fw name
-            disc.title ?? '',
-            disc.fullWidthTitle ?? '',
-            '', // no album
-            '', // no artist
-            '' + disc.used,
-            '',
-            '',
-        ]);
-        for (const group of disc.groups) {
-            const groupStart = Math.min(...group.tracks.map((e) => e.index));
-            const groupEnd = Math.max(...group.tracks.map((e) => e.index));
-            const groupRange = group.title === null ? '' : `${groupStart}-${groupEnd}`;
-            for (const track of group.tracks) {
-                rows.push([
-                    '' + (track.index + 1),
-                    groupRange,
-                    group.title ?? '',
-                    group.fullWidthTitle ?? '',
-                    track.title ?? '',
-                    track.fullWidthTitle ?? '',
-                    track.album ?? '',
-                    track.artist ?? '',
-                    '' + track.duration,
-                    track.encoding.codec,
-                    track.encoding.bitrate?.toString() ?? '',
-                ]);
-            }
+        try {
+            const disc = await serviceRegistry.netmdService!.listContent();
+            const csv = createTitleCSV(disc, conversion);
+            callback(new Blob([csv.document], { type: 'text/csv;charset=utf-8' }), csv.filename);
+        } catch (error) {
+            // Archive callers must stop rather than silently creating an incomplete archive.
+            if (callback !== downloadBlob) throw error;
+            dispatch(batchActions([
+                errorDialogAction.setErrorMessage(`CSV export failed: ${error instanceof Error ? error.message : String(error)}`),
+                errorDialogAction.setVisible(true),
+            ]));
+        } finally {
+            dispatch(appStateActions.setLoading(false));
         }
-        const csvDocument = [csvHeader.map(e => e[0]), ...rows].map((e) => e.map((q) => q.toString().replace(/,/g, '\\,')).join(',')).join('\n');
-
-        let title;
-        if (disc.title) {
-            title = disc.title;
-            if (disc.fullWidthTitle) {
-                title += ` (${disc.fullWidthTitle})`;
-            }
-        } else if (disc.fullWidthTitle) {
-            title = disc.fullWidthTitle;
-        } else {
-            title = 'Disc';
-        }
-
-        callback(new Blob([csvDocument]), title + '.csv');
-        dispatch(appStateActions.setLoading(false));
     };
 }
 
 export function importCSV(file: File) {
     return async function (dispatch: AppDispatch, getState: () => RootState) {
-        const text = new TextDecoder('utf-8').decode(await file.arrayBuffer());
-        const usesHiMDTitles = getState().main.deviceCapabilities.includes(Capability.himdTitles);
-        const records = text
-            .split('\n')
-            .map((e) => e.trim())
-            .filter((e) => e.length !== 0)
-            .map((e) => e.split(/(?<!\\),/g).map((x) => x.replace(/\\,/g, ',')));
-
-        if (records.length === 0) {
-            alert('Empty CSV file');
-            return;
-        }
-
-        // Backwards-compatibility
-        if (records[0].every((e, i) => e === csvHeaderOld[i])) {
-            // It's using the old format
-            records[0] = csvHeader.map(e => e[0]);
-            for (let i = 1; i < records.length; i++) {
-                records[i].splice(6, 0, '', ''); // ALBUM, ARTIST
-                records[i].push(''); // BITRATE
-            }
-        }
-
-        if (records[0].some((e, i) => !csvHeader[i].includes(e))) {
-            alert('Malformed CSV file');
-            return;
-        }
-
-        const addedGroupRanges = new Set<string>();
-
-        const isTimeDifferenceAcceptable = (a: number, b: number) => Math.abs(a - b) < 2;
-
-        // Make sure the CSV matches the disc
+        if (!file || getState().csvDialog.busy) return;
+        const service = serviceRegistry.netmdService;
         dispatch(appStateActions.setLoading(true));
-        const disc = await serviceRegistry.netmdService!.listContent();
-        const ungroupedTracks = getTracks(disc).sort((a, b) => a.index - b.index);
-        if (disc.trackCount !== records.length - 2) {
-            // - 2 - one for the header, second for the disc title / info
-            if (
-                !window.confirm(
-                    `The CSV file describes a disc with ${records.length - 2} tracks.\nThe disc inserted has ${
-                        disc.trackCount
-                    } tracks.\nContinue importing?`
-                )
-            ) {
-                dispatch(appStateActions.setLoading(false));
-                return;
-            }
+        try {
+            const draft = parseTitleCSV(new TextDecoder('utf-8').decode(await file.arrayBuffer()), file.name);
+            if (service !== serviceRegistry.netmdService) return;
+            dispatch(csvDialogActions.open(draft));
+        } catch (error) {
+            dispatch(batchActions([
+                errorDialogAction.setErrorMessage(`CSV import failed: ${error instanceof Error ? error.message : String(error)}`),
+                errorDialogAction.setVisible(true),
+            ]));
+        } finally {
+            dispatch(appStateActions.setLoading(false));
         }
+    };
+}
 
-        await serviceRegistry.netmdService!.wipeDiscTitleInfo();
-
-        for (const [
-            sIndex,
-            grRange,
-            groupName,
-            groupFullWidthName,
-            name,
-            fwName,
-            album,
-            artist,
-            sDuration,
-            codec,
-            bitrate,
-        ] of records.slice(1)) {
-            const index = parseInt(sIndex),
-                duration = parseInt(sDuration),
-                gRange = grRange.replace(/ /g, '');
-            if (index === 0) {
-                // Disc title info
-                await serviceRegistry.netmdService!.renameDisc(name, fwName);
-                continue;
-            }
-            if (!ungroupedTracks[index - 1]) {
-                // Editing track that's not part of the disc.
-                // Skip.
-                continue;
-            }
-
-            const currentTrackEncoding = ungroupedTracks[index - 1].encoding;
-            if (
-                !isTimeDifferenceAcceptable(ungroupedTracks[index - 1].duration, duration) ||
-                currentTrackEncoding.codec.toLowerCase() !== codec.toLowerCase() ||
-                (bitrate !== '' && currentTrackEncoding.bitrate !== parseInt(bitrate))
-            ) {
-                const bitrateDescription = bitrate === '' ? '' : ` (${bitrate} kbps)`;
-                const actualBitrateDescription =
-                    currentTrackEncoding.bitrate === undefined ? '' : ` (${currentTrackEncoding.bitrate} kbps)`;
-                if (
-                    !window.confirm(
-                        `
-                    The CSV file describes track ${index} as a ${secondsToHumanReadable(
-                        duration
-                    )} ${codec}${bitrateDescription} track. The actual track ${index} is a ${secondsToHumanReadable(
-                        ungroupedTracks[index - 1].duration
-                    )} ${currentTrackEncoding.codec}${actualBitrateDescription} track. Label it according to the file?
-                        `.trim()
-                    )
-                ) {
-                    continue;
+export function submitCSVImport() {
+    return async function (dispatch: AppDispatch, getState: () => RootState) {
+        const { csvDialog, main, appState } = getState();
+        if (!csvDialog.draft || csvDialog.busy) return;
+        const service = serviceRegistry.netmdService;
+        if (!service) return;
+        dispatch(batchActions([csvDialogActions.setBusy(true), csvDialogActions.setError(''), appStateActions.setLoading(true)]));
+        let writeStarted = false;
+        let completed = false;
+        let message = '';
+        try {
+            completed = await writeTitleCSV(csvDialog.draft, service, {
+                usesHiMDTitles: main.deviceCapabilities.includes(Capability.himdTitles),
+                supportsFullWidth: main.deviceCapabilities.includes(Capability.fullWidthSupport),
+                allowFullWidth: appState.fullWidthSupport,
+            }, text => window.confirm(text), () => {
+                if (service !== serviceRegistry.netmdService) throw new Error('The device connection changed. Reopen the CSV file.');
+                writeStarted = true;
+            });
+        } catch (error) {
+            message = (writeStarted ? 'CSV import stopped. Some titles may already have been changed. ' : 'CSV import failed before writing. ') +
+                (error instanceof Error ? error.message : String(error));
+        } finally {
+            if (writeStarted && service === serviceRegistry.netmdService) {
+                try {
+                    // Refresh without listContent()'s unrelated corrupted-title recovery prompt.
+                    dispatch(mainActions.setDisc(await service.listContent(true)));
+                } catch (error) {
+                    message += ` Could not refresh disc contents: ${error instanceof Error ? error.message : String(error)}`;
                 }
             }
-
-            if (gRange !== '') {
-                // Is part of group
-                if (!addedGroupRanges.has(gRange)) {
-                    addedGroupRanges.add(gRange);
-                    const [startS, endS] = gRange.split('-');
-                    const start = parseInt(startS),
-                        end = parseInt(endS),
-                        length = end - start + 1;
-                    await serviceRegistry.netmdService!.addGroup(start, length, groupName, groupFullWidthName);
-                }
-            }
-
-            if (usesHiMDTitles) {
-                await serviceRegistry.netmdService!.renameTrack(index - 1, { title: name, album, artist });
-            } else {
-                await serviceRegistry.netmdService!.renameTrack(index - 1, name, fwName);
-            }
+            dispatch(batchActions([csvDialogActions.setBusy(false), appStateActions.setLoading(false)]));
+            if (message) dispatch(csvDialogActions.setError(message.trim()));
+            else if (completed) dispatch(csvDialogActions.close());
         }
-
-        listContent()(dispatch);
     };
 }
 

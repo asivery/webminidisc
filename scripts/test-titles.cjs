@@ -5,7 +5,7 @@ const { buildSync } = require('esbuild');
 global.localStorage = { getItem: () => null, setItem: () => {} };
 const root = path.resolve(__dirname, '..');
 const result = buildSync({
-    entryPoints: [path.join(root, 'tests/titles.test.ts')],
+    stdin: { contents: "import './tests/titles.test'; import './tests/csv-titles.test';", resolveDir: root, loader: 'ts' },
     bundle: true,
     platform: 'node',
     format: 'cjs',
