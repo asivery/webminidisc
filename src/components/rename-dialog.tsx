@@ -1,3 +1,5 @@
+import { UnicodeRenameFields } from './rename-unicode-fields';
+import { validateDeviceTitles } from '../title-conversion';
 import React, { useCallback } from 'react';
 import { useDispatch, batchActions } from '../frontend-utils';
 import { useShallowEqualSelector } from '../frontend-utils';
@@ -49,30 +51,49 @@ const nameMap: { [key in RenameType]: string } = {
     [RenameType.SONG_RECOGNITION_TITLE]: 'Track',
 };
 
-export const RenameDialog = (props: {}) => {
+export const RenameDialog = () => {
     const dispatch = useDispatch();
     const { classes } = useStyles();
 
-    const { fullWidthTitle, himdAlbum, himdArtist, himdTitle, index, renameType, title, visible } = useShallowEqualSelector(
-        (state) => state.renameDialog
-    );
+    const {
+        fullWidthTitle,
+        himdAlbum,
+        himdArtist,
+        himdTitle,
+        index,
+        renameType,
+        title,
+        visible,
+        unicodeTitle,
+        unicodeSource,
+        sourceId,
+        tagLoading,
+    } = useShallowEqualSelector((state) => state.renameDialog);
     const { deviceCapabilities } = useShallowEqualSelector((state) => state.main);
 
     const allowFullWidth = useShallowEqualSelector((state) => state.appState.fullWidthSupport);
 
     const what = nameMap[renameType];
+    const { vintageMode } = useShallowEqualSelector((state) => state.appState);
+    const enhanced =
+        !vintageMode && [RenameType.DISC, RenameType.GROUP, RenameType.TRACK, RenameType.TRACK_CONVERT_DIALOG].includes(renameType);
+    const supportsFullWidth = deviceCapabilities.includes(Capability.fullWidthSupport);
+    const validation = validateDeviceTitles(title, enhanced && allowFullWidth && supportsFullWidth ? fullWidthTitle : '');
+    const invalid = enhanced && (!!validation.titleError || !!validation.fullWidthError || tagLoading);
+    const submittedFullWidth = enhanced && allowFullWidth && supportsFullWidth ? validation.normalizedFullWidth : fullWidthTitle;
 
     const handleCancelRename = useCallback(() => {
         dispatch(renameDialogActions.setVisible(false));
     }, [dispatch]);
 
     const handleDoRename = useCallback(() => {
+        if (invalid) return;
         switch (renameType) {
             case RenameType.DISC:
                 dispatch(
                     renameDisc({
                         newName: title,
-                        newFullWidthName: fullWidthTitle,
+                        newFullWidthName: submittedFullWidth,
                     })
                 );
                 break;
@@ -81,7 +102,7 @@ export const RenameDialog = (props: {}) => {
                     renameTrack({
                         index,
                         newName: title,
-                        newFullWidthName: fullWidthTitle,
+                        newFullWidthName: submittedFullWidth,
                     })
                 );
                 break;
@@ -90,7 +111,7 @@ export const RenameDialog = (props: {}) => {
                     renameGroup({
                         groupIndex: index,
                         newName: title,
-                        newFullWidthName: fullWidthTitle,
+                        newFullWidthName: submittedFullWidth,
                     })
                 );
                 break;
@@ -112,8 +133,9 @@ export const RenameDialog = (props: {}) => {
                 dispatch(
                     renameInConvertDialog({
                         index,
+                        ...(enhanced ? { unicodeTitle, unicodeSource, sourceId } : {}),
                         newName: title,
-                        newFullWidthName: fullWidthTitle,
+                        newFullWidthName: submittedFullWidth,
                     })
                 );
                 break;
@@ -132,13 +154,28 @@ export const RenameDialog = (props: {}) => {
                     renameInSongRecognitionDialog({
                         index,
                         newName: title,
-                        newFullWidthName: fullWidthTitle,
+                        newFullWidthName: submittedFullWidth,
                     })
                 );
                 break;
         }
         handleCancelRename(); // Close the dialog
-    }, [dispatch, handleCancelRename, renameType, title, fullWidthTitle, index, himdTitle, himdArtist, himdAlbum]);
+    }, [
+        dispatch,
+        handleCancelRename,
+        renameType,
+        title,
+        index,
+        himdTitle,
+        himdArtist,
+        himdAlbum,
+        invalid,
+        submittedFullWidth,
+        enhanced,
+        unicodeTitle,
+        unicodeSource,
+        sourceId,
+    ]);
 
     const minidiscSpec = serviceRegistry.netmdSpec!;
 
@@ -160,7 +197,7 @@ export const RenameDialog = (props: {}) => {
 
     const handleEnterKeyEvent = useCallback(
         (event: React.KeyboardEvent) => {
-            if (event.key === `Enter`) {
+            if (event.key === `Enter` && !event.nativeEvent.isComposing && event.keyCode !== 229) {
                 event.stopPropagation();
                 event.preventDefault();
                 handleDoRename();
@@ -169,18 +206,15 @@ export const RenameDialog = (props: {}) => {
         [handleDoRename]
     );
 
-    const handleSwitchToFullWidth = useCallback(
-        (event: React.MouseEvent) => {
-            dispatch(
-                batchActions([
-                    appActions.setFullWidthSupport(true),
-                    renameDialogActions.setCurrentFullWidthName(minidiscSpec.sanitizeFullWidthTitle(title)),
-                    renameDialogActions.setCurrentName(''),
-                ])
-            );
-        },
-        [title, dispatch, minidiscSpec]
-    );
+    const handleSwitchToFullWidth = useCallback(() => {
+        dispatch(
+            batchActions([
+                appActions.setFullWidthSupport(true),
+                renameDialogActions.setCurrentFullWidthName(minidiscSpec.sanitizeFullWidthTitle(title)),
+                renameDialogActions.setCurrentName(''),
+            ])
+        );
+    }, [title, dispatch, minidiscSpec]);
 
     // HIMD:
     const handleHiMDTitleChange = useCallback(
@@ -203,7 +237,6 @@ export const RenameDialog = (props: {}) => {
     );
     // /HIMD
 
-    const { vintageMode } = useShallowEqualSelector((state) => state.appState);
     if (vintageMode) {
         const p = {
             renameDialogVisible: visible,
@@ -228,7 +261,8 @@ export const RenameDialog = (props: {}) => {
         >
             <DialogTitle id="rename-dialog-title">Rename {what}</DialogTitle>
             <DialogContent>
-                {!allowFullWidth &&
+                {!enhanced &&
+                !allowFullWidth &&
                 deviceCapabilities.includes(Capability.fullWidthSupport) &&
                 title
                     .split('')
@@ -283,6 +317,15 @@ export const RenameDialog = (props: {}) => {
                             onChange={handleHiMDArtistChange}
                         />
                     </>
+                ) : enhanced ? (
+                    <UnicodeRenameFields
+                        what={what}
+                        allowFullWidth={allowFullWidth}
+                        supportsFullWidth={supportsFullWidth}
+                        titleError={validation.titleError}
+                        fullWidthError={validation.fullWidthError}
+                        onKeyDown={handleEnterKeyEvent}
+                    />
                 ) : (
                     <>
                         <TextField
@@ -313,7 +356,7 @@ export const RenameDialog = (props: {}) => {
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleCancelRename}>Cancel</Button>
-                <Button color={'primary'} onClick={handleDoRename}>
+                <Button color={'primary'} disabled={invalid} onClick={handleDoRename}>
                     Rename
                 </Button>
             </DialogActions>

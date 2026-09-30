@@ -598,11 +598,17 @@ export function recordTracks(indexes: number[], deviceId: string) {
     };
 }
 
-export function renameInConvertDialog({ index, newName, newFullWidthName }: { index: number; newName: string; newFullWidthName: string }) {
+export function renameInConvertDialog({ index, newName, newFullWidthName, sourceId, unicodeTitle, unicodeSource }: {
+    index: number; newName: string; newFullWidthName: string;
+    sourceId?: string | null; unicodeTitle?: string; unicodeSource?: string;
+}) {
     return async function (dispatch: AppDispatch, getState: () => RootState) {
         const newTitles = [...getState().convertDialog.titles];
-        newTitles.splice(index, 1, {
-            ...newTitles[index],
+        const targetIndex = sourceId ? newTitles.findIndex(track => track.sourceId === sourceId) : index;
+        if (targetIndex < 0 || !newTitles[targetIndex]) return;
+        newTitles.splice(targetIndex, 1, {
+            ...newTitles[targetIndex],
+            ...(unicodeTitle !== undefined ? { unicodeTitle, unicodeSource, unicodeSaved: true } : {}),
             title: newName,
             fullWidthTitle: newFullWidthName,
         });

@@ -13,6 +13,14 @@ export enum RenameType {
 }
 
 export interface RenameDialogState {
+    unicodeTitle: string;
+    unicodeSource: string;
+    sourceId: string | null;
+    reloadOnOpen: boolean;
+    sessionId: number;
+    unicodeRevision: number;
+    tagLoading: boolean;
+    tagError: string;
     visible: boolean;
     title: string;
     fullWidthTitle: string;
@@ -26,6 +34,14 @@ export interface RenameDialogState {
 }
 
 const initialState: RenameDialogState = {
+    unicodeTitle: '',
+    unicodeSource: '',
+    sourceId: null,
+    reloadOnOpen: false,
+    sessionId: 0,
+    unicodeRevision: 0,
+    tagLoading: false,
+    tagError: '',
     visible: false,
     title: '',
     fullWidthTitle: '',
@@ -44,6 +60,10 @@ export const slice = createSlice({
     reducers: {
         setVisible: (state: RenameDialogState, action: PayloadAction<boolean>) => {
             state.visible = action.payload;
+            if (!action.payload) {
+                state.sessionId++;
+                state.tagLoading = false;
+            }
         },
         setCurrentName: (state: RenameDialogState, action: PayloadAction<string>) => {
             state.title = action.payload;
@@ -54,6 +74,45 @@ export const slice = createSlice({
 
         setRenameType: (state: RenameDialogState, action: PayloadAction<RenameType>) => {
             state.renameType = action.payload;
+            state.unicodeTitle = state.fullWidthTitle || state.title;
+            state.unicodeSource = state.fullWidthTitle ? 'Existing Full-Width title' : 'Existing title';
+            state.sourceId = null;
+            state.reloadOnOpen = false;
+            state.sessionId++;
+            state.unicodeRevision = 0;
+            state.tagError = '';
+            state.tagLoading = false;
+        },
+        setUnicodeName: (state, action: PayloadAction<string>) => {
+            state.unicodeTitle = action.payload;
+            state.unicodeSource = 'Edited Unicode title';
+            state.tagError = '';
+            state.unicodeRevision++;
+            state.tagLoading = false;
+        },
+        setUnicodeSource: (state, action: PayloadAction<{ title: string; source: string; sourceId: string; reload: boolean }>) => {
+            state.unicodeTitle = action.payload.title;
+            state.unicodeSource = action.payload.source;
+            state.sourceId = action.payload.sourceId;
+            state.reloadOnOpen = action.payload.reload;
+        },
+        startTagRead: (state) => {
+            state.tagLoading = true;
+            state.tagError = '';
+            state.unicodeRevision++;
+        },
+        finishTagRead: (
+            state,
+            action: PayloadAction<{ sessionId: number; revision: number; title?: string; source?: string; error?: string }>
+        ) => {
+            const result = action.payload;
+            if (!state.visible || result.sessionId !== state.sessionId || result.revision !== state.unicodeRevision) return;
+            state.tagLoading = false;
+            state.tagError = result.error || '';
+            if (result.title !== undefined) {
+                state.unicodeTitle = result.title;
+                state.unicodeSource = result.source || '';
+            }
         },
         setIndex: (state: RenameDialogState, action: PayloadAction<number>) => {
             state.index = action.payload;

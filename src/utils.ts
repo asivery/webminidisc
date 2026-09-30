@@ -247,22 +247,7 @@ export function getPublicPathFor(script: string) {
     return `${import.meta.env.BASE_URL}${script}`;
 }
 
-export function savePreference(key: string, value: unknown) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
-
-export function loadPreference<T>(key: string, defaultValue: T): T {
-    const res = localStorage.getItem(key);
-    if (res === null) {
-        return defaultValue;
-    } else {
-        try {
-            return JSON.parse(res) as T;
-        } catch (e) {
-            return defaultValue;
-        }
-    }
-}
+export { savePreference, loadPreference } from './preferences';
 
 export function timeToSeekArgs(timeInSecs: number): number[] {
     let value = Math.round(timeInSecs); // ignore frames

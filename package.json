@@ -21,7 +21,8 @@
     "preview": "vite preview",
     "analyze": "source-map-explorer 'dist/assets/*.js'",
     "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\n\\\" > src/version-info.ts\"",
-    "pretty": "prettier src/**/*.{ts,tsx} --write"
+    "pretty": "prettier src/**/*.{ts,tsx} --write",
+    "test:titles": "node scripts/test-titles.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -42,6 +43,8 @@
     "netmd-exploits": "^0.5.11",
     "netmd-js": "^4.3.0",
     "netmd-tocmanip": "^0.2.1",
+    "opencc-js": "1.4.2",
+    "pinyin-pro": "3.29.4",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",

@@ -11,6 +11,7 @@ import { actions as appActions } from './redux/app-feature';
 import { actions as mainActions } from './redux/main-feature';
 
 import App from './components/app';
+import { RenameSourcesProvider } from './components/rename-sources';
 
 import { MediaRecorderService } from './services/browserintegration/mediarecorder';
 import { BrowserMediaSessionService } from './services/browserintegration/media-session';
@@ -142,7 +143,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
     <Provider store={store}>
         <SettingsResetErrorBoundary>
-            <App />
+            <RenameSourcesProvider><App /></RenameSourcesProvider>
         </SettingsResetErrorBoundary>
     </Provider>
 );
