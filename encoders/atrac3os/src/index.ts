@@ -79,7 +79,7 @@ export default class Atrac3OSExportService implements AudioEncoderV1Instance {
         return {
             ffmpeg: 'Transcoding to PCM...',
             atrac: 'Transcoding to ATRAC...',
-        }[stage] ?? null;
+        }[stage] ?? this.ffmpeg.getUserFriendyStageName(stage);
     }
 
     async init(): Promise<void> {

@@ -93,6 +93,7 @@ export class FfmpegAudioEncoder implements AudioEncoderV1Instance {
         const outFileName = `${this.outFileNameNoExt}.raw`;
         await this.ffmpegProcess.transcode(this.inFileName, outFileName, ffmpegCommand);
         const { data } = await this.ffmpegProcess.read(outFileName);
+        await this.ffmpegProcess.remove(outFileName);
         return data;
     }
 
@@ -105,6 +106,7 @@ export class FfmpegAudioEncoder implements AudioEncoderV1Instance {
         const outFileName = `${this.outFileNameNoExt}.mp3`;
         await this.ffmpegProcess.transcode(this.inFileName, outFileName, ffmpegCommand);
         const { data } = await this.ffmpegProcess.read(outFileName);
+        await this.ffmpegProcess.remove(outFileName);
         return data;
     }
 
@@ -112,7 +114,7 @@ export class FfmpegAudioEncoder implements AudioEncoderV1Instance {
         return (
             (
                 {
-                    encoding: 'encoding',
+                    encoding: 'Transcoding...',
                 } as const
             )[stage] ?? null
         );
