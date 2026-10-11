@@ -2,6 +2,12 @@ import { ChangelogVersion } from "./bridge-types";
 
 export const CHANGELOG: ChangelogVersion[] = [
     {
+        name: "Version 1.6.2",
+        contents: [
+            "Fix race condition in encoder setup",
+        ],
+    },
+    {
         name: "Version 1.6.1",
         contents: [
             "Fixed SP encoders",
