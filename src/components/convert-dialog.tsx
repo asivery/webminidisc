@@ -847,7 +847,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     }, [dispatch, handleClose, titles, currentlySelectedCodec, files, enableReplayGain, enableGapless]);
 
     const encoderSupportState = useMemo(
-        () => serviceRegistry.audioExportService!.getSupportFor(transferCodecToExportCodec(currentlySelectedCodec).codec),
+        () => serviceRegistry.audioExportService?.getSupportFor(transferCodecToExportCodec(currentlySelectedCodec).codec) ?? { state: 'unsupported', gapless: false, },
         [currentlySelectedCodec, globalAudioExportServiceId]
     );
     useEffect(() => {
@@ -855,8 +855,8 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     }, [setEnableGapless, encoderSupportState]);
     const isSelectedIncomplete = encoderSupportState.state === 'poor';
     const isSelectedUnsupported = encoderSupportState.state === 'unsupported';
-    const formatsSupport: { state: 'perfect' | 'poor' | 'unsupported'; gapless: boolean; bitrates: number[] }[] =
-        minidiscSpec.availableFormats.map((e) => {
+    const formatsSupport: { state: 'perfect' | 'poor' | 'unsupported'; gapless: boolean; bitrates: number[] }[] = useMemo(() =>
+        serviceRegistry.audioExportService ? minidiscSpec.availableFormats.map((e) => {
             const info = serviceRegistry.audioExportService!.getSupportFor(
                 transferCodecToExportCodec({ codec: e.codec, bitrate: 0 }).codec
             );
@@ -864,7 +864,9 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 ...info,
                 bitrates: info.bitrates ? info.bitrates.filter((z) => e.availableBitrates.includes(z)) : e.availableBitrates
             };
-        });
+        }) : [],
+        [globalAudioExportServiceId, visible]
+    )
 
     const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
 
