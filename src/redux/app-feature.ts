@@ -71,7 +71,7 @@ export const buildInitialState = (): AppState => {
         pageFullHeight: loadPreference('pageFullHeight', false),
         pageFullWidth: loadPreference('pageFullWidth', false),
         archiveDiscCreateZip: loadPreference('archiveDiscCreateZip', false),
-        factoryModeUseSlowerExploit: loadPreference('factoryModeUseSlowerExploit', false),
+        factoryModeUseSlowerExploit: loadPreference('factoryModeUseSlowerExploit', navigator.platform.toLowerCase().includes('mac')),
         factoryModeShortcuts: loadPreference('factoryModeShortcuts', false),
         factoryModeNERAWDownload: loadPreference('factoryModeNERAWDownload', false),
     };

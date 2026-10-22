@@ -6,6 +6,7 @@ export const CHANGELOG: ChangelogVersion[] = [
         contents: [
             "Fix race condition in encoder setup",
             "Better support for Network Walkmans",
+            "Default to slower ATRAC export exploit on MacOS machines",
         ],
     },
     {
