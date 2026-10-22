@@ -29,9 +29,19 @@ export class SettingsResetErrorBoundary extends React.Component<
         const errorString = `${(error.stack ?? error.message).substring(0, 200)}...`;
         if (this.state.wipeSettings) {
             window.alert(
-                `Unrecoverable error while initializing app. Your app settings have been deleted.\n${errorString}\nPress OK to restart.`
+                `Unrecoverable error while initializing app. Your app settings have been deleted.\n${errorString}\nPress OK to restart.\nIf this keeps happening, close and reopen your browser.`
             );
             window.localStorage.clear();
+            if('serviceWorker' in window) {
+                if(window.navigator && navigator.serviceWorker) {
+                    navigator.serviceWorker.getRegistrations()
+                        .then(function(registrations) {
+                            for(let registration of registrations) {
+                                registration.unregister();
+                            }
+                        });
+                }
+            }
             if(EncoderStorageManager.INSTANCE) {
                 EncoderStorageManager.INSTANCE.reset().then(() => window.reload());
             }
