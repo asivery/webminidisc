@@ -15,7 +15,7 @@ import Select from '@mui/material/Select';
 import { Services } from '../services/interface-service-manager';
 import { addService } from '../redux/actions';
 import { isAllValid, initializeParameters } from '../custom-parameters';
-import { renderCustomParameter } from './custom-parameters-renderer';
+import { CustomParameterRendered } from './custom-parameters-renderer';
 
 const Transition = React.forwardRef(function Transition(props: SlideProps, ref: React.Ref<unknown>) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -116,7 +116,10 @@ export const OtherDeviceDialog = (props: {}) => {
                 {currentService.description}
                 <div className={classes.fullWidth}>
                     {currentService.customParameters!.map((n) =>
-                        renderCustomParameter(n, otherDeviceDialogCustomParameters, handleParameterChange)
+                        <CustomParameterRendered
+                            parameter={n}
+                            values={otherDeviceDialogCustomParameters}
+                            parameterChangeCallback={handleParameterChange} />
                     )}
                 </div>
             </DialogContent>

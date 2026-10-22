@@ -19,7 +19,7 @@ import Switch from '@mui/material/Switch';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { makeStyles } from 'tss-react/mui';
-import { renderCustomParameter } from './custom-parameters-renderer';
+import { CustomParameterRendered } from './custom-parameters-renderer';
 import { CustomParameters, initializeParameters, isAllValid } from '../custom-parameters';
 import { SettingInterface } from '../bridge-types';
 import { LibraryServices } from '../services/library-services';
@@ -156,15 +156,17 @@ const NativeFields = ({ section, classes }: { section: string; classes: any }) =
                 </SimpleField>
             );
         } else {
-            return renderCustomParameter(
-                {
-                    type: entry.type,
-                    userFriendlyName: entry.name,
-                    varName: entry.family + entry.name,
-                },
-                { [entry.family + entry.name]: entry.state },
-                (_, nv) => entry.update(nv).then(updateState),
-                classes.marginApply
+            return (
+                <CustomParameterRendered
+                    parameter={{
+                        type: entry.type,
+                        userFriendlyName: entry.name,
+                        varName: entry.family + entry.name,
+                    }}
+                    values={{ [entry.family + entry.name]: entry.state }}
+                    parameterChangeCallback={(_, nv) => entry.update(nv).then(updateState)}
+                    customClass={classes.marginApply}
+                />
             );
         }
     });
@@ -424,12 +426,11 @@ export const SettingsDialog = (props: {}) => {
                     </Typography>
                     <Box className={classes.fieldMargin}>
                         {currentService.customParameters?.map((n) =>
-                            renderCustomParameter(
-                                n,
-                                currentExportServiceConfig!,
-                                handleExportServiceParameterChange,
-                                classes.noLeftMargin
-                            )
+                            <CustomParameterRendered
+                                parameter={n}
+                                values={currentExportServiceConfig!}
+                                parameterChangeCallback={handleExportServiceParameterChange}
+                                customClass={classes.noLeftMargin}/>
                         )}
                     </Box>
                 </>}
@@ -452,12 +453,11 @@ export const SettingsDialog = (props: {}) => {
                         <Typography className={classes.encoderDescription}>{currentLibrary.description}</Typography>
                         <Box className={classes.fieldMargin}>
                             {currentLibrary.customParameters?.map((n) =>
-                                renderCustomParameter(
-                                    n,
-                                    currentLibraryServiceConfig!,
-                                    handleLibraryServiceParameterChange,
-                                    classes.noLeftMargin
-                                )
+                            <CustomParameterRendered
+                                parameter={n}
+                                values={currentLibraryServiceConfig!}
+                                parameterChangeCallback={handleLibraryServiceParameterChange}
+                                customClass={classes.noLeftMargin}/>
                             )}
                         </Box>
                     </>

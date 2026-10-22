@@ -5,11 +5,13 @@ import TextField from '@mui/material/TextField';
 import { CustomParameterInfo, CustomParameters, CustomParameterType, getDefaultForType } from '../custom-parameters';
 import { Button, MenuItem, Select, Tooltip } from '@mui/material';
 
-export function renderCustomParameter(
-    parameter: CustomParameterInfo,
-    values: CustomParameters,
-    parameterChangeCallback: (varName: string, newValue: any) => void,
-    customClass?: string
+export function CustomParameterRendered({ parameter, values, parameterChangeCallback, customClass}: 
+    {
+        parameter: CustomParameterInfo,
+        values: CustomParameters,
+        parameterChangeCallback: (varName: string, newValue: any) => void,
+        customClass?: string
+    }
 ) {
     const value = values[parameter.varName] as any;
     const [type, setType] = useState<CustomParameterType>(null);
@@ -18,14 +20,17 @@ export function renderCustomParameter(
         if(Array.isArray(newType) && Array.isArray(type)) {
             if(newType.length !== type.length || !newType.every((e, i) => e.value === type[i].value)) {
                 setType(newType);
+                if(!newType.find(e => e.value === values[parameter.varName]!)) 
+                    parameterChangeCallback(parameter.varName, getDefaultForType(newType));
             }
         } else {
             if(newType !== type) {
                 setType(newType);
-                parameterChangeCallback(parameter.varName, getDefaultForType(newType));
+                if(type !== null)
+                    parameterChangeCallback(parameter.varName, getDefaultForType(newType));
             }
         }
-    }, [values, type]);
+    }, [values, type, parameter]);
     const handleParameterChange = (event: any, type: CustomParameterType, name: string) => {
         parameterChangeCallback(
             name,
