@@ -28,7 +28,7 @@ const BYTES_DEFAULT_SPEC = new DefaultMinidiscSpec();
 (BYTES_DEFAULT_SPEC as any).measurementUnits = 'bytes';
 BYTES_DEFAULT_SPEC.translateToDefaultMeasuringModeFrom = new HiMDSpec().translateToDefaultMeasuringModeFrom;
 
-const MOCKS: ServicePrototype[] = import.meta.env.PROD ? [] :[
+const MOCKS: ServicePrototype[] = (import.meta.env.PROD && localStorage.getItem("show-mocks") !== 'true') ? [] :[
     {
         name: 'MockMD',
         getConnectName: () => 'Connect to MockMD',
