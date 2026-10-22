@@ -2,11 +2,11 @@ import React from 'react';
 import { Button, Panel } from 'react95';
 import { belowDesktop, useDeviceCapabilities } from '../../frontend-utils';
 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
-import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
-import PauseIcon from '@mui/icons-material/Pause';
+import { PlayArrow as PlayArrowIcon } from '@mui/icons-material'
+import { Stop as StopIcon } from '@mui/icons-material'
+import { SkipNext as SkipNextIcon } from '@mui/icons-material'
+import { SkipPrevious as SkipPreviousIcon } from '@mui/icons-material'
+import { Pause as PauseIcon } from '@mui/icons-material'
 import { makeStyles } from 'tss-react/mui';
 
 const useStyles = makeStyles()((theme) => ({

@@ -1,11 +1,11 @@
 import React, { useCallback, useRef, useEffect, useState, useMemo, SyntheticEvent } from 'react';
 import clsx from 'clsx';
 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
-import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
-import PauseIcon from '@mui/icons-material/Pause';
+import { PlayArrow as PlayArrowIcon } from '@mui/icons-material'
+import { Stop as StopIcon } from '@mui/icons-material'
+import { SkipNext as SkipNextIcon } from '@mui/icons-material'
+import { SkipPrevious as SkipPreviousIcon } from '@mui/icons-material'
+import { Pause as PauseIcon } from '@mui/icons-material'
 
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';

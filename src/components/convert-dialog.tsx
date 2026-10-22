@@ -38,12 +38,12 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Tooltip from '@mui/material/Tooltip';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import AddIcon from '@mui/icons-material/Add';
-import CloudDownload from '@mui/icons-material/CloudDownload';
-import RemoveIcon from '@mui/icons-material/Remove';
-import EditIcon from '@mui/icons-material/Edit';
+import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material'
+import { ExpandLess as ExpandLessIcon } from '@mui/icons-material'
+import { Add as AddIcon } from '@mui/icons-material'
+import { CloudDownload as CloudDownload } from '@mui/icons-material'
+import { Remove as RemoveIcon } from '@mui/icons-material'
+import { Edit as EditIcon } from '@mui/icons-material'
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';

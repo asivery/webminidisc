@@ -10,7 +10,7 @@ import {
     Droppable,
     DroppableProvided,
     DroppableStateSnapshot,
-} from 'react-beautiful-dnd';
+} from '@hello-pangea/dnd';
 import { listContent, deleteTracks, moveTrack, groupTracks, deleteGroups, dragDropTrack, ejectDisc, flushDevice } from '../redux/actions';
 import { actions as renameDialogActions, RenameType } from '../redux/rename-dialog-feature';
 import { actions as convertDialogActions } from '../redux/convert-dialog-feature';
@@ -37,13 +37,13 @@ import { alpha, lighten } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Fab from '@mui/material/Fab';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import { Add as AddIcon } from '@mui/icons-material'
+import { Delete as DeleteIcon } from '@mui/icons-material'
+import { Edit as EditIcon } from '@mui/icons-material'
 import Backdrop from '@mui/material/Backdrop';
-import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
-import EjectIcon from '@mui/icons-material/Eject';
-import DoneIcon from '@mui/icons-material/Done';
+import { CreateNewFolder as CreateNewFolderIcon } from '@mui/icons-material'
+import { Eject as EjectIcon } from '@mui/icons-material'
+import { Done as DoneIcon } from '@mui/icons-material'
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';

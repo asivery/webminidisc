@@ -5,7 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { MoreVert as MoreVertIcon } from '@mui/icons-material'
 
 import {
     downloadRam,
@@ -31,24 +31,24 @@ import ListItemText from '@mui/material/ListItemText';
 import Tooltip from '@mui/material/Tooltip';
 import { makeStyles } from 'tss-react/mui';
 
-import RefreshIcon from '@mui/icons-material/Refresh';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import ToggleOffIcon from '@mui/icons-material/ToggleOff';
-import ToggleOnIcon from '@mui/icons-material/ToggleOn';
-import HelpIcon from '@mui/icons-material/Help';
-import MemoryIcon from '@mui/icons-material/Memory';
-import CodeIcon from '@mui/icons-material/Code';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import PublishIcon from '@mui/icons-material/Publish';
-import GamesIcon from '@mui/icons-material/Games';
-import SecurityIcon from '@mui/icons-material/Security';
-import NoEncryptionIcon from '@mui/icons-material/NoEncryption';
-import ArchiveIcon from '@mui/icons-material/Archive';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import SettingsIcon from '@mui/icons-material/Settings';
-import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
-import DiscFullIcon from '@mui/icons-material/DiscFull';
+import { Refresh as RefreshIcon } from '@mui/icons-material'
+import { GitHub as GitHubIcon } from '@mui/icons-material'
+import { ExitToApp as ExitToAppIcon } from '@mui/icons-material'
+import { ToggleOff as ToggleOffIcon } from '@mui/icons-material'
+import { ToggleOn as ToggleOnIcon } from '@mui/icons-material'
+import { Help as HelpIcon } from '@mui/icons-material'
+import { Memory as MemoryIcon } from '@mui/icons-material'
+import { Code as CodeIcon } from '@mui/icons-material'
+import { GetApp as GetAppIcon } from '@mui/icons-material'
+import { Publish as PublishIcon } from '@mui/icons-material'
+import { Games as GamesIcon } from '@mui/icons-material'
+import { Security as SecurityIcon } from '@mui/icons-material'
+import { NoEncryption as NoEncryptionIcon } from '@mui/icons-material'
+import { Archive as ArchiveIcon } from '@mui/icons-material'
+import { LockOpen as LockOpenIcon } from '@mui/icons-material'
+import { Settings as SettingsIcon } from '@mui/icons-material'
+import { HomeRepairService as HomeRepairServiceIcon } from '@mui/icons-material'
+import { DiscFull as DiscFullIcon } from '@mui/icons-material'
 
 import { Capability, ExploitCapability } from '../../services/interfaces/netmd';
 

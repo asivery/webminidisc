@@ -52,7 +52,6 @@ export default ({ mode }) => {
           "theme_color": "#000000",
           "orientation": "portrait",
           "background_color": "#ffffff",
-          "splash_pages": null
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 1024 * 1024 * 10, // 10 MiB

@@ -14,9 +14,9 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import IconButton from '@mui/material/IconButton';
 
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { Delete as DeleteIcon } from '@mui/icons-material'
+import { Add as AddIcon } from '@mui/icons-material'
+import { OpenInNew as OpenInNewIcon } from '@mui/icons-material'
 
 import { TopMenu } from './topmenu';
 import ChromeIconPath from '../images/chrome-icon.svg';

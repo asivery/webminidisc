@@ -12,9 +12,9 @@ import { useShallowEqualSelector } from "../../frontend-utils";
 import { actions as factoryActions } from '../../redux/factory/factory-feature';
 import { FactoryModeEditDialog } from './factory-fragment-mode-edit-dialog';
 import { ExploitCapability } from '../../services/interfaces/netmd';
-import DoneIcon from '@mui/icons-material/Done';
-import CloseIcon from '@mui/icons-material/Close';
-import GetAppIcon from '@mui/icons-material/GetApp';
+import { Done as DoneIcon } from '@mui/icons-material'
+import { Close as CloseIcon } from '@mui/icons-material'
+import { GetApp as GetAppIcon } from '@mui/icons-material'
 import {
     DisplayableBlock,
     DiscAddressInput,

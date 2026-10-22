@@ -4,20 +4,20 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 
-import DragIndicator from '@mui/icons-material/DragIndicator';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
+import { DragIndicator as DragIndicator } from '@mui/icons-material'
+import { PlayArrow as PlayArrowIcon } from '@mui/icons-material'
+import { Pause as PauseIcon } from '@mui/icons-material'
 import IconButton from '@mui/material/IconButton';
-import FolderIcon from '@mui/icons-material/Folder';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Folder as FolderIcon } from '@mui/icons-material'
+import { Delete as DeleteIcon } from '@mui/icons-material'
 
-import { DraggableProvided } from 'react-beautiful-dnd';
 import { Track, Group, getDefaultCodec } from '../services/interfaces/netmd';
 import { formatTimeFromSeconds, secondsToHumanReadable } from '../utils';
 
 import serviceRegistry from '../services/registry';
 import { alpha, lighten } from '@mui/material';
 import { useDeviceCapabilities } from '../frontend-utils';
+import { DraggableProvided } from '@hello-pangea/dnd';
 
 const useStyles = makeStyles<
     void,
