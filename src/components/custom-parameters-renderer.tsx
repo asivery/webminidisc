@@ -1,16 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
-import { CustomParameterInfo, CustomParameterType } from '../custom-parameters';
+import { CustomParameterInfo, CustomParameters, CustomParameterType, getDefaultForType } from '../custom-parameters';
 import { Button, MenuItem, Select, Tooltip } from '@mui/material';
 
 export function renderCustomParameter(
     parameter: CustomParameterInfo,
-    value: any,
+    values: CustomParameters,
     parameterChangeCallback: (varName: string, newValue: any) => void,
     customClass?: string
 ) {
+    const value = values[parameter.varName] as any;
+    const [type, setType] = useState<CustomParameterType>(null);
+    useEffect(() => {
+        const newType = typeof parameter.type === 'function' ? parameter.type(values) : parameter.type;
+        if(Array.isArray(newType) && Array.isArray(type)) {
+            if(newType.length !== type.length || !newType.every((e, i) => e.value === type[i].value)) {
+                setType(newType);
+            }
+        } else {
+            if(newType !== type) {
+                setType(newType);
+                parameterChangeCallback(parameter.varName, getDefaultForType(newType));
+            }
+        }
+    }, [values, type]);
     const handleParameterChange = (event: any, type: CustomParameterType, name: string) => {
         parameterChangeCallback(
             name,
@@ -24,7 +39,9 @@ export function renderCustomParameter(
 
     const fullWidth = { minWidth: '100%' };
 
-    if (Array.isArray(parameter.type)) {
+    if(!type) return null;
+
+    if (Array.isArray(type)) {
         // Enumerator:
         return (
             <FormControlLabel
@@ -32,10 +49,10 @@ export function renderCustomParameter(
                 control={
                     <Select
                         value={value}
-                        onChange={(e) => handleParameterChange(e, parameter.type, parameter.varName)}
+                        onChange={(e) => handleParameterChange(e, type, parameter.varName)}
                         className={customClass}
                     >
-                        {parameter.type.map((e) => (
+                        {type.map((e) => (
                             <MenuItem value={e.value} key={e.value}>
                                 {e.name}
                             </MenuItem>
@@ -44,18 +61,18 @@ export function renderCustomParameter(
                 }
                 label={parameter.userFriendlyName}
                 labelPlacement="start"
-                style={{ ...fullWidth, justifyContent: 'space-between', marginLeft: 0 }}
+                style={{ ...fullWidth, justifyContent: 'space-between', marginLeft: 0, marginBottom: 8 }}
                 key={parameter.varName}
             />
         );
     }
 
-    switch (parameter.type) {
+    switch (type) {
         case 'boolean':
             return (
                 <FormControlLabel
                     className={customClass}
-                    control={<Checkbox checked={value} onChange={(e) => handleParameterChange(e, parameter.type, parameter.varName)} />}
+                    control={<Checkbox checked={value} onChange={(e) => handleParameterChange(e, type, parameter.varName)} />}
                     label={parameter.userFriendlyName}
                     style={fullWidth}
                     key={parameter.varName}
@@ -69,7 +86,7 @@ export function renderCustomParameter(
                     label={parameter.userFriendlyName}
                     error={parameter.validator ? !parameter.validator(value) : false}
                     value={value || ''}
-                    onChange={(e) => handleParameterChange(e, parameter.type, parameter.varName)}
+                    onChange={(e) => handleParameterChange(e, type, parameter.varName)}
                     style={fullWidth}
                 />
             );
@@ -81,7 +98,7 @@ export function renderCustomParameter(
                     error={parameter.validator ? !parameter.validator(value) : false}
                     type="number"
                     value={value || 0}
-                    onChange={(e) => handleParameterChange(e, parameter.type, parameter.varName)}
+                    onChange={(e) => handleParameterChange(e, type, parameter.varName)}
                     style={fullWidth}
                     key={parameter.varName}
                 />
@@ -97,13 +114,13 @@ export function renderCustomParameter(
                                 style={{ color: !(parameter.validator?.(value) ?? true) ? 'red' : undefined }}
                                 onClick={() => {
                                     window.native
-                                        ?.openFileHostDialog?.([{ name: 'All files', extensions: ['*'] }], parameter.type === 'hostDirPath')
+                                        ?.openFileHostDialog?.([{ name: 'All files', extensions: ['*'] }], type === 'hostDirPath')
                                         ?.then((e) => {
                                             parameterChangeCallback(parameter.varName, e ?? '');
                                         });
                                 }}
                             >
-                                Choose {parameter.type === 'hostDirPath' ? 'Directory' : 'File'}
+                                Choose {type === 'hostDirPath' ? 'Directory' : 'File'}
                             </Button>
                         </Tooltip>
                     }

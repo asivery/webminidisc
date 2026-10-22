@@ -6,6 +6,7 @@ import { NetMDMockService } from './interfaces/netmd-mock';
 import { NetMDRemoteService } from './interfaces/remote-netmd';
 import { DeviceIds } from 'networkwm-js';
 import { NetworkWMService } from './interfaces/networkwm-nodrm';
+import { bytesToHumanReadable } from '../utils';
 
 interface ServicePrototype {
     create: (parameters?: CustomParameters) => NetMDService | null;
@@ -164,6 +165,16 @@ const MOCKS: ServicePrototype[] = import.meta.env.PROD ? [] :[
     },
 ];
 
+// FSA doesn't discern between pids, so walkmans can be grouped easily
+const _networkWmSeriesSet = new Set<string>();
+for(let device of DeviceIds) {
+    if(device.disableDRM)
+        _networkWmSeriesSet.add(device.series || device.name);
+}
+
+const networkWmSeriesList = Array.from(_networkWmSeriesSet);
+
+
 export const Services: ServicePrototype[] = [
     {
         name: 'USB NetMD',
@@ -197,22 +208,47 @@ export const Services: ServicePrototype[] = [
     {
         name: 'DRM-Free Network Walkman',
         getConnectName: (params) => {
-            const intPid = parseInt(params!.pid as string);
-            return `Connect to ${DeviceIds.find((e) => e.productId == intPid)!.name}`;
+            let sizeIndex = parseInt(params!.size as string || '-1');
+            const dev = DeviceIds.find(e => e.name === params!.name || e.series === params!.name)!;
+            if(dev.knownSizes?.[sizeIndex]) {
+                const size = bytesToHumanReadable(Math.pow(2, Math.round(Math.log2(dev.knownSizes[sizeIndex]) + 0.4)));
+                return `Connect to ${params!.name} (${size})`;
+            } else {
+                return `Connect to ${params!.name}`;
+            }
         },
         create: (params) => {
-            const intPid = parseInt(params!.pid as string);
-            return new NetworkWMService(DeviceIds.find((e) => e.productId == intPid)!);
+            const dev = DeviceIds.find(e => e.name === params!.name || e.series === params!.name)!;
+            const capacitySelectedIndex = parseInt(params!.size as string || '-1');
+            return new NetworkWMService(dev, capacitySelectedIndex, dev?.series === params!.name);
         },
         requiresChrome: true,
         spec: new HiMDSpec(),
         customParameters: [
             {
-                varName: 'pid',
-                type: DeviceIds.filter((e) => e.disableDRM).map((e) => ({ name: e.name, value: e.productId.toString() })),
+                varName: 'name',
+                type: networkWmSeriesList.map((e) => ({ name: e, value: e })),
                 userFriendlyName: 'Device',
-                defaultValue: DeviceIds.filter((e) => e.disableDRM)[0].productId.toString(),
+                defaultValue: networkWmSeriesList[0]
             },
+            {
+                varName: 'size',
+                type: (params) => {
+                    const devFound = DeviceIds.filter(e => e.name === params!.name || e.series === params!.name)!;
+                    const allKnownSizes = devFound.flatMap(e => e.knownSizes ?? []);
+                    if(!devFound) return null;
+                    if(allKnownSizes.length) {
+                        return allKnownSizes.map((e, i) => ({
+                            // Align the user-readable names to 'nice' values:
+                            name: bytesToHumanReadable(Math.pow(2, Math.round(Math.log2(e) + 0.4))),
+                            value: i.toString()
+                        }));
+                    } else {
+                        return null;
+                    }
+                },
+                userFriendlyName: 'Capacity',
+            }
         ],
     },
     {
@@ -294,13 +330,18 @@ export function filterOutCorrupted(savedCustomServices: ServiceConstructionInfo[
         const parameterKeys = Object.keys(info.parameters!);
         if (!requiredParameters) continue; // The service cannot be a custom service - no props to set.
         if (requiredParameters.length !== parameterKeys.length) continue; // Invalid config.
-        const typeValid = (n: CustomParameterInfo, value: CustomParameters extends { [e: string]: infer R } ? R : never) =>
-            Array.isArray(n.type) ? n.type.some((e) => e.value === value) : typeof value === n.type;
+        const typeValid = (n: CustomParameterInfo, value: CustomParameters extends { [e: string]: infer R } ? R : never) => {
+            const type = typeof n.type === 'function' ? n.type(info.parameters!) : n.type;
+            return Array.isArray(type) ? type.some((e) => e.value === value) : typeof value === type;
+        }
+
         if (
             requiredParameters.filter((n) => parameterKeys.includes(n.varName) && typeValid(n, info.parameters![n.varName])).length !==
             requiredParameters.length
-        )
+        ) {
+            console.log("Dropping service " + info.name + " from available - params differ");
             continue; // The service's parameters differ from the prototype's declaration.
+        }
         legalCustomServices.push(info);
     }
     return legalCustomServices;

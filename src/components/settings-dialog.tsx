@@ -162,7 +162,7 @@ const NativeFields = ({ section, classes }: { section: string; classes: any }) =
                     userFriendlyName: entry.name,
                     varName: entry.family + entry.name,
                 },
-                entry.state,
+                { [entry.family + entry.name]: entry.state },
                 (_, nv) => entry.update(nv).then(updateState),
                 classes.marginApply
             );
@@ -426,7 +426,7 @@ export const SettingsDialog = (props: {}) => {
                         {currentService.customParameters?.map((n) =>
                             renderCustomParameter(
                                 n,
-                                currentExportServiceConfig![n.varName],
+                                currentExportServiceConfig!,
                                 handleExportServiceParameterChange,
                                 classes.noLeftMargin
                             )
@@ -454,7 +454,7 @@ export const SettingsDialog = (props: {}) => {
                             {currentLibrary.customParameters?.map((n) =>
                                 renderCustomParameter(
                                     n,
-                                    currentLibraryServiceConfig![n.varName],
+                                    currentLibraryServiceConfig!,
                                     handleLibraryServiceParameterChange,
                                     classes.noLeftMargin
                                 )

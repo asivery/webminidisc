@@ -12,7 +12,6 @@ import Slide, { SlideProps } from '@mui/material/Slide';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import { TransitionProps } from '@mui/material/transitions';
 import { Services } from '../services/interface-service-manager';
 import { addService } from '../redux/actions';
 import { isAllValid, initializeParameters } from '../custom-parameters';
@@ -117,7 +116,7 @@ export const OtherDeviceDialog = (props: {}) => {
                 {currentService.description}
                 <div className={classes.fullWidth}>
                     {currentService.customParameters!.map((n) =>
-                        renderCustomParameter(n, otherDeviceDialogCustomParameters[n.varName], handleParameterChange)
+                        renderCustomParameter(n, otherDeviceDialogCustomParameters, handleParameterChange)
                     )}
                 </div>
             </DialogContent>

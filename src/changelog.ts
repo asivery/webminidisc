@@ -5,6 +5,7 @@ export const CHANGELOG: ChangelogVersion[] = [
         name: "Version 1.6.2",
         contents: [
             "Fix race condition in encoder setup",
+            "Better support for Network Walkmans",
         ],
     },
     {
