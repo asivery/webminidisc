@@ -67,7 +67,7 @@ export const W95ConvertDialog = (props: {
                     onClick={() => props.setSelectedTrack(i)}
                     onDoubleClick={() => props.renameTrackManually(i)}
                     ref={ref}
-                    style={isSelected ? themeContext.selectedTableRow : {}}
+                    style={isSelected ? (themeContext as any).selectedTableRow : {}}
                 >
                     <TableDataCell>{file.title}</TableDataCell>
                 </CustomTableRow>

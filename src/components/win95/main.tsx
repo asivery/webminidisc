@@ -214,7 +214,7 @@ export const W95Main = (props: {
                             <TableBody>
                                 {props.tracks.map((track) => (
                                     <CustomTableRow
-                                        style={props.selected.includes(track.index) ? themeContext.selectedTableRow : {}}
+                                        style={props.selected.includes(track.index) ? (themeContext as any).selectedTableRow : {}}
                                         key={track.index}
                                         onDoubleClick={(event: React.MouseEvent) =>
                                             deviceCapabilities.metadataEdit && props.handleRenameTrack(event, track.index)
