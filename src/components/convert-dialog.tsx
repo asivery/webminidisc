@@ -864,7 +864,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 ...info,
                 bitrates: info.bitrates ? info.bitrates.filter((z) => e.availableBitrates.includes(z)) : e.availableBitrates
             };
-        }) : [],
+        }) : minidiscSpec.availableFormats.map(() => ({ state: 'unsupported', gapless: false, bitrates: [] })),
         [globalAudioExportServiceId, visible]
     )
 
