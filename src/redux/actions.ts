@@ -122,8 +122,7 @@ export function validateAndLoadEncoders(absoluteInit: boolean) {
             try {
                 const result = await fetch(getPublicPathFor("encoders.json"));
                 if(result.status !== 200) {
-                    console.log(`Invalid status for encoders.json: ${result.status}: ${await result.text()}`);
-                    return;
+                    throw new Error(`Invalid status for encoders.json: ${result.status}: ${await result.text()}`);
                 }
                 const jsonData = await result.json() as JSONEncoderInfo;
                 const toInstall = [];
