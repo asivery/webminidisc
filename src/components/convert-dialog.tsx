@@ -560,6 +560,14 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
 
     const [enableReplayGain, setEnableReplayGain] = useState(false);
     const [enableGapless, setEnableGapless] = useState(false);
+    const supportsRecordingTime = deviceCapabilities.includes(Capability.himdRecordingTime);
+    const [writeRecordingTime, setWriteRecordingTime] = useState(() => localStorage.getItem('ewmd.himd.writeRecordingDate') !== '0');
+    const [customRecordingTime, setCustomRecordingTime] = useState('');
+    const customTimestamp = new Date(customRecordingTime).getTime();
+    const customYear = new Date(customTimestamp).getFullYear();
+    const invalidRecordingTime =
+        supportsRecordingTime && writeRecordingTime && customRecordingTime !== '' && !(customYear >= 1980 && customYear <= 2107);
+    const recordingDate = supportsRecordingTime && writeRecordingTime ? (customRecordingTime ? customTimestamp : 'now') : undefined;
 
     const handleToggleReplayGain = useCallback(() => {
         setEnableReplayGain((enableReplayGain) => !enableReplayGain);
@@ -825,6 +833,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
     const dialogVisible = useShallowEqualSelector((state) => state.convertDialog.visible);
 
     const handleConvert = useCallback(() => {
+        if (invalidRecordingTime) return;
         handleClose();
         setEnableReplayGain(false);
         dispatch(
@@ -841,10 +850,11 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 {
                     enableReplayGain,
                     enableGapless,
+                    recordingDate,
                 }
             )
         );
-    }, [dispatch, handleClose, titles, currentlySelectedCodec, files, enableReplayGain, enableGapless]);
+    }, [dispatch, handleClose, titles, currentlySelectedCodec, files, enableReplayGain, enableGapless, invalidRecordingTime, recordingDate]);
 
     const encoderSupportState = useMemo(
         () => serviceRegistry.audioExportService?.getSupportFor(transferCodecToExportCodec(currentlySelectedCodec).codec) ?? { state: 'unsupported', gapless: false, },
@@ -870,6 +880,39 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
 
     const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
 
+    const recordingTimeOptions = supportsRecordingTime && (
+        <div>
+            <label>
+                <input
+                    type="checkbox"
+                    checked={writeRecordingTime}
+                    onChange={(event) => {
+                        const checked = event.target.checked;
+                        localStorage.setItem('ewmd.himd.writeRecordingDate', checked ? '1' : '0');
+                        setWriteRecordingTime(checked);
+                    }}
+                />
+                Write recording date and time
+            </label>
+            {writeRecordingTime && (
+                <div>
+                    <label>
+                        Custom date and time (leave blank to use the current local time)
+                        <br />
+                        <input
+                            type="datetime-local"
+                            min="1980-01-01T00:00"
+                            max="2107-12-31T23:59"
+                            value={customRecordingTime}
+                            onChange={(event) => setCustomRecordingTime(event.target.value)}
+                        />
+                    </label>
+                    {invalidRecordingTime && <div role="alert">Enter a date between 1980 and 2107.</div>}
+                </div>
+            )}
+        </div>
+    );
+
     if (vintageMode) {
         const p = {
             visible,
@@ -894,6 +937,8 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
             handleChangeFormat,
             handleChangeTitleFormat,
             handleConvert,
+            recordingTimeOptions,
+            invalidRecordingTime,
 
             tracksOrderVisible,
             setTracksOrderVisible,
@@ -1198,6 +1243,7 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                             disabled={!encoderSupportState.gapless}
                             control={<Checkbox checked={enableGapless} onChange={handleToggleGapless} />}
                         />
+                        {recordingTimeOptions}
                     </AccordionDetails>
                 </Accordion>
             </DialogContent>
@@ -1209,7 +1255,10 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                 <Button onClick={handleClose} disabled={loadingMetadata}>
                     Cancel
                 </Button>
-                <Button onClick={handleConvert} disabled={loadingMetadata || availableDurationUnits < 0 || isSelectedUnsupported}>
+                <Button
+                    onClick={handleConvert}
+                    disabled={loadingMetadata || availableDurationUnits < 0 || isSelectedUnsupported || invalidRecordingTime}
+                >
                     Ok
                 </Button>
             </DialogActions>
