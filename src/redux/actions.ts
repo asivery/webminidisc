@@ -1363,7 +1363,7 @@ export function flushDevice() {
 export function convertAndUpload(
     files: TitledFile[],
     format: Codec,
-    additionalParameters: { enableReplayGain: boolean; enableGapless: boolean }
+    additionalParameters: { enableReplayGain: boolean; enableGapless: boolean; recordingDate?: 'now' | number }
 ) {
     return async function (dispatch: AppDispatch, getState: () => RootState) {
         const deviceCapabilities = getState().main.deviceCapabilities;
@@ -1675,8 +1675,25 @@ export function convertAndUpload(
                 try {
                     // SPS / SPM was filtered out before
                     const formatOverride: Codec = (file.forcedEncoding as Codec | null) ?? format;
+                    const recordingDate = additionalParameters.recordingDate;
+                    const date =
+                        deviceCapabilities.includes(Capability.himdRecordingTime) && recordingDate !== undefined
+                            ? new Date(recordingDate === 'now' ? Date.now() : recordingDate)
+                            : undefined;
+                    const year = date?.getFullYear();
+                    const recordingTime =
+                        date && year !== undefined && year >= 1980 && year <= 2107
+                            ? {
+                                  year: year - 1900,
+                                  month: date.getMonth(),
+                                  day: date.getDate(),
+                                  hour: date.getHours(),
+                                  minute: date.getMinutes(),
+                                  second: date.getSeconds(),
+                              }
+                            : undefined;
                     await netmdService?.upload(
-                        usesHiMDTitles ? { title, artist: file.artist, album: file.album } : halfWidthTitle,
+                        usesHiMDTitles ? { title, artist: file.artist, album: file.album, recordingTime } : halfWidthTitle,
                         fullWidthTitle,
                         data,
                         formatOverride,
