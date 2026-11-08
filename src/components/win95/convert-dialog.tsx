@@ -41,6 +41,8 @@ export const W95ConvertDialog = (props: {
         }>
     ) => void;
     handleConvert: () => void;
+    recordingTimeOptions: React.ReactNode;
+    invalidRecordingTime: boolean;
     tracksOrderVisible: boolean;
     setTracksOrderVisible: React.Dispatch<React.SetStateAction<boolean>>;
     handleToggleTracksOrder: () => void;
@@ -109,6 +111,7 @@ export const W95ConvertDialog = (props: {
                             />
                         </Fieldset>
                     </div>
+                    {props.recordingTimeOptions}
                     <p
                         hidden={props.availableCharacters.halfWidth > 0 && props.availableCharacters.fullWidth > 0}
                         style={{ marginTop: '1em' }}
@@ -159,7 +162,10 @@ export const W95ConvertDialog = (props: {
                             props.tracksOrderVisible ? 'Hide' : 'Show'
                         } Tracks`}</Button>
                         <div style={{ flex: '1 1 auto' }}></div>
-                        <FooterButton disabled={props.loadingMetadata || props.availableSeconds < 0} onClick={props.handleConvert}>
+                        <FooterButton
+                            disabled={props.loadingMetadata || props.availableSeconds < 0 || props.invalidRecordingTime}
+                            onClick={props.handleConvert}
+                        >
                             OK
                         </FooterButton>
                         <FooterButton disabled={props.loadingMetadata} onClick={props.handleClose}>
