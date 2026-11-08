@@ -41,6 +41,7 @@ import {
     RecordingCodec,
     Codec,
     TitleParameter,
+    UploadTitleParameter,
     DeviceStatus,
 } from './netmd';
 import { concatUint8Arrays } from 'netmd-js/dist/utils';
@@ -431,7 +432,14 @@ export class HiMDFullService extends HiMDRestrictedService {
     }
 
     async getServiceCapabilities() {
-        return [Capability.contentList, Capability.metadataEdit, Capability.trackDownload, Capability.trackUpload, Capability.himdTitles];
+        return [
+            Capability.contentList,
+            Capability.metadataEdit,
+            Capability.trackDownload,
+            Capability.trackUpload,
+            Capability.himdTitles,
+            Capability.himdRecordingTime,
+        ];
     }
 
     async pair() {
@@ -529,12 +537,14 @@ export class HiMDFullService extends HiMDRestrictedService {
     }
 
     async upload(
-        title: TitleParameter,
+        title: UploadTitleParameter,
         fullWidthTitle: string,
         data: ArrayBuffer,
         format: Codec,
         progressCallback: (progress: { written: number; encrypted: number; total: number }) => void
     ): Promise<void> {
+        const recordingTime = typeof title === 'object' ? title.recordingTime : undefined;
+        const trackIndex = this.himd!.getTrackCount();
         if (format.codec === 'MP3') {
             const stream = new HiMDWriteStream(this.himd!, this.atdata!, true);
             let firstByteOffset = -1;
@@ -599,6 +609,11 @@ export class HiMDFullService extends HiMDRestrictedService {
                 },
                 true
             );
+        }
+        if (recordingTime) {
+            // The timestamp is outside the authenticated track data. Save it with the usual upload flush.
+            const trackSlot = this.himd!.trackIndexToTrackSlot(trackIndex);
+            this.himd!.writeTrack(trackSlot, { ...this.himd!.getTrack(trackSlot), recordingTime });
         }
     }
 

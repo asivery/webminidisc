@@ -60,7 +60,7 @@ import {
 } from 'netmd-exploits';
 import netmdExploits from 'netmd-exploits';
 import netmdTocmanip from 'netmd-tocmanip';
-import { HiMDCodecName } from 'himd-js';
+import { DOSTime, HiMDCodecName } from 'himd-js';
 import Worker from 'netmd-js/dist/web-encrypt-worker?worker';
 
 export enum Capability {
@@ -75,6 +75,7 @@ export enum Capability {
     fullWidthSupport,
     nativeMonoUpload,
     himdFormat,
+    himdRecordingTime,
 }
 
 export enum ExploitCapability {
@@ -176,7 +177,9 @@ export const WireformatDict: { [k: string]: Wireformat } = {
     LP4: Wireformat.lp4,
 };
 
-export type TitleParameter = string | { title?: string; album?: string; artist?: string };
+type TrackTitle = { title?: string; album?: string; artist?: string };
+export type TitleParameter = string | TrackTitle;
+export type UploadTitleParameter = string | (TrackTitle & { recordingTime?: DOSTime });
 
 export class DefaultMinidiscSpec implements MinidiscSpec {
     public readonly availableFormats: RecordingCodec[] = [{ codec: 'SPS', defaultBitrate: 292, userFriendlyName: 'SP', availableBitrates: [292] }, { codec: 'SPM', defaultBitrate: 146, userFriendlyName: 'MONO', availableBitrates: [146], displayBadgeFriendlyName: 'SP' }, { codec: 'AT3', defaultBitrate: 132, userFriendlyName: 'LP2', availableBitrates: [132] }, { codec: 'AT3', defaultBitrate: 66, userFriendlyName: 'LP4', availableBitrates: [66] }];
@@ -235,7 +238,7 @@ export abstract class NetMDService {
     abstract prepareUpload(): Promise<void>;
     abstract finalizeUpload(): Promise<void>;
     abstract upload(
-        title: TitleParameter,
+        title: UploadTitleParameter,
         fullWidthTitle: string,
         data: ArrayBuffer,
         format: Codec,
