@@ -16,6 +16,7 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import { W95DeviceInfoDialog } from './win95/device-info-dialog';
 import MiniDiscLogo from '../images/minidisclogo.svg';
+import { SpecRow } from './deck/common';
 
 export type { DeviceInfoRow } from './device-info-rows';
 
@@ -28,6 +29,7 @@ export const DeviceInfoDialog = (props: {}) => {
 
     const visible = useShallowEqualSelector((state) => state.appState.deviceInfoDialogVisible);
     const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
+    const deckMode = useShallowEqualSelector((state) => state.appState.deckMode);
     const { deviceName, deviceInfo, disc } = useShallowEqualSelector((state) => state.main);
 
     const handleClose = () => {
@@ -59,19 +61,31 @@ export const DeviceInfoDialog = (props: {}) => {
             <DialogTitle id="device-info-dialog-slide-title">{title}</DialogTitle>
             <DialogContent>
                 <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                    <img src={MiniDiscLogo} alt="MiniDisc" style={{ width: 180, maxWidth: '100%' }} />
-                    <Table size="small" style={{ flex: 1, minWidth: 240 }}>
-                        <TableBody>
+                    <img
+                        src={MiniDiscLogo}
+                        alt="MiniDisc"
+                        style={deckMode ? { width: 140, maxWidth: '100%', filter: 'invert(0.9)' } : { width: 180, maxWidth: '100%' }}
+                    />
+                    {deckMode ? (
+                        <div style={{ flex: 1, minWidth: 240 }}>
                             {rows.map((row) => (
-                                <TableRow key={row.label}>
-                                    <TableCell component="th" scope="row" style={{ fontWeight: 'bold', width: 130 }}>
-                                        {row.label}
-                                    </TableCell>
-                                    <TableCell>{row.value}</TableCell>
-                                </TableRow>
+                                <SpecRow key={row.label} label={row.label} value={row.value} />
                             ))}
-                        </TableBody>
-                    </Table>
+                        </div>
+                    ) : (
+                        <Table size="small" style={{ flex: 1, minWidth: 240 }}>
+                            <TableBody>
+                                {rows.map((row) => (
+                                    <TableRow key={row.label}>
+                                        <TableCell component="th" scope="row" style={{ fontWeight: 'bold', width: 130 }}>
+                                            {row.label}
+                                        </TableCell>
+                                        <TableCell>{row.value}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
                 </div>
             </DialogContent>
             <DialogActions>

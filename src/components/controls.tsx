@@ -21,6 +21,7 @@ import MDIcon1 from '../images/md1.svg?react';
 import MDIcon2 from '../images/md2.svg?react';
 import MDIcon3 from '../images/md3.svg?react';
 import { W95Controls } from './win95/controls';
+import { DeckControls } from './deck/controls';
 
 const frames = [MDIcon0, MDIcon1, MDIcon2, MDIcon3];
 
@@ -317,24 +318,28 @@ export const Controls = () => {
     const DiscFrame = frames[lcdIconFrame];
 
     const vintageMode = useShallowEqualSelector((state) => state.appState.vintageMode);
+    const deckMode = useShallowEqualSelector((state) => state.appState.deckMode);
+    const p = {
+        handlePrev,
+        handlePlay,
+        handleStop,
+        handlePause,
+        handleNext,
+
+        message,
+        loading,
+        discPresent,
+        lcdScroll,
+        lcdRef,
+        lcdScrollDuration,
+
+        classes,
+    };
     if (vintageMode) {
-        const p = {
-            handlePrev,
-            handlePlay,
-            handleStop,
-            handlePause,
-            handleNext,
-
-            message,
-            loading,
-            discPresent,
-            lcdScroll,
-            lcdRef,
-            lcdScrollDuration,
-
-            classes,
-        };
         return <W95Controls {...p} />;
+    }
+    if (deckMode) {
+        return <DeckControls {...p} />;
     }
 
     return (

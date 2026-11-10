@@ -71,6 +71,7 @@ import { TopMenu } from './topmenu';
 import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import { W95Main } from './win95/main';
+import { DeckMain } from './deck/main';
 import { useMemo } from 'react';
 import { ChangelogDialog } from './changelog-dialog';
 import { getDefaultCodecName, Track } from '../services/interfaces/netmd';
@@ -205,7 +206,7 @@ export const Main = (props: {}) => {
     const deviceName = useShallowEqualSelector((state) => state.main.deviceName);
     const deviceStatus = useShallowEqualSelector((state) => state.main.deviceStatus);
     const factoryModeRippingInMainUi = useShallowEqualSelector((state) => state.appState.factoryModeRippingInMainUi);
-    const { vintageMode } = useShallowEqualSelector((state) => state.appState);
+    const { vintageMode, deckMode } = useShallowEqualSelector((state) => state.appState);
 
     const [selected, setSelected] = React.useState<number[]>([]);
     const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
@@ -521,42 +522,63 @@ export const Main = (props: {}) => {
         dispatch(openLocalLibrary());
     }, [dispatch]);
 
+    const p = {
+        disc,
+        deviceName,
+
+        factoryModeRippingInMainUi,
+
+        selected,
+        setSelected,
+        selectedCount,
+        isUsingBytes: minidiscSpec?.measurementUnits == 'bytes',
+
+        tracks,
+        uploadedFiles,
+        setUploadedFiles,
+
+        onDrop,
+        getRootProps,
+        getInputProps,
+        isDragActive,
+        open,
+
+        moveMenuAnchorEl,
+        setMoveMenuAnchorEl,
+
+        handleShowMoveMenu,
+        handleCloseMoveMenu,
+        handleMoveSelectedTrack,
+        handleShowDumpDialog,
+        handleDeleteSelected,
+        handleRenameActionClick,
+        handleRenameTrack,
+        handleSelectAllClick,
+        handleSelectTrackClick,
+    };
     if (vintageMode) {
-        const p = {
-            disc,
-            deviceName,
-
-            factoryModeRippingInMainUi,
-
-            selected,
-            setSelected,
-            selectedCount,
-            isUsingBytes: minidiscSpec?.measurementUnits == 'bytes',
-
-            tracks,
-            uploadedFiles,
-            setUploadedFiles,
-
-            onDrop,
-            getRootProps,
-            getInputProps,
-            isDragActive,
-            open,
-
-            moveMenuAnchorEl,
-            setMoveMenuAnchorEl,
-
-            handleShowMoveMenu,
-            handleCloseMoveMenu,
-            handleMoveSelectedTrack,
-            handleShowDumpDialog,
-            handleDeleteSelected,
-            handleRenameActionClick,
-            handleRenameTrack,
-            handleSelectAllClick,
-            handleSelectTrackClick,
-        };
         return <W95Main {...p} />;
+    }
+    if (deckMode) {
+        return (
+            <DeckMain
+                {...p}
+                handleTogglePlayPauseTrack={handleTogglePlayPauseTrack}
+                handleDeleteTrack={handleDeleteTrack}
+                handleEject={handleEject}
+                handleFlush={handleFlush}
+                handleRenameDisc={handleRenameDisc}
+                handleDrop={handleDrop}
+                handleOpenContextMenu={handleOpenContextMenu}
+                handleRenameGroup={handleRenameGroup}
+                handleDeleteGroup={handleDeleteGroup}
+                handleSelectGroupClick={handleSelectGroupClick}
+                selectedGroups={selectedGroups}
+                handleGroupTracks={handleGroupTracks}
+                canGroup={canGroup}
+                handleOpenLocalLibrary={handleOpenLocalLibrary}
+            />
+        );
     }
 
     return (

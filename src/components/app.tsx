@@ -1,4 +1,5 @@
 import React, { useMemo, lazy, Suspense, useEffect } from 'react';
+import { DeckPanel, DECK_SCROLLBAR } from './deck/common';
 import { belowDesktop, forAnyDesktop, forWideDesktop, useDispatch, useShallowEqualSelector, useThemeDetector } from '../frontend-utils';
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -51,6 +52,20 @@ const useStyles = makeStyles()((theme) => ({
             height: 250,
         },
     },
+    // Deck: a full-width column that fills the window; the paper is the 1280px content track.
+    deckLayout: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        [forAnyDesktop(theme)]: {
+            width: '100%',
+            maxWidth: 'none',
+        },
+        [forWideDesktop(theme)]: {
+            width: '100%',
+            maxWidth: 'none',
+        },
+    },
     paperShowsList: {
         [forAnyDesktop(theme)]: {
             height: 600,
@@ -61,6 +76,37 @@ const useStyles = makeStyles()((theme) => ({
     },
     paperFullHeight: {
         height: 'calc(100% - 50px)',
+    },
+    // Deliberately after paperShowsList and paperFullHeight: tss injects rules in this order, so these heights win.
+    // Homebrew view under Deck: one panel that owns its scrolling (html and body never scroll).
+    deckFactory: {
+        height: '100%',
+        boxSizing: 'border-box',
+        overflow: 'auto',
+        padding: theme.spacing(2, 3),
+        ...DECK_SCROLLBAR,
+    },
+    deckPaper: {
+        background: 'transparent',
+        boxShadow: 'none',
+        border: 'none',
+        borderRadius: 0,
+        padding: theme.spacing(1),
+        flex: '1 1 auto',
+        minHeight: 0,
+        width: '100%',
+        maxWidth: 1280,
+        boxSizing: 'border-box',
+        height: 'auto',
+        margin: '0 auto',
+        [forAnyDesktop(theme)]: {
+            height: 'auto',
+            margin: '16px auto 0',
+        },
+        [forWideDesktop(theme)]: {
+            height: 'auto',
+            margin: '16px auto 0',
+        },
     },
     layoutFullWidth: {
         [forAnyDesktop(theme)]: {
@@ -196,7 +242,7 @@ const lightTheme = createTheme({
 });
 
 const InternalApp = () => {
-    const { mainView, loading, pageFullHeight, pageFullWidth } = useShallowEqualSelector((state) => state.appState);
+    const { mainView, loading, pageFullHeight, pageFullWidth, deckMode } = useShallowEqualSelector((state) => state.appState);
     const { deviceCapabilities } = useShallowEqualSelector((state) => state.main);
     const { classes, cx } = useStyles();
     const dispatch = useDispatch();
@@ -217,16 +263,30 @@ const InternalApp = () => {
                     </Backdrop>
                 }
             >
-                <main className={cx(classes.layout, { [classes.layoutFullWidth]: pageFullWidth })}>
+                <main
+                    className={cx(classes.layout, {
+                        [classes.layoutFullWidth]: pageFullWidth && !deckMode,
+                        [classes.deckLayout]: deckMode,
+                    })}
+                >
                     <Paper
                         className={cx(classes.paper, {
                             [classes.paperShowsList]: deviceCapabilities.includes(0 /*Capability.listContent*/),
-                            [classes.paperFullHeight]: pageFullHeight,
+                            [classes.paperFullHeight]: pageFullHeight && !deckMode,
+                            [classes.deckPaper]: deckMode,
                         })}
                     >
                         {mainView === 'WELCOME' ? <Welcome /> : null}
                         {mainView === 'MAIN' ? <Main /> : null}
-                        {mainView === 'FACTORY' ? <Toc /> : null}
+                        {mainView === 'FACTORY' ? (
+                            deckMode ? (
+                                <DeckPanel className={classes.deckFactory}>
+                                    <Toc />
+                                </DeckPanel>
+                            ) : (
+                                <Toc />
+                            )
+                        ) : null}
 
                         <Box className={classes.controlsContainer}>{mainView === 'MAIN' ? <Controls /> : null}</Box>
                     </Paper>

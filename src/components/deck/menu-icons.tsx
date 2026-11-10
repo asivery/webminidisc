@@ -76,9 +76,14 @@ const SWAP = new Map<React.ElementType, React.ElementType>([
     [ToggleOn, ToggleRight],
 ]);
 
+// Items Deck's main screen already shows (the disc card's keys; the device name opens About this Walkman), so
+// Deck's menu leaves them out. Matched by the stock items' keys in topmenu.tsx.
+const SHOWN_ON_SCREEN = new Set(['deviceInfo', 'update', 'title', 'wipe', 'song-recognition', 'import-csv', 'export-csv']);
+
 export function deckMenuItems(node: React.ReactNode): React.ReactNode {
     return React.Children.map(node, (child) => {
         if (!React.isValidElement(child)) return child;
+        if (child.key !== null && SHOWN_ON_SCREEN.has(String(child.key))) return null;
         const Lucide = SWAP.get(child.type as React.ElementType);
         if (Lucide) return <Lucide size={14} />;
         const { children } = child.props as { children?: React.ReactNode };

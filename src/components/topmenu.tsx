@@ -70,7 +70,11 @@ const useStyles = makeStyles()((theme) => ({
     },
 }));
 
-export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: () => void }) {
+export const TopMenu = function (props: {
+    tracksSelected?: number[];
+    onClick?: () => void;
+    renderTrigger?: (open: (event: React.MouseEvent<HTMLElement>) => void) => React.ReactNode;
+}) {
     const { classes } = useStyles();
     const dispatch = useDispatch();
 
@@ -640,9 +644,13 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
     }
     return (
         <React.Fragment>
-            <IconButton aria-label="actions" aria-controls="actions-menu" aria-haspopup="true" onClick={handleMenuOpen}>
-                <MoreVertIcon />
-            </IconButton>
+            {props.renderTrigger ? (
+                props.renderTrigger(handleMenuOpen)
+            ) : (
+                <IconButton aria-label="actions" aria-controls="actions-menu" aria-haspopup="true" onClick={handleMenuOpen}>
+                    <MoreVertIcon />
+                </IconButton>
+            )}
             <Menu id="actions-menu" anchorEl={menuAnchorEl} keepMounted open={menuOpen} onClose={handleMenuClose}>
                 {deckMode ? deckMenuItems(menuItems) : menuItems}
             </Menu>
