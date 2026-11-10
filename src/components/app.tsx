@@ -3,7 +3,7 @@ import { belowDesktop, forAnyDesktop, forWideDesktop, useDispatch, useShallowEqu
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from './deck/loader';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { makeStyles } from 'tss-react/mui';
 

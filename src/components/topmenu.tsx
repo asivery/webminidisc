@@ -32,6 +32,7 @@ import { ToggleOff as ToggleOffIcon } from '@mui/icons-material'
 import { ToggleOn as ToggleOnIcon } from '@mui/icons-material'
 import { MusicNote as MusicNoteIcon } from '@mui/icons-material'
 import Win95Icon from '../images/win95/win95.png';
+import { deckMenuItems } from './deck/menu-icons';
 import { Help as HelpIcon } from '@mui/icons-material'
 import { Settings as SettingsIcon } from '@mui/icons-material'
 import { GetApp as GetAppIcon } from '@mui/icons-material'
@@ -643,7 +644,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                 <MoreVertIcon />
             </IconButton>
             <Menu id="actions-menu" anchorEl={menuAnchorEl} keepMounted open={menuOpen} onClose={handleMenuClose}>
-                {menuItems}
+                {deckMode ? deckMenuItems(menuItems) : menuItems}
             </Menu>
             <Menu
                 id="factory-actions-submenu"
@@ -660,7 +661,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                     horizontal: 'right',
                 }}
             >
-                {shortcutsItems}
+                {deckMode ? deckMenuItems(shortcutsItems) : shortcutsItems}
             </Menu>
 
             <input type="file" accept=".csv" ref={hiddenFileInputRef} style={{ display: 'none' }} onChange={handleCSVImportFromFile} />

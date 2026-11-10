@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import { ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material'
+import { ArrowDropDown as ArrowDropDownIcon } from './deck/icons'
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
 import Paper from '@mui/material/Paper';
@@ -9,7 +9,7 @@ import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import { ButtonProps } from '@mui/material/Button';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress } from './deck/loader';
 
 export type OptionType = {
     name: string;
