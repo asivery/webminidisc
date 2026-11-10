@@ -27,6 +27,7 @@ import { DeleteForever as DeleteForeverIcon } from '@mui/icons-material'
 import { BugReport as BugReportIcon } from '@mui/icons-material'
 import { ExitToApp as ExitToAppIcon } from '@mui/icons-material'
 import { Info as InfoIcon } from '@mui/icons-material'
+import { Headphones as HeadphonesIcon } from '@mui/icons-material'
 import { ToggleOff as ToggleOffIcon } from '@mui/icons-material'
 import { ToggleOn as ToggleOnIcon } from '@mui/icons-material'
 import { MusicNote as MusicNoteIcon } from '@mui/icons-material'
@@ -164,6 +165,11 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
 
     const handleShowAbout = useCallback(() => {
         dispatch(appActions.showAboutDialog(true));
+        handleMenuClose();
+    }, [dispatch, handleMenuClose]);
+
+    const handleShowDeviceInfo = useCallback(() => {
+        dispatch(appActions.showDeviceInfoDialog(true));
         handleMenuClose();
     }, [dispatch, handleMenuClose]);
 
@@ -367,6 +373,17 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
     );
 
     // END HOMEBREW / MAINUI BRIDGE
+
+    if (mainView === 'MAIN') {
+        menuItems.push(
+            <MenuItem key="deviceInfo" onClick={handleShowDeviceInfo}>
+                <ListItemIcon className={classes.listItemIcon}>
+                    <HeadphonesIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>About this Walkman</ListItemText>
+            </MenuItem>
+        );
+    }
 
     if (mainView === 'MAIN' && disc !== null) {
         menuItems.push(
@@ -599,6 +616,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
             handleRenameDisc,
             handleExit,
             handleShowAbout,
+            handleShowDeviceInfo,
             handleShowChangelog,
             handleVintageMode,
         };
