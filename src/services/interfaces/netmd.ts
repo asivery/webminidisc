@@ -308,6 +308,7 @@ export interface NetMDFactoryService {
 export function convertDiscToWMD(source: NetMDDisc): Disc {
     return {
         ...source,
+        used: Math.ceil(source.used / 512),
         left: Math.ceil(source.left / 512),
         total: Math.ceil(source.total / 512),
         groups: source.groups.map(convertGroupToWMD),
@@ -317,6 +318,7 @@ export function convertDiscToWMD(source: NetMDDisc): Disc {
 export function convertDiscToNJS(source: Disc): NetMDDisc {
     return {
         ...source,
+        used: source.used * 512,
         left: source.left * 512,
         total: source.total * 512,
         groups: source.groups.map(convertGroupToNJS),
