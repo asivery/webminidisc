@@ -73,7 +73,9 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
     const { classes } = useStyles();
     const dispatch = useDispatch();
 
-    const { mainView, vintageMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector((state) => state.appState);
+    const { mainView, vintageMode, deckMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector(
+        (state) => state.appState
+    );
     const { disc } = useShallowEqualSelector((state) => state.main);
     const { spUploadSpeedupActive, deviceDiscSwapDetectionDisabled } = useShallowEqualSelector((state) => state.factory);
     const discTitle = useShallowEqualSelector((state) => state.main.disc?.title ?? ``);
@@ -119,6 +121,11 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
         setMenuAnchorEl(null);
         handleShortcutsClose();
     }, [setMenuAnchorEl, handleShortcutsClose]);
+
+    const handleDeckMode = useCallback(() => {
+        dispatch(appActions.setDeckMode(!deckMode));
+        handleMenuClose();
+    }, [dispatch, deckMode, handleMenuClose]);
 
     const handleShowSettings = useCallback(() => {
         dispatch(appActions.showSettingsDialog(true));
@@ -520,6 +527,14 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                 <img alt="Windows 95" src={Win95Icon} width="24px" height="24px" />
             </ListItemIcon>
             <ListItemText>Retro Mode (beta)</ListItemText>
+        </MenuItem>
+    );
+    menuItems.push(
+        <MenuItem key="deckMode" onClick={handleDeckMode}>
+            <ListItemIcon className={classes.listItemIcon}>
+                {deckMode ? <ToggleOnIcon fontSize="small" /> : <ToggleOffIcon fontSize="small" />}
+            </ListItemIcon>
+            <ListItemText>Deck Mode</ListItemText>
         </MenuItem>
     );
 

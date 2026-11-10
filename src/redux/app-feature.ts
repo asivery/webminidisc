@@ -16,6 +16,7 @@ export interface AppState {
     connectingInProgress: boolean;
     colorTheme: 'dark' | 'light' | 'system';
     vintageMode: boolean;
+    deckMode: boolean;
     aboutDialogVisible: boolean;
     deviceInfoDialogVisible: boolean;
     discProtectedDialogVisible: boolean;
@@ -52,6 +53,7 @@ export const buildInitialState = (): AppState => {
         connectingInProgress: false,
         colorTheme: loadPreference('colorTheme', 'system'),
         vintageMode: loadPreference('vintageMode', false),
+        deckMode: loadPreference('deckMode', false),
         changelogDialogVisible: false,
         aboutDialogVisible: false,
         deviceInfoDialogVisible: false,
@@ -121,6 +123,18 @@ export const slice = createSlice({
         setVintageMode: (state, action: PayloadAction<boolean>) => {
             state.vintageMode = action.payload;
             savePreference('vintageMode', action.payload);
+            if (action.payload) {
+                state.deckMode = false;
+                savePreference('deckMode', false);
+            }
+        },
+        setDeckMode: (state, action: PayloadAction<boolean>) => {
+            state.deckMode = action.payload;
+            savePreference('deckMode', action.payload);
+            if (action.payload) {
+                state.vintageMode = false;
+                savePreference('vintageMode', false);
+            }
         },
         showAboutDialog: (state, action: PayloadAction<boolean>) => {
             state.aboutDialogVisible = action.payload;

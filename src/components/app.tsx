@@ -14,6 +14,8 @@ import Box from '@mui/material/Box';
 import { W95App } from './win95/app';
 import { validateAndLoadEncoders } from '../redux/actions';
 import { EncoderDownloadDialog } from './encoder-download-dialog';
+import { deckTheme } from '../themes/deck';
+import { themeCommons } from '../themes/commons';
 
 const Toc = lazy(() => import('./factory/factory'));
 const Controls = lazy(() => import('./controls'));
@@ -92,39 +94,6 @@ const useStyles = makeStyles()((theme) => ({
         },
     },
 }));
-
-const themeCommons = {
-    components: {
-        MuiSelect: {
-            defaultProps: { variant: 'standard' },
-        },
-        MuiPaper: {
-            defaultProps: { elevation: 1 },
-            styleOverrides: {
-                elevation24: {
-                    backgroundImage: 'none !important',
-                },
-            },
-        },
-        MuiDialog: {
-            defaultProps: {
-                PaperProps: {
-                    elevation: 0,
-                },
-            },
-        },
-        MuiMenu: {
-            defaultProps: {
-                PaperProps: {
-                    elevation: 24,
-                },
-            },
-        },
-        MuiTextField: {
-            defaultProps: { variant: 'standard' },
-        },
-    },
-} as const;
 
 const darkTheme = createTheme({
     palette: {
@@ -288,10 +257,10 @@ const InternalApp = () => {
 };
 
 const App = () => {
-    const { colorTheme, vintageMode } = useShallowEqualSelector((state) => state.appState);
+    const { colorTheme, vintageMode, deckMode } = useShallowEqualSelector((state) => state.appState);
     const systemIsDarkTheme = useThemeDetector();
 
-    const theme = useMemo(() => {
+    const baseTheme = useMemo(() => {
         switch (colorTheme) {
             case 'light':
                 return lightTheme;
@@ -301,6 +270,7 @@ const App = () => {
                 return systemIsDarkTheme ? darkTheme : lightTheme;
         }
     }, [systemIsDarkTheme, colorTheme]);
+    const theme = deckMode ? deckTheme : baseTheme;
 
     if (vintageMode) {
         return <W95App />;
