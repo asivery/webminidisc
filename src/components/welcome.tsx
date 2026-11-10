@@ -21,6 +21,7 @@ import { OpenInNew as OpenInNewIcon } from '@mui/icons-material'
 import { TopMenu } from './topmenu';
 import ChromeIconPath from '../images/chrome-icon.svg';
 import { W95Welcome } from './win95/welcome';
+import { DeckWelcome } from './deck/welcome';
 
 import SplitButton, { OptionType } from './split-button';
 import {
@@ -111,6 +112,7 @@ export const Welcome = (props: {}) => {
         pairingFailed,
         pairingMessage,
         vintageMode,
+        deckMode,
         lastSelectedService,
         connectingInProgress,
     } = useShallowEqualSelector((state) => state.appState);
@@ -201,6 +203,25 @@ export const Welcome = (props: {}) => {
             <span className={classes.standardOption}>{option.name}</span>
         );
     };
+
+    if (deckMode) {
+        return (
+            <DeckWelcome
+                options={options}
+                deleteCustom={deleteCustom}
+                simpleServicesLength={simpleServicesLength}
+                browserSupported={browserSupported}
+                connectDisabled={doesServiceRequireChrome(availableServices[lastSelectedService]) && !runningChrome}
+                lastSelectedService={lastSelectedService}
+                connectingInProgress={connectingInProgress}
+                pairingFailed={pairingFailed}
+                pairingMessage={pairingMessage}
+                showWhyUnsupported={showWhyUnsupported}
+                handleLearnWhy={handleLearnWhy}
+                forceContinue={forceContinue}
+            />
+        );
+    }
 
     return (
         <React.Fragment>

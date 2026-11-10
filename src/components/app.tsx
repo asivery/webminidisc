@@ -1,4 +1,5 @@
 import React, { useMemo, lazy, Suspense, useEffect } from 'react';
+import { DeckFooter } from './deck/footer';
 import { DeckPanel, DECK_SCROLLBAR } from './deck/common';
 import { belowDesktop, forAnyDesktop, forWideDesktop, useDispatch, useShallowEqualSelector, useThemeDetector } from '../frontend-utils';
 
@@ -52,7 +53,8 @@ const useStyles = makeStyles()((theme) => ({
             height: 250,
         },
     },
-    // Deck: a full-width column that fills the window; the paper is the 1280px content track.
+    // Deck: a full-width column that fills the window; the paper is the 1280px content track and the
+    // Deck footer sits last, edge to edge, hugging the bottom.
     deckLayout: {
         display: 'flex',
         flexDirection: 'column',
@@ -290,18 +292,22 @@ const InternalApp = () => {
 
                         <Box className={classes.controlsContainer}>{mainView === 'MAIN' ? <Controls /> : null}</Box>
                     </Paper>
-                    <Typography variant="body2" color="textSecondary" className={classes.copyrightTypography}>
-                        {'© '}
-                        <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://stefano.brilli.me/">
-                            Stefano Brilli
-                        </Link>
-                        {', '}
-                        <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://github.com/asivery/">
-                            Asivery
-                        </Link>{' '}
-                        {new Date().getFullYear()}
-                        {'.'}
-                    </Typography>
+                    {deckMode ? (
+                        <DeckFooter />
+                    ) : (
+                        <Typography variant="body2" color="textSecondary" className={classes.copyrightTypography}>
+                            {'© '}
+                            <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://stefano.brilli.me/">
+                                Stefano Brilli
+                            </Link>
+                            {', '}
+                            <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://github.com/asivery/">
+                                Asivery
+                            </Link>{' '}
+                            {new Date().getFullYear()}
+                            {'.'}
+                        </Typography>
+                    )}
                 </main>
             </Suspense>
 
