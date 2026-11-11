@@ -29,6 +29,7 @@ import RenameIconUrl from '../../images/win95/rename.png';
 import DeviceIconUrl from '../../images/win95/device.png';
 import { RenameDialog } from '../rename-dialog';
 import { AboutDialog } from '../about-dialog';
+import { DeviceInfoDialog } from '../device-info-dialog';
 
 import MDIconUrl from '../../images/win95/minidisc32.png';
 import { FloatingButton, CustomTableRow } from './common';
@@ -254,6 +255,7 @@ export const W95Main = (props: {
                 isExploitDownload={props.factoryModeRippingInMainUi}
             />
             <AboutDialog />
+            <DeviceInfoDialog />
             <ChangelogDialog />
             <PanicDialog />
         </>

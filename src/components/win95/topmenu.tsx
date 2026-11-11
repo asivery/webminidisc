@@ -11,6 +11,7 @@ export const W95TopMenu = (props: {
     handleRenameDisc: () => void;
     handleExit: () => void;
     handleShowAbout: () => void;
+    handleShowDeviceInfo: () => void;
     handleShowChangelog: () => void;
     handleVintageMode: () => void;
 }) => {
@@ -24,6 +25,11 @@ export const W95TopMenu = (props: {
     );
 
     if (props.mainView === 'MAIN') {
+        items.push(
+            <ListItem key="deviceInfo" onClick={props.handleShowDeviceInfo}>
+                About this device...
+            </ListItem>
+        );
         items.push(
             <ListItem key="update" onClick={props.handleRefresh}>
                 Reload TOC

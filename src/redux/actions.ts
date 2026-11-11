@@ -410,6 +410,7 @@ export function listContent(dropCache: boolean = false) {
             console.log(e);
         }
         const deviceName = await serviceRegistry.netmdService!.getDeviceName();
+        const deviceInfo = await serviceRegistry.netmdService!.getDeviceInfo();
         const deviceCapabilities = await serviceRegistry.netmdService!.getServiceCapabilities();
 
         if (deviceStatus?.discPresent) {
@@ -433,6 +434,7 @@ export function listContent(dropCache: boolean = false) {
             batchActions([
                 mainActions.setDisc(disc),
                 mainActions.setDeviceName(deviceName),
+                mainActions.setDeviceInfo(deviceInfo),
                 mainActions.setDeviceStatus(deviceStatus),
                 mainActions.setDeviceCapabilities(deviceCapabilities),
                 appStateActions.setLoading(false),

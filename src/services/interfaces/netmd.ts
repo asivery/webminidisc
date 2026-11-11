@@ -137,6 +137,11 @@ export interface Disc {
     groups: Group[];
 }
 
+export interface DeviceInfo {
+    vendorId: number;
+    productId: number;
+}
+
 export interface MinidiscSpec {
     readonly availableFormats: RecordingCodec[];
     readonly defaultFormat: [number, number]; // [availableFormatsIndex, bitrateIndex]
@@ -256,6 +261,11 @@ export abstract class NetMDService {
     abstract isDeviceConnected(device: USBDevice): boolean;
 
     async factory(): Promise<NetMDFactoryService | null> {
+        return null;
+    }
+
+    // USB vendor/product IDs for the "About this device" panel. Only the USB service knows them.
+    async getDeviceInfo(): Promise<DeviceInfo | null> {
         return null;
     }
 
@@ -503,6 +513,12 @@ export class NetMDUSBService extends NetMDService {
     @asyncMutex
     async getDeviceName() {
         return this.netmdInterface!.netMd.getDeviceName();
+    }
+
+    async getDeviceInfo() {
+        const netMd = this.netmdInterface?.netMd;
+        if (!netMd) return null;
+        return { vendorId: netMd.getVendor(), productId: netMd.getProduct() };
     }
 
     @asyncMutex

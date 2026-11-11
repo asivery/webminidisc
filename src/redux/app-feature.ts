@@ -17,6 +17,7 @@ export interface AppState {
     colorTheme: 'dark' | 'light' | 'system';
     vintageMode: boolean;
     aboutDialogVisible: boolean;
+    deviceInfoDialogVisible: boolean;
     discProtectedDialogVisible: boolean;
     discProtectedDialogDisabled: boolean;
     settingsDialogVisible: boolean;
@@ -53,6 +54,7 @@ export const buildInitialState = (): AppState => {
         vintageMode: loadPreference('vintageMode', false),
         changelogDialogVisible: false,
         aboutDialogVisible: false,
+        deviceInfoDialogVisible: false,
         discProtectedDialogVisible: false,
         discProtectedDialogDisabled: loadPreference('discProtectedDialogDisabled', false),
         settingsDialogVisible: false,
@@ -122,6 +124,9 @@ export const slice = createSlice({
         },
         showAboutDialog: (state, action: PayloadAction<boolean>) => {
             state.aboutDialogVisible = action.payload;
+        },
+        showDeviceInfoDialog: (state, action: PayloadAction<boolean>) => {
+            state.deviceInfoDialogVisible = action.payload;
         },
         showDiscProtectedDialog: (state, action: PayloadAction<boolean>) => {
             state.discProtectedDialogVisible = action.payload;

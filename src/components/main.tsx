@@ -55,6 +55,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
+import ButtonBase from '@mui/material/ButtonBase';
 
 import { GroupRow, LeftInNondefaultCodecs, MockTrackRow, TrackRow } from './main-rows';
 import { RenameDialog } from './rename-dialog';
@@ -64,6 +65,7 @@ import { ErrorDialog } from './error-dialog';
 import { PanicDialog } from './panic-dialog';
 import { ConvertDialog } from './convert-dialog';
 import { AboutDialog } from './about-dialog';
+import { DeviceInfoDialog } from './device-info-dialog';
 import { DumpDialog } from './dump-dialog';
 import { TopMenu } from './topmenu';
 import Checkbox from '@mui/material/Checkbox';
@@ -133,6 +135,16 @@ const useStyles = makeStyles()((theme) => ({
     headBox: {
         display: 'flex',
         justifyContent: 'space-between',
+    },
+    clickableDeviceName: {
+        font: 'inherit',
+        textAlign: 'inherit',
+        verticalAlign: 'baseline',
+        borderRadius: 4,
+        '&.Mui-focusVisible': {
+            outline: `2px solid ${theme.palette.primary.main}`,
+            outlineOffset: 2,
+        },
     },
     spacing: {
         marginTop: theme.spacing(1),
@@ -551,7 +563,15 @@ export const Main = (props: {}) => {
         <React.Fragment>
             <Box className={classes.headBox}>
                 <Typography component="h1" variant="h4">
-                    {deviceName || `Loading...`}
+                    <Tooltip title="About this device" arrow describeChild>
+                        <ButtonBase
+                            focusRipple
+                            className={classes.clickableDeviceName}
+                            onClick={() => dispatch(appStateActions.showDeviceInfoDialog(true))}
+                        >
+                            {deviceName || `Loading...`}
+                        </ButtonBase>
+                    </Tooltip>
                 </Typography>
                 <span>
                     {deviceCapabilities.discEject && (
@@ -859,6 +879,7 @@ export const Main = (props: {}) => {
             <SongRecognitionProgressDialog />
             <FactoryModeNoticeDialog />
             <AboutDialog />
+            <DeviceInfoDialog />
             <ChangelogDialog />
             <SettingsDialog />
             <ManageEncodersDialog />
