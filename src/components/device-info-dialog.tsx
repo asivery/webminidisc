@@ -18,8 +18,6 @@ import { W95DeviceInfoDialog } from './win95/device-info-dialog';
 import MiniDiscLogo from '../images/minidisclogo.svg';
 import { SpecRow } from './deck/common';
 
-export type { DeviceInfoRow } from './device-info-rows';
-
 const Transition = React.forwardRef(function Transition(props: SlideProps, ref: React.Ref<unknown>) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
