@@ -392,7 +392,7 @@ export const TopMenu = function (props: {
                 <ListItemIcon className={classes.listItemIcon}>
                     <HeadphonesIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>About this Walkman</ListItemText>
+                <ListItemText>About this device</ListItemText>
             </MenuItem>
         );
     }

@@ -585,7 +585,7 @@ export const Main = (props: {}) => {
         <React.Fragment>
             <Box className={classes.headBox}>
                 <Typography component="h1" variant="h4">
-                    <Tooltip title="About this Walkman" arrow describeChild>
+                    <Tooltip title="About this device" arrow describeChild>
                         <ButtonBase
                             focusRipple
                             className={classes.clickableDeviceName}

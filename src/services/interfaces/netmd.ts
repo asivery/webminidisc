@@ -264,7 +264,7 @@ export abstract class NetMDService {
         return null;
     }
 
-    // USB vendor/product IDs for the "About this Walkman" panel. Only the USB service knows them.
+    // USB vendor/product IDs for the "About this device" panel. Only the USB service knows them.
     async getDeviceInfo(): Promise<DeviceInfo | null> {
         return null;
     }
