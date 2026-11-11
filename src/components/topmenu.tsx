@@ -380,7 +380,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                 <ListItemIcon className={classes.listItemIcon}>
                     <HeadphonesIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>About this Walkman</ListItemText>
+                <ListItemText>About this device</ListItemText>
             </MenuItem>
         );
     }

@@ -27,7 +27,7 @@ export const W95TopMenu = (props: {
     if (props.mainView === 'MAIN') {
         items.push(
             <ListItem key="deviceInfo" onClick={props.handleShowDeviceInfo}>
-                About this Walkman...
+                About this device...
             </ListItem>
         );
         items.push(
