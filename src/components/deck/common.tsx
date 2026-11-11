@@ -82,7 +82,7 @@ const useStyles = makeStyles()(() => ({
         whiteSpace: 'nowrap',
     },
     specEmphasis: {
-        fontWeight: 600,
+        fontWeight: 700,
     },
     specAccent: {
         color: AMBER_SOFT,

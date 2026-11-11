@@ -1,6 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import { makeStyles } from 'tss-react/mui';
 import Backdrop from '@mui/material/Backdrop';
+import ButtonBase from '@mui/material/ButtonBase';
 import type { DropResult, ResponderProvided } from '@hello-pangea/dnd';
 import { ArrowUpFromLine, Check, ChevronDown, Download, Music, Pencil, RefreshCw, Timer, Trash2, Upload } from 'lucide-react';
 
@@ -237,10 +238,19 @@ const useStyles = makeStyles()((theme) => ({
         margin: 0,
         ...ellipsis,
     },
+    // The device heading holds a button, so it must not clip the button's focus ring; the button ellipsises.
+    deviceHeading: {
+        overflow: 'visible',
+    },
     // The device name and its spec rows open About this device; the name warms to amber like a key.
     clickable: {
-        cursor: 'pointer',
-        '&:hover, &:focus-visible': { color: AMBER_SOFT },
+        font: 'inherit',
+        letterSpacing: 'inherit',
+        textAlign: 'inherit',
+        display: 'block',
+        maxWidth: '100%',
+        ...ellipsis,
+        '&:hover, &.Mui-focusVisible': { color: AMBER_SOFT },
     },
     clickableRows: {
         cursor: 'pointer',
@@ -326,7 +336,7 @@ const useStyles = makeStyles()((theme) => ({
         display: 'inline-flex',
         alignItems: 'center',
         gap: 4,
-        fontWeight: 600,
+        fontWeight: 700,
     },
     meterRemaining: {
         fontWeight: 700,
@@ -380,7 +390,7 @@ const useStyles = makeStyles()((theme) => ({
         fontFamily: MONO,
         fontSize: 10,
         lineHeight: '14px',
-        fontWeight: 600,
+        fontWeight: 700,
         letterSpacing: 0.8,
         color: AMBER_SOFT,
         ...ellipsis,
@@ -447,21 +457,10 @@ const DeviceCard = ({ props, classes }: { props: DeckMainProps; classes: Classes
                     <span className={status === 'READY' ? classes.led : `${classes.led} ${classes.ledDim}`} />
                     <DeckLabel>{status === 'CONNECTING' ? status : `ONLINE • ${status}`}</DeckLabel>
                 </div>
-                <h2
-                    className={`${classes.heading} ${classes.clickable}`}
-                    title={props.deviceName}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${props.deviceName}: show device details`}
-                    onClick={() => dispatch(appActions.showDeviceInfoDialog(true))}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            dispatch(appActions.showDeviceInfoDialog(true));
-                        }
-                    }}
-                >
-                    {props.deviceName}
+                <h2 className={`${classes.heading} ${classes.deviceHeading}`} title={props.deviceName}>
+                    <ButtonBase className={classes.clickable} onClick={() => dispatch(appActions.showDeviceInfoDialog(true))}>
+                        {props.deviceName}
+                    </ButtonBase>
                 </h2>
             </div>
             <div className={`${classes.specs} ${classes.clickableRows}`} onClick={() => dispatch(appActions.showDeviceInfoDialog(true))}>

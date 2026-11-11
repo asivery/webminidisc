@@ -90,7 +90,7 @@ const useStyles = makeStyles()((theme) => ({
         flex: 1,
         minWidth: 0,
         height: 16,
-        fontWeight: 600,
+        fontWeight: 700,
         letterSpacing: 1.68,
     },
     line2: {

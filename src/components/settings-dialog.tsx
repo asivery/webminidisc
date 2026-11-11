@@ -355,7 +355,7 @@ export const SettingsDialog = (props: {}) => {
                 <DialogContentText className={headerClass}>Appearance</DialogContentText>
                 {deckMode && (
                     <Typography className={classes.encoderDescription}>
-                        Deck Mode is always dark and fills the window, so the colour theme and stretch settings apply to the standard look
+                        Deck Mode is always dark and fills the window, so the color theme and stretch settings apply to the standard look
                         only.
                     </Typography>
                 )}
