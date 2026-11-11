@@ -237,7 +237,7 @@ const useStyles = makeStyles()((theme) => ({
         margin: 0,
         ...ellipsis,
     },
-    // The device name and its spec rows open About this Walkman; the name warms to amber like a key.
+    // The device name and its spec rows open About this device; the name warms to amber like a key.
     clickable: {
         cursor: 'pointer',
         '&:hover, &:focus-visible': { color: AMBER_SOFT },

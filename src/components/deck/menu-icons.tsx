@@ -76,7 +76,7 @@ const SWAP = new Map<React.ElementType, React.ElementType>([
     [ToggleOn, ToggleRight],
 ]);
 
-// Items Deck's main screen already shows (the disc card's keys; the device name opens About this Walkman), so
+// Items Deck's main screen already shows (the disc card's keys; the device name opens About this device), so
 // Deck's menu leaves them out. Matched by the stock items' keys in topmenu.tsx.
 const SHOWN_ON_SCREEN = new Set(['deviceInfo', 'update', 'title', 'wipe', 'song-recognition', 'import-csv', 'export-csv']);
 
