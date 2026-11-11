@@ -17,8 +17,6 @@ import TableRow from '@mui/material/TableRow';
 import { W95DeviceInfoDialog } from './win95/device-info-dialog';
 import MiniDiscLogo from '../images/minidisclogo.svg';
 
-export type { DeviceInfoRow } from './device-info-rows';
-
 const Transition = React.forwardRef(function Transition(props: SlideProps, ref: React.Ref<unknown>) {
     return <Slide direction="up" ref={ref} {...props} />;
 });

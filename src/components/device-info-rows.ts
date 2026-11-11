@@ -36,7 +36,8 @@ function describeDisc(disc: Disc | null, usesBytes: boolean) {
     return `${size}, ${free} free, ${protection}`;
 }
 
-// Same naming as the badge in the track list: SP, MONO, LP2, LP4 on NetMD.
+// The recording mode's own name: SP, MONO, LP2, LP4 on NetMD. (The track list's badge differs for mono: it
+// shows SP, with a separate MONO tag.)
 export function recordingModeName(track: Track, spec: MinidiscSpec | undefined) {
     const format = spec?.availableFormats.find(
         (e) => e.codec === track.encoding.codec && e.availableBitrates.includes(track.encoding.bitrate)

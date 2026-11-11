@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, WindowHeader } from 'react95';
 import { FooterButton, DialogOverlay, DialogWindow, DialogFooter, DialogWindowContent, WindowCloseIcon } from './common';
-import { DeviceInfoRow } from '../device-info-dialog';
+import type { DeviceInfoRow } from '../device-info-rows';
 
 export const W95DeviceInfoDialog = (props: {
     visible: boolean;
