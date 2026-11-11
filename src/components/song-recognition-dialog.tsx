@@ -109,6 +109,13 @@ const useStyles = makeStyles()((theme) => ({
     recognizeFail: {
         color: theme.palette.error.main,
     },
+    // Deck Mode: status text is a one-line mono caption (declared after the two classes above).
+    deckStatus: {
+        whiteSpace: 'nowrap',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11,
+        letterSpacing: 0.66,
+    },
     lineInModule: {
         marginTop: theme.spacing(3),
         marginBottom: theme.spacing(3),
@@ -124,10 +131,10 @@ const useStyles = makeStyles()((theme) => ({
 
 export const SongRecognitionDialog = (props: {}) => {
     const dispatch = useDispatch();
-    const { classes } = useStyles();
+    const { classes, cx } = useStyles();
 
     const { visible, titles, titleFormat, importMethod } = useShallowEqualSelector((state) => state.songRecognitionDialog);
-    const { fullWidthSupport } = useShallowEqualSelector((state) => state.appState);
+    const { fullWidthSupport, deckMode } = useShallowEqualSelector((state) => state.appState);
     const { deviceCapabilities, disc } = useShallowEqualSelector((state) => state.main);
 
     // Line in section
@@ -390,9 +397,10 @@ export const SongRecognitionDialog = (props: {}) => {
                                 </TableCell>
                                 <TableCell
                                     onDoubleClick={() => handleOpenRenameDialog(title.index)}
-                                    className={
-                                        title.recognizeFail ? classes.recognizeFail : !title.alreadyRecognized ? classes.greyedOut : ``
-                                    }
+                                    className={cx(
+                                        title.recognizeFail ? classes.recognizeFail : !title.alreadyRecognized ? classes.greyedOut : ``,
+                                        deckMode && (title.recognizeFail || !title.alreadyRecognized) && classes.deckStatus
+                                    )}
                                 >
                                     {title.recognizeFail
                                         ? 'Could not recognize'

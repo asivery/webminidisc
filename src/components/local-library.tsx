@@ -23,7 +23,7 @@ import { makeStyles } from 'tss-react/mui';
 import serviceRegistry from '../services/registry';
 import { LocalDatabase } from '../services/library/library';
 import { File, FileBrowser } from './file-browser/browser';
-import { Add, ArrowUpward } from '@mui/icons-material';
+import { Add, ArrowUpward } from './deck/icons';
 import { dirSorter, FileType } from './file-browser/utils';
 import { AudioEncoderV1ExportParams } from '../services/audio/apiv1/external-interface';
 

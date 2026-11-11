@@ -89,6 +89,19 @@ const useStyles = makeStyles()((theme) => ({
     noLeftMargin: {
         marginLeft: 0,
     },
+    // Deck Mode: section headers become mono labels over a hairline (declared after `header` to win).
+    deckHeader: {
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 10,
+        lineHeight: '14px',
+        fontWeight: 500,
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        color: '#ffb84d',
+        paddingBottom: 6,
+        marginBottom: theme.spacing(1),
+        borderBottom: '1px solid #2a2c33',
+    },
 }));
 
 const SimpleField = ({
@@ -174,12 +187,13 @@ const NativeFields = ({ section, classes }: { section: string; classes: any }) =
 
 export const SettingsDialog = (props: {}) => {
     const dispatch = useDispatch();
-    const { classes } = useStyles();
+    const { classes, cx } = useStyles();
 
     const visible = useShallowEqualSelector((state) => state.appState.settingsDialogVisible);
 
     // Appearance properties
-    const { colorTheme, pageFullHeight, pageFullWidth } = useShallowEqualSelector((state) => state.appState);
+    const { colorTheme, pageFullHeight, pageFullWidth, deckMode } = useShallowEqualSelector((state) => state.appState);
+    const headerClass = cx(classes.header, deckMode && classes.deckHeader);
 
     // Functionality properties
     const { fullWidthSupport } = useShallowEqualSelector((state) => state.appState);
@@ -338,23 +352,33 @@ export const SettingsDialog = (props: {}) => {
         >
             <DialogTitle id="settings-dialog-slide-title">Settings</DialogTitle>
             <DialogContent>
-                <DialogContentText className={classes.header}>Appearance</DialogContentText>
-                <SimpleField name="Color theme" classes={classes}>
-                    <Select className={classes.wider} value={colorTheme} onChange={handleThemeChange}>
-                        <MenuItem value="light">Light</MenuItem>
-                        <MenuItem value="dark">Dark</MenuItem>
-                        <MenuItem value="system">Device Theme</MenuItem>
-                    </Select>
-                </SimpleField>
-                <SimpleField name="Stretch Web Minidisc Pro to fill the screen vertically" classes={classes} formControl={true}>
-                    <Switch checked={pageFullHeight} onChange={handlePageFullHeightChange} />
-                </SimpleField>
-                <SimpleField name="Stretch Web Minidisc Pro to fill the screen horizontally" classes={classes} formControl={true}>
-                    <Switch checked={pageFullWidth} onChange={handlePageFullWidthChange} />
-                </SimpleField>
+                <DialogContentText className={headerClass}>Appearance</DialogContentText>
+                {deckMode && (
+                    <Typography className={classes.encoderDescription}>
+                        Deck Mode is always dark and fills the window, so the color theme and stretch settings apply to the standard look
+                        only.
+                    </Typography>
+                )}
+                {!deckMode && (
+                    <>
+                        <SimpleField name="Color theme" classes={classes}>
+                            <Select className={classes.wider} value={colorTheme} onChange={handleThemeChange}>
+                                <MenuItem value="light">Light</MenuItem>
+                                <MenuItem value="dark">Dark</MenuItem>
+                                <MenuItem value="system">Device Theme</MenuItem>
+                            </Select>
+                        </SimpleField>
+                        <SimpleField name="Stretch Web Minidisc Pro to fill the screen vertically" classes={classes} formControl={true}>
+                            <Switch checked={pageFullHeight} onChange={handlePageFullHeightChange} />
+                        </SimpleField>
+                        <SimpleField name="Stretch Web Minidisc Pro to fill the screen horizontally" classes={classes} formControl={true}>
+                            <Switch checked={pageFullWidth} onChange={handlePageFullWidthChange} />
+                        </SimpleField>
+                    </>
+                )}
                 <NativeFields classes={classes} section="Appearance" />
 
-                <DialogContentText className={classes.header}>Functionality</DialogContentText>
+                <DialogContentText className={headerClass}>Functionality</DialogContentText>
                 <SimpleField
                     name="Enable full width title editing"
                     classes={classes}
@@ -400,7 +424,7 @@ export const SettingsDialog = (props: {}) => {
                 </SimpleField>
                 <NativeFields classes={classes} section="Functionality" />
 
-                <DialogContentText className={classes.header}>Encoding</DialogContentText>
+                <DialogContentText className={headerClass}>Encoding</DialogContentText>
                 <SimpleField name="Installed encoders" classes={classes} formControl={true}>
                     <Button onClick={showManageEncodersDialog}>Manage</Button>
                 </SimpleField>
@@ -435,7 +459,7 @@ export const SettingsDialog = (props: {}) => {
                     </Box>
                 </>}
 
-                <DialogContentText className={classes.header}>Library</DialogContentText>
+                <DialogContentText className={headerClass}>Library</DialogContentText>
                 <SimpleField name="Library to use" classes={classes}>
                     <Select className={classes.wider} value={currentLibraryService} onChange={handleLibraryServiceChanges}>
                         <MenuItem value={-1} key="library-none">

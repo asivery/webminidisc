@@ -27,10 +27,12 @@ import { DeleteForever as DeleteForeverIcon } from '@mui/icons-material'
 import { BugReport as BugReportIcon } from '@mui/icons-material'
 import { ExitToApp as ExitToAppIcon } from '@mui/icons-material'
 import { Info as InfoIcon } from '@mui/icons-material'
+import { Headphones as HeadphonesIcon } from '@mui/icons-material'
 import { ToggleOff as ToggleOffIcon } from '@mui/icons-material'
 import { ToggleOn as ToggleOnIcon } from '@mui/icons-material'
 import { MusicNote as MusicNoteIcon } from '@mui/icons-material'
 import Win95Icon from '../images/win95/win95.png';
+import { deckMenuItems } from './deck/menu-icons';
 import { Help as HelpIcon } from '@mui/icons-material'
 import { Settings as SettingsIcon } from '@mui/icons-material'
 import { GetApp as GetAppIcon } from '@mui/icons-material'
@@ -68,11 +70,17 @@ const useStyles = makeStyles()((theme) => ({
     },
 }));
 
-export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: () => void }) {
+export const TopMenu = function (props: {
+    tracksSelected?: number[];
+    onClick?: () => void;
+    renderTrigger?: (open: (event: React.MouseEvent<HTMLElement>) => void) => React.ReactNode;
+}) {
     const { classes } = useStyles();
     const dispatch = useDispatch();
 
-    const { mainView, vintageMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector((state) => state.appState);
+    const { mainView, vintageMode, deckMode, factoryModeRippingInMainUi, factoryModeShortcuts } = useShallowEqualSelector(
+        (state) => state.appState
+    );
     const { disc } = useShallowEqualSelector((state) => state.main);
     const { spUploadSpeedupActive, deviceDiscSwapDetectionDisabled } = useShallowEqualSelector((state) => state.factory);
     const discTitle = useShallowEqualSelector((state) => state.main.disc?.title ?? ``);
@@ -119,6 +127,11 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
         handleShortcutsClose();
     }, [setMenuAnchorEl, handleShortcutsClose]);
 
+    const handleDeckMode = useCallback(() => {
+        dispatch(appActions.setDeckMode(!deckMode));
+        handleMenuClose();
+    }, [dispatch, deckMode, handleMenuClose]);
+
     const handleShowSettings = useCallback(() => {
         dispatch(appActions.showSettingsDialog(true));
         handleMenuClose();
@@ -164,6 +177,11 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
 
     const handleShowAbout = useCallback(() => {
         dispatch(appActions.showAboutDialog(true));
+        handleMenuClose();
+    }, [dispatch, handleMenuClose]);
+
+    const handleShowDeviceInfo = useCallback(() => {
+        dispatch(appActions.showDeviceInfoDialog(true));
         handleMenuClose();
     }, [dispatch, handleMenuClose]);
 
@@ -368,6 +386,17 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
 
     // END HOMEBREW / MAINUI BRIDGE
 
+    if (mainView === 'MAIN') {
+        menuItems.push(
+            <MenuItem key="deviceInfo" onClick={handleShowDeviceInfo}>
+                <ListItemIcon className={classes.listItemIcon}>
+                    <HeadphonesIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>About this device</ListItemText>
+            </MenuItem>
+        );
+    }
+
     if (mainView === 'MAIN' && disc !== null) {
         menuItems.push(
             <MenuItem key="update" onClick={handleRefresh}>
@@ -505,6 +534,14 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
             <ListItemText>Retro Mode (beta)</ListItemText>
         </MenuItem>
     );
+    menuItems.push(
+        <MenuItem key="deckMode" onClick={handleDeckMode}>
+            <ListItemIcon className={classes.listItemIcon}>
+                {deckMode ? <ToggleOnIcon fontSize="small" /> : <ToggleOffIcon fontSize="small" />}
+            </ListItemIcon>
+            <ListItemText>Deck Mode</ListItemText>
+        </MenuItem>
+    );
 
     if (mainView === 'MAIN') {
         if (isShiftDown) {
@@ -599,6 +636,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
             handleRenameDisc,
             handleExit,
             handleShowAbout,
+            handleShowDeviceInfo,
             handleShowChangelog,
             handleVintageMode,
         };
@@ -606,11 +644,15 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
     }
     return (
         <React.Fragment>
-            <IconButton aria-label="actions" aria-controls="actions-menu" aria-haspopup="true" onClick={handleMenuOpen}>
-                <MoreVertIcon />
-            </IconButton>
+            {props.renderTrigger ? (
+                props.renderTrigger(handleMenuOpen)
+            ) : (
+                <IconButton aria-label="actions" aria-controls="actions-menu" aria-haspopup="true" onClick={handleMenuOpen}>
+                    <MoreVertIcon />
+                </IconButton>
+            )}
             <Menu id="actions-menu" anchorEl={menuAnchorEl} keepMounted open={menuOpen} onClose={handleMenuClose}>
-                {menuItems}
+                {deckMode ? deckMenuItems(menuItems) : menuItems}
             </Menu>
             <Menu
                 id="factory-actions-submenu"
@@ -627,7 +669,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
                     horizontal: 'right',
                 }}
             >
-                {shortcutsItems}
+                {deckMode ? deckMenuItems(shortcutsItems) : shortcutsItems}
             </Menu>
 
             <input type="file" accept=".csv" ref={hiddenFileInputRef} style={{ display: 'none' }} onChange={handleCSVImportFromFile} />

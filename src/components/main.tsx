@@ -55,6 +55,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
+import ButtonBase from '@mui/material/ButtonBase';
 
 import { GroupRow, LeftInNondefaultCodecs, MockTrackRow, TrackRow } from './main-rows';
 import { RenameDialog } from './rename-dialog';
@@ -64,11 +65,13 @@ import { ErrorDialog } from './error-dialog';
 import { PanicDialog } from './panic-dialog';
 import { ConvertDialog } from './convert-dialog';
 import { AboutDialog } from './about-dialog';
+import { DeviceInfoDialog } from './device-info-dialog';
 import { DumpDialog } from './dump-dialog';
 import { TopMenu } from './topmenu';
 import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import { W95Main } from './win95/main';
+import { DeckMain } from './deck/main';
 import { useMemo } from 'react';
 import { ChangelogDialog } from './changelog-dialog';
 import { getDefaultCodecName, Track } from '../services/interfaces/netmd';
@@ -134,6 +137,16 @@ const useStyles = makeStyles()((theme) => ({
         display: 'flex',
         justifyContent: 'space-between',
     },
+    clickableDeviceName: {
+        font: 'inherit',
+        textAlign: 'inherit',
+        verticalAlign: 'baseline',
+        borderRadius: 4,
+        '&.Mui-focusVisible': {
+            outline: `2px solid ${theme.palette.primary.main}`,
+            outlineOffset: 2,
+        },
+    },
     spacing: {
         marginTop: theme.spacing(1),
     },
@@ -193,7 +206,7 @@ export const Main = (props: {}) => {
     const deviceName = useShallowEqualSelector((state) => state.main.deviceName);
     const deviceStatus = useShallowEqualSelector((state) => state.main.deviceStatus);
     const factoryModeRippingInMainUi = useShallowEqualSelector((state) => state.appState.factoryModeRippingInMainUi);
-    const { vintageMode } = useShallowEqualSelector((state) => state.appState);
+    const { vintageMode, deckMode } = useShallowEqualSelector((state) => state.appState);
 
     const [selected, setSelected] = React.useState<number[]>([]);
     const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
@@ -509,49 +522,78 @@ export const Main = (props: {}) => {
         dispatch(openLocalLibrary());
     }, [dispatch]);
 
+    const p = {
+        disc,
+        deviceName,
+
+        factoryModeRippingInMainUi,
+
+        selected,
+        setSelected,
+        selectedCount,
+        isUsingBytes: minidiscSpec?.measurementUnits == 'bytes',
+
+        tracks,
+        uploadedFiles,
+        setUploadedFiles,
+
+        onDrop,
+        getRootProps,
+        getInputProps,
+        isDragActive,
+        open,
+
+        moveMenuAnchorEl,
+        setMoveMenuAnchorEl,
+
+        handleShowMoveMenu,
+        handleCloseMoveMenu,
+        handleMoveSelectedTrack,
+        handleShowDumpDialog,
+        handleDeleteSelected,
+        handleRenameActionClick,
+        handleRenameTrack,
+        handleSelectAllClick,
+        handleSelectTrackClick,
+    };
     if (vintageMode) {
-        const p = {
-            disc,
-            deviceName,
-
-            factoryModeRippingInMainUi,
-
-            selected,
-            setSelected,
-            selectedCount,
-            isUsingBytes: minidiscSpec?.measurementUnits == 'bytes',
-
-            tracks,
-            uploadedFiles,
-            setUploadedFiles,
-
-            onDrop,
-            getRootProps,
-            getInputProps,
-            isDragActive,
-            open,
-
-            moveMenuAnchorEl,
-            setMoveMenuAnchorEl,
-
-            handleShowMoveMenu,
-            handleCloseMoveMenu,
-            handleMoveSelectedTrack,
-            handleShowDumpDialog,
-            handleDeleteSelected,
-            handleRenameActionClick,
-            handleRenameTrack,
-            handleSelectAllClick,
-            handleSelectTrackClick,
-        };
         return <W95Main {...p} />;
+    }
+    if (deckMode) {
+        return (
+            <DeckMain
+                {...p}
+                handleTogglePlayPauseTrack={handleTogglePlayPauseTrack}
+                handleDeleteTrack={handleDeleteTrack}
+                handleEject={handleEject}
+                handleFlush={handleFlush}
+                handleRenameDisc={handleRenameDisc}
+                handleDrop={handleDrop}
+                handleOpenContextMenu={handleOpenContextMenu}
+                handleRenameGroup={handleRenameGroup}
+                handleDeleteGroup={handleDeleteGroup}
+                handleSelectGroupClick={handleSelectGroupClick}
+                selectedGroups={selectedGroups}
+                handleGroupTracks={handleGroupTracks}
+                canGroup={canGroup}
+                handleOpenLocalLibrary={handleOpenLocalLibrary}
+            />
+        );
     }
 
     return (
         <React.Fragment>
             <Box className={classes.headBox}>
                 <Typography component="h1" variant="h4">
-                    {deviceName || `Loading...`}
+                    <Tooltip title="About this device" arrow describeChild>
+                        <ButtonBase
+                            focusRipple
+                            className={classes.clickableDeviceName}
+                            onClick={() => dispatch(appStateActions.showDeviceInfoDialog(true))}
+                        >
+                            {deviceName || `Loading...`}
+                        </ButtonBase>
+                    </Tooltip>
                 </Typography>
                 <span>
                     {deviceCapabilities.discEject && (
@@ -859,6 +901,7 @@ export const Main = (props: {}) => {
             <SongRecognitionProgressDialog />
             <FactoryModeNoticeDialog />
             <AboutDialog />
+            <DeviceInfoDialog />
             <ChangelogDialog />
             <SettingsDialog />
             <ManageEncodersDialog />

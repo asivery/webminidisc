@@ -11,7 +11,7 @@ import { makeStyles } from 'tss-react/mui';
 import { Button, IconButton, List, ListItem, ListItemText, Tooltip } from '@mui/material';
 import { AudioEncoderV1Metadata } from '../services/audio/apiv1/external-interface';
 import { DYNAMIC_ENCODER_SAR_SUBMAGIC, EncoderStorageManager } from '../services/audio/apiv1/dynamic-encoders';
-import { DeleteForever } from '@mui/icons-material';
+import { DeleteForever } from './deck/icons';
 import { validateAndLoadEncoders } from '../redux/actions';
 import { SARFile } from '../services/audio/apiv1/external-archive';
 

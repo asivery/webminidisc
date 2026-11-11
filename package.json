@@ -46,6 +46,7 @@
     "jconv": "github:asivery/jconv-webminidisc",
     "jszip": "^3.10.1",
     "lint-staged": "^15.2.2",
+    "lucide-react": "^1.71.0",
     "music-metadata": "^11.10.3",
     "netmd-exploits": "^0.5.12",
     "netmd-js": "^4.4.1",

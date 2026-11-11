@@ -26,6 +26,13 @@ const useStyles = makeStyles()((theme) => ({
     selectEmpty: {
         marginTop: theme.spacing(2),
     },
+    // Deck's transport bar gets its own full-width row; its main-screen negative margin is cancelled here.
+    deckControls: {
+        flexBasis: '100%',
+        marginTop: theme.spacing(2),
+        marginRight: theme.spacing(2),
+        '& > div': { marginRight: 0 },
+    },
     factoryModeNotice: {
         marginBottom: theme.spacing(2),
         fontWeight: 'bold',
@@ -36,6 +43,7 @@ export function LineInDeviceSelect({ handleChange, inputDeviceId }: { handleChan
     const { classes } = useStyles();
 
     const { deviceCapabilities } = useShallowEqualSelector((state) => state.main);
+    const deckMode = useShallowEqualSelector((state) => state.appState.deckMode);
     const [devices, setInputDevices] = useState<{ deviceId: string; label: string }[]>([]);
 
     useEffect(() => {
@@ -84,7 +92,13 @@ export function LineInDeviceSelect({ handleChange, inputDeviceId }: { handleChan
                     </Select>
                     <FormHelperText>Input Source</FormHelperText>
                 </FormControl>
-                <Controls />
+                {deckMode ? (
+                    <div className={classes.deckControls}>
+                        <Controls />
+                    </div>
+                ) : (
+                    <Controls />
+                )}
             </Box>
         </React.Fragment>
     );

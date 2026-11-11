@@ -1,9 +1,11 @@
 import React, { useMemo, lazy, Suspense, useEffect } from 'react';
+import { DeckFooter } from './deck/footer';
+import { DeckPanel, DECK_SCROLLBAR } from './deck/common';
 import { belowDesktop, forAnyDesktop, forWideDesktop, useDispatch, useShallowEqualSelector, useThemeDetector } from '../frontend-utils';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from './deck/loader';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { makeStyles } from 'tss-react/mui';
 
@@ -14,6 +16,8 @@ import Box from '@mui/material/Box';
 import { W95App } from './win95/app';
 import { validateAndLoadEncoders } from '../redux/actions';
 import { EncoderDownloadDialog } from './encoder-download-dialog';
+import { deckTheme } from '../themes/deck';
+import { themeCommons } from '../themes/commons';
 
 const Toc = lazy(() => import('./factory/factory'));
 const Controls = lazy(() => import('./controls'));
@@ -49,6 +53,21 @@ const useStyles = makeStyles()((theme) => ({
             height: 250,
         },
     },
+    // Deck: a full-width column that fills the window; the paper is the 1280px content track and the
+    // Deck footer sits last, edge to edge, hugging the bottom.
+    deckLayout: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        [forAnyDesktop(theme)]: {
+            width: '100%',
+            maxWidth: 'none',
+        },
+        [forWideDesktop(theme)]: {
+            width: '100%',
+            maxWidth: 'none',
+        },
+    },
     paperShowsList: {
         [forAnyDesktop(theme)]: {
             height: 600,
@@ -59,6 +78,37 @@ const useStyles = makeStyles()((theme) => ({
     },
     paperFullHeight: {
         height: 'calc(100% - 50px)',
+    },
+    // Deliberately after paperShowsList and paperFullHeight: tss injects rules in this order, so these heights win.
+    // Homebrew view under Deck: one panel that owns its scrolling (html and body never scroll).
+    deckFactory: {
+        height: '100%',
+        boxSizing: 'border-box',
+        overflow: 'auto',
+        padding: theme.spacing(2, 3),
+        ...DECK_SCROLLBAR,
+    },
+    deckPaper: {
+        background: 'transparent',
+        boxShadow: 'none',
+        border: 'none',
+        borderRadius: 0,
+        padding: theme.spacing(1),
+        flex: '1 1 auto',
+        minHeight: 0,
+        width: '100%',
+        maxWidth: 1280,
+        boxSizing: 'border-box',
+        height: 'auto',
+        margin: '0 auto',
+        [forAnyDesktop(theme)]: {
+            height: 'auto',
+            margin: '16px auto 0',
+        },
+        [forWideDesktop(theme)]: {
+            height: 'auto',
+            margin: '16px auto 0',
+        },
     },
     layoutFullWidth: {
         [forAnyDesktop(theme)]: {
@@ -92,39 +142,6 @@ const useStyles = makeStyles()((theme) => ({
         },
     },
 }));
-
-const themeCommons = {
-    components: {
-        MuiSelect: {
-            defaultProps: { variant: 'standard' },
-        },
-        MuiPaper: {
-            defaultProps: { elevation: 1 },
-            styleOverrides: {
-                elevation24: {
-                    backgroundImage: 'none !important',
-                },
-            },
-        },
-        MuiDialog: {
-            defaultProps: {
-                PaperProps: {
-                    elevation: 0,
-                },
-            },
-        },
-        MuiMenu: {
-            defaultProps: {
-                PaperProps: {
-                    elevation: 24,
-                },
-            },
-        },
-        MuiTextField: {
-            defaultProps: { variant: 'standard' },
-        },
-    },
-} as const;
 
 const darkTheme = createTheme({
     palette: {
@@ -227,7 +244,7 @@ const lightTheme = createTheme({
 });
 
 const InternalApp = () => {
-    const { mainView, loading, pageFullHeight, pageFullWidth } = useShallowEqualSelector((state) => state.appState);
+    const { mainView, loading, pageFullHeight, pageFullWidth, deckMode } = useShallowEqualSelector((state) => state.appState);
     const { deviceCapabilities } = useShallowEqualSelector((state) => state.main);
     const { classes, cx } = useStyles();
     const dispatch = useDispatch();
@@ -248,31 +265,49 @@ const InternalApp = () => {
                     </Backdrop>
                 }
             >
-                <main className={cx(classes.layout, { [classes.layoutFullWidth]: pageFullWidth })}>
+                <main
+                    className={cx(classes.layout, {
+                        [classes.layoutFullWidth]: pageFullWidth && !deckMode,
+                        [classes.deckLayout]: deckMode,
+                    })}
+                >
                     <Paper
                         className={cx(classes.paper, {
                             [classes.paperShowsList]: deviceCapabilities.includes(0 /*Capability.listContent*/),
-                            [classes.paperFullHeight]: pageFullHeight,
+                            [classes.paperFullHeight]: pageFullHeight && !deckMode,
+                            [classes.deckPaper]: deckMode,
                         })}
                     >
                         {mainView === 'WELCOME' ? <Welcome /> : null}
                         {mainView === 'MAIN' ? <Main /> : null}
-                        {mainView === 'FACTORY' ? <Toc /> : null}
+                        {mainView === 'FACTORY' ? (
+                            deckMode ? (
+                                <DeckPanel className={classes.deckFactory}>
+                                    <Toc />
+                                </DeckPanel>
+                            ) : (
+                                <Toc />
+                            )
+                        ) : null}
 
                         <Box className={classes.controlsContainer}>{mainView === 'MAIN' ? <Controls /> : null}</Box>
                     </Paper>
-                    <Typography variant="body2" color="textSecondary" className={classes.copyrightTypography}>
-                        {'© '}
-                        <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://stefano.brilli.me/">
-                            Stefano Brilli
-                        </Link>
-                        {', '}
-                        <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://github.com/asivery/">
-                            Asivery
-                        </Link>{' '}
-                        {new Date().getFullYear()}
-                        {'.'}
-                    </Typography>
+                    {deckMode ? (
+                        <DeckFooter />
+                    ) : (
+                        <Typography variant="body2" color="textSecondary" className={classes.copyrightTypography}>
+                            {'© '}
+                            <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://stefano.brilli.me/">
+                                Stefano Brilli
+                            </Link>
+                            {', '}
+                            <Link rel="noopener noreferrer" color="inherit" target="_blank" href="https://github.com/asivery/">
+                                Asivery
+                            </Link>{' '}
+                            {new Date().getFullYear()}
+                            {'.'}
+                        </Typography>
+                    )}
                 </main>
             </Suspense>
 
@@ -288,10 +323,10 @@ const InternalApp = () => {
 };
 
 const App = () => {
-    const { colorTheme, vintageMode } = useShallowEqualSelector((state) => state.appState);
+    const { colorTheme, vintageMode, deckMode } = useShallowEqualSelector((state) => state.appState);
     const systemIsDarkTheme = useThemeDetector();
 
-    const theme = useMemo(() => {
+    const baseTheme = useMemo(() => {
         switch (colorTheme) {
             case 'light':
                 return lightTheme;
@@ -301,6 +336,7 @@ const App = () => {
                 return systemIsDarkTheme ? darkTheme : lightTheme;
         }
     }, [systemIsDarkTheme, colorTheme]);
+    const theme = deckMode ? deckTheme : baseTheme;
 
     if (vintageMode) {
         return <W95App />;
