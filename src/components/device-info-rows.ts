@@ -1,10 +1,23 @@
 import { bytesToHumanReadable, formatTimeFromSeconds, getTracks } from '../utils';
 import { DeviceInfo, Disc, MinidiscSpec, Track } from '../services/interfaces/netmd';
 
+// USB vendor IDs of the NetMD devices netmd-js knows.
 const VENDOR_NAMES: Record<number, string> = {
     0x054c: 'Sony',
     0x04dd: 'Sharp',
+    0x04da: 'Panasonic',
+    0x0b28: 'Kenwood',
+    0x0411: 'Buffalo',
 };
+
+// Brands that made NetMD devices. Some report another maker's vendor ID (Aiwa players use Sony's), so a brand
+// at the start of the model name wins over the vendor ID.
+const BRANDS = ['Aiwa', 'Buffalo', 'Hitachi', 'Kenwood', 'Panasonic', 'Pioneer', 'Sharp', 'Sony', 'Victor'];
+
+export function manufacturerName(deviceName: string, vendorId: number) {
+    const brand = BRANDS.find((name) => deviceName.startsWith(`${name} `));
+    return brand ?? VENDOR_NAMES[vendorId] ?? `Unknown (${formatUsbId(vendorId)})`;
+}
 
 export interface DeviceInfoRow {
     label: string;
@@ -55,7 +68,7 @@ export function buildDeviceInfoRows(
     if (deviceInfo) {
         rows.push({
             label: 'Manufacturer',
-            value: VENDOR_NAMES[deviceInfo.vendorId] ?? `Unknown (${formatUsbId(deviceInfo.vendorId)})`,
+            value: manufacturerName(deviceName, deviceInfo.vendorId),
         });
         rows.push({ label: 'USB ID', value: `${formatUsbId(deviceInfo.vendorId)}:${formatUsbId(deviceInfo.productId)}` });
     }
